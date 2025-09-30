@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.pyo
+*.pyd
+
+# Entorno virtual
+venv/
+env/
+ENV/
+.venv/
+.ENV/
+
+# Archivos de Django
+*.log
+*.pot
+*.pyc
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+
+# Archivos de migraciones (puedes ignorar si no quieres subirlas)
+*/migrations/__pycache__/
+*/migrations/*.py
+
+# Configuración local
+*.env
+.env.*
+.envrc
+.settings/
+.idea/
+.vscode/
+
+# Archivos de coverage/test
+.coverage
+coverage.xml
+*.cover
+*.log
+htmlcov/
+
+# Archivos de herramientas
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
