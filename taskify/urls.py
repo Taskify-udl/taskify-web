@@ -10,6 +10,6 @@ urlpatterns = [
 
     # API DRF
     path("api/", include(router.urls)),
-    path("api-auth/", include("rest_framework.urls")),  # login/logout del browsable API
+    path("api-auth/", include("rest_framework.urls")),
 
 ]

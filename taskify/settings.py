@@ -12,7 +12,6 @@ ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:8000", "http://localhost:8000"]
 
 INSTALLED_APPS = [
-    # Django
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -20,13 +19,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # Terceros
     'rest_framework',
-    # 'rest_framework.authtoken',  # ← descomenta si usarás TokenAuthentication
-
-    # Tus apps (ajusta nombres)
-    # 'blog',
-    # 'core',
+    'taskify_app',
 ]
 
 MIDDLEWARE = [
@@ -93,14 +87,15 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Django REST Framework
+# 👉 Por defecto, API PÚBLICA. Luego exiges login por vista/acción.
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.SessionAuthentication",  # útil con login de Django
-        # "rest_framework.authentication.TokenAuthentication",  # si activas authtoken
-        # "rest_framework.authentication.BasicAuthentication",
+        "rest_framework.authentication.SessionAuthentication",  # útil con login de Django (CSRF aplica)
+        # "rest_framework_simplejwt.authentication.JWTAuthentication",  # ⬅️ si usas JWT, descomenta e instala simplejwt
+        # "rest_framework.authentication.BasicAuthentication",  # opcional
     ],
     "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.IsAuthenticatedOrReadOnly",
+        "rest_framework.permissions.AllowAny",  # ⬅️ clave: por defecto no exige autenticación
     ],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,
