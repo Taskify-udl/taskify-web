@@ -73,3 +73,49 @@ class FavoriteSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         validated_data.pop("user", None)
         return super().update(instance, validated_data)
+
+from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth.models import Group
+from rest_framework import serializers
+User = get_user_model()
+
+
+class RegisterSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=150)
+    email = serializers.EmailField(required=False, allow_blank=True)
+    password = serializers.CharField(write_only=True, trim_whitespace=False)
+    password2 = serializers.CharField(write_only=True, trim_whitespace=False)
+    role = serializers.ChoiceField(choices=("base", "provider"), default="base")
+
+    def validate_username(self, value):
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError("Ese nombre de usuario ya existe.")
+        return value
+
+    def validate_email(self, value):
+        if value and User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("Ese email ya está en uso.")
+        return value
+
+    def validate(self, attrs):
+        if attrs["password"] != attrs["password2"]:
+            raise serializers.ValidationError({"password2": "Las contraseñas no coinciden."})
+        # Valida contra las políticas de Django (longitud, comunes, numéricas...)
+        validate_password(attrs["password"])
+        return attrs
+
+    def create(self, validated_data):
+        role = validated_data.pop("role", "base")
+        validated_data.pop("password2", None)
+        password = validated_data.pop("password")
+        user = User(**validated_data)
+        user.set_password(password)
+        user.save()
+
+        # Asigna grupo (si existe). No permitimos crear admin aquí.
+        group = Group.objects.filter(name=role).first()
+        if group:
+            user.groups.add(group)
+
+        return user
