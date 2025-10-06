@@ -1,0 +1,29 @@
+{% load static %}
+<header class="navbar">
+    <div class="navbar-left">
+        <a href="{% url 'home' %}">
+            <img src="{% static 'images/logo.png' %}" alt="Taskify Logo" class="logo">
+        </a>
+    </div>
+
+    <div class="navbar-center">
+        <form action="{% url 'search'%}" method="get">
+            <input type="text" name="q" placeholder="Search services..." class="search-bar">
+            <button type="submit">Search</button>
+        </form>
+    </div>
+
+    <div class="navbar-right">
+        {% if user.is_authenticated %}
+            <a href="{% url 'chats' %}">Chat</a>
+            <a href="{% url 'my_services' %}">My Services</a>
+            <a href="{% url 'my_orders' %}">My Orders</a>
+            <a href="{% url 'profile' %}">
+                <img src="{% static 'images/user-icon.png' %}" alt="Profile" class="profile-icon">
+            </a>
+        {% else %}
+            <a href="{% url 'login' %}" class="btn">Login</a>
+            <a href="{% url 'signup' %}" class="btn btn-primary">Sign up</a>
+        {% endif %}
+    </div>
+</header>
