@@ -1,13 +1,59 @@
-{% extends "base.html" %}
-
-{% block title %}Página de prueba{% endblock %}
+{% extends 'base.html' %}
+{% block title %}Taskify{% endblock %}
 
 {% block content %}
+<section class="hero">
+    <h1>Find the best professionals for your tasks</h1>
+    <p>Connect, hire, and get things done easily.</p>
+</section>
 
+<!-- Categorías -->
+<section class="categories">
+    <h2>Explore Categories</h2>
+    <div class="category-grid">
+        <div class="category-card">
+            <h3>Design</h3>
+            <p>Creative professionals for logos, branding, and UI/UX design.</p>
+        </div>
+        <div class="category-card">
+            <h3>Development</h3>
+            <p>Web and app developers to build powerful digital products.</p>
+        </div>
+        <div class="category-card">
+            <h3>Marketing</h3>
+            <p>Experts in digital marketing, SEO, and brand growth.</p>
+        </div>
+        <div class="category-card">
+            <h3>Writing</h3>
+            <p>Copywriters and editors to make your content shine.</p>
+        </div>
+    </div>
+</section>
 
-<h2 class="bg-primary">Bienvenido a la página de inicio</h2>
-<p>Esto es contenido dentro del bloque “content”.</p>
-
-
-
+<!-- Servicios destacados -->
+<section class="featured-services">
+    <h2>Featured Services</h2>
+    <div class="service-grid">
+        <div class="service-card">
+            <h3>Logo Design</h3>
+            <p>Professional logo design for your business.</p>
+            <span class="price">$50</span>
+        </div>
+        <div class="service-card">
+            <h3>Web Development</h3>
+            <p>Create modern and responsive websites.</p>
+            <span class="price">$200</span>
+        </div>
+        <div class="service-card">
+            <h3>Marketing Strategy</h3>
+            <p>Grow your business with expert marketing plans.</p>
+            <span class="price">$150</span>
+        </div>
+        <div class="service-card">
+            <h3>SEO Optimization</h3>
+            <p>Improve your website ranking on Google.</p>
+            <span class="price">$120</span>
+        </div>
+    </div>
+</section>
 {% endblock %}

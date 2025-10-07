@@ -4,6 +4,7 @@ from django.template.context_processors import request
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
+from taskify_app import views
 from taskify_app.api.auth import RegisterView
 from taskify_app.api.viewsets import (
     CategoryViewSet,
@@ -13,7 +14,6 @@ from taskify_app.api.viewsets import (
     ReviewViewSet,
     FavoriteViewSet,
 )
-from taskify_app.views import home_view
 
 router = DefaultRouter()
 router.register(r"categories", CategoryViewSet, basename="category")
@@ -27,7 +27,18 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include(router.urls)),
     path("api-auth/", include("rest_framework.urls")),
-    path("api/auth/register/", RegisterView.as_view(), name="register"),
-    path("", home_view, name="home"),
+    path("api-auth/register/", RegisterView.as_view(), name="register"),
 
+    # Home
+    path("", views.home, name='home'),
+
+    # Header
+    path("search/", views.search, name='search'),
+    path("chats/", views.chats, name='chats'),
+    path("my_services/", views.my_services, name='my_services'),
+    path("my_orders/", views.my_orders, name='my_orders'),
+    path("profile/", views.profile, name='profile'),
+
+    path("login/", views.login, name='login'),
+    path("signup/", views.signup, name='signup'),
 ]
