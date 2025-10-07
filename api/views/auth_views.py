@@ -45,5 +45,4 @@ def register(request):
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def profile(request):
-    print(request.user)
     return Response({"profile"})
