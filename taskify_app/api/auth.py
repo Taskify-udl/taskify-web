@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 from .serializers import RegisterSerializer
 
 @method_decorator(csrf_exempt, name="dispatch")  # evitar CSRF en POST anónimo
-class RegisterView(APIView):
+class   RegisterView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = []  # no forzar autenticación en este endpoint
 

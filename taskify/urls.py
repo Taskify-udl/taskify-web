@@ -27,7 +27,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include(router.urls)),
     path("api-auth/", include("rest_framework.urls")),
-    path("api/auth/register/", RegisterView.as_view(), name="register"),
+    path("api-auth/register/", RegisterView.as_view(), name="register"),
 
     # Home
     path("", views.home, name='home'),
