@@ -14,6 +14,7 @@ from taskify_app.api.viewsets import (
     ReviewViewSet,
     FavoriteViewSet,
 )
+from rest_framework.authtoken import views as token_views
 
 router = DefaultRouter()
 router.register(r"categories", CategoryViewSet, basename="category")
@@ -26,7 +27,9 @@ router.register(r"favorites", FavoriteViewSet, basename="favorite")
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include(router.urls)),
+    path("api-auth/login", token_views.obtain_auth_token),
     path("api-auth/", include("rest_framework.urls")),
+
     path("api-auth/register/", RegisterView.as_view(), name="register"),
 
     # Home
