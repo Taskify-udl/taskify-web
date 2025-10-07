@@ -1,5 +1,5 @@
 from rest_framework import serializers
-
+from django.contrib.auth.models import User
 from taskify_app.models import Category
 
 
@@ -9,11 +9,7 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ['name', 'slug', 'description']
 
 
-    """queryset = Category.objects.all().order_by("name")
-    serializer_class = CategorySerializer
-
-    def get_permissions(self):
-        # Lectura pública; crear/editar/borrar solo admin autenticado
-        if self.action in ["list", "retrieve"]:
-            return [AllowAny()]
-        return [IsAuthenticated(), IsAdmin()]"""
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id','username', 'email', 'password']
