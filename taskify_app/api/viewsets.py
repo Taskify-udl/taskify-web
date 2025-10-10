@@ -1,8 +1,11 @@
 from rest_framework import viewsets
+from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from .permissions import ReadOnly, IsProvider, IsAdmin, IsOwnerOrAdmin
 from .serializers import *
 from ..models import Category, Service, Contract, Review, Favorite, ServiceCategory
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from rest_framework.permissions import IsAuthenticated
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -31,6 +34,8 @@ class ServiceViewSet(viewsets.ModelViewSet):
         serializer.save(provider=self.request.user)
 
 class ContractViewSet(viewsets.ModelViewSet):
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    permission_classes = [IsAuthenticated]
     queryset = Contract.objects.select_related("user", "service").all()
     serializer_class = ContractSerializer
 
