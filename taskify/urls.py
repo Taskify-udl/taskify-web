@@ -26,12 +26,7 @@ router.register(r"favorites", FavoriteViewSet, basename="favorite")
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/", include(router.urls)),
-    path("api-auth/loginv2", token_views.obtain_auth_token),
-    path("api-auth/", include("rest_framework.urls")),
-    path("apiv2/", include("api.urls")),
-
-    path("api-auth/register/", RegisterView.as_view(), name="register"),
+    path("api/", include("api.urls")),
 
     # Home
     path("", views.home, name='home'),
