@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Search Results{% endblock %}
+
+{% block content %}
+<h2>Results for "{{ query }}"</h2>
+
+{% if results %}
+    <ul>
+        {% for service in results %}
+            <li>{{ service.title }}</li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No results found.</p>
+{% endif %}
+{% endblock %}
