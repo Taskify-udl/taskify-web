@@ -10,10 +10,12 @@ from rest_framework.authentication import TokenAuthentication
 from api.serializers import UserSerializer
 from django.contrib.auth.models import User
 
+from taskify_app.models import CustomUser
+
 
 @api_view(['POST'])
 def login(request):
-    user = get_object_or_404(User, username=request.data['username'])
+    user = get_object_or_404(CustomUser, username=request.data['username'])
     if not user.check_password(request.data['password']):
         return Response({"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
     token, created = Token.objects.get_or_create(user=user)
@@ -29,7 +31,7 @@ def register(request):
     if serializer.is_valid():
         serializer.save()
 
-        user = User.objects.get(username=request.data['username'])
+        user = CustomUser.objects.get(username=request.data['username'])
         print(serializer.data)
         user.set_password(serializer.data['password'])
         user.save()

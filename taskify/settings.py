@@ -68,7 +68,6 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-
 # I18N
 LANGUAGE_CODE = 'es-es'
 TIME_ZONE = 'Europe/Madrid'
@@ -101,7 +100,4 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 10,
 }
 
-
-
-
-
+AUTH_USER_MODEL = 'taskify_app.CustomUser'

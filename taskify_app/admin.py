@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
 from django.db.models import Avg, Count
 from django import forms
 
@@ -8,8 +9,21 @@ from .models import (
     Review,
     Service,
     ServiceCategory,
-    Contract
+    Contract, CustomUser
 )
+
+
+@admin.register(CustomUser)
+class CustomUserAdmin(UserAdmin):
+    # añade aquí tus campos extra si tienes
+    # Ejemplo si añadiste 'company' y 'phone':
+    fieldsets = UserAdmin.fieldsets + (
+        ('Extra', {'fields': ('company', 'phone')}),
+    )
+    add_fieldsets = UserAdmin.add_fieldsets
+    # MUY IMPORTANTE para que el autocompletado funcione:
+    search_fields = ('username', 'email', 'first_name', 'last_name')
+    ordering = ('id',)
 
 
 @admin.register(Contract)

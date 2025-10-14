@@ -5,29 +5,14 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
 from taskify_app import views
-from taskify_app.api.auth import RegisterView
-from taskify_app.api.viewsets import (
-    CategoryViewSet,
-    ServiceViewSet,
-    ServiceCategoryViewSet,
-    ContractViewSet,
-    ReviewViewSet,
-    FavoriteViewSet,
-)
+
 from rest_framework.authtoken import views as token_views
 
 router = DefaultRouter()
-router.register(r"categories", CategoryViewSet, basename="category")
-router.register(r"services", ServiceViewSet, basename="service")
-router.register(r"service-categories", ServiceCategoryViewSet, basename="servicecategory")
-router.register(r"contracts", ContractViewSet, basename="contract")
-router.register(r"reviews", ReviewViewSet, basename="review")
-router.register(r"favorites", FavoriteViewSet, basename="favorite")
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include("api.urls")),
-
     # Home
     path("", views.home, name='home'),
 
@@ -38,6 +23,6 @@ urlpatterns = [
     path("my_orders/", views.my_orders, name='my_orders'),
     path("profile/", views.profile, name='profile'),
 
-    path("login/", views.login, name='login'),
+    path("login/", views.user_login , name='login'),
     path("signup/", views.signup, name='signup'),
 ]
