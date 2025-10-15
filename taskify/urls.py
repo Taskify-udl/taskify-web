@@ -37,6 +37,10 @@ urlpatterns = [
     path("my_services/", views.my_services, name='my_services'),
     path("my_orders/", views.my_orders, name='my_orders'),
     path("profile/", views.profile, name='profile'),
+    path("profile/edit/", views.edit_profile, name='edit_profile'),
+    path("profile/stats/", views.advanced_stats, name='advanced_stats'),
+    path("notifications/", views.notifications, name='notifications'),
+    path("notifications/mark-read/<int:notification_id>/", views.mark_notification_read, name='mark_notification_read'),
 
     path("login/", views.login, name='login'),
     path("signup/", views.signup, name='signup'),

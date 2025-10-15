@@ -18,6 +18,12 @@
             <a href="{% url 'chats' %}">Chat</a>
             <a href="{% url 'my_services' %}">My Services</a>
             <a href="{% url 'my_orders' %}">My Orders</a>
+            <a href="{% url 'notifications' %}" class="notifications-link">
+                <span class="notification-icon">🔔</span>
+                {% if unread_notifications_count > 0 %}
+                    <span class="notification-badge">{{ unread_notifications_count }}</span>
+                {% endif %}
+            </a>
             <a href="{% url 'profile' %}">
                 <img src="{% static 'images/user-icon.png' %}" alt="Profile" class="profile-icon">
             </a>

@@ -1,0 +1,573 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Estadísticas Avanzadas - Taskify{% endblock %}
+
+{% block content %}
+<div class="stats-container">
+    <div class="stats-header">
+        <h1>Estadísticas Avanzadas</h1>
+        <a href="{% url 'profile' %}" class="btn btn-secondary">← Volver al Perfil</a>
+    </div>
+
+    <div class="stats-overview">
+        <div class="stat-card">
+            <div class="stat-icon">📊</div>
+            <div class="stat-content">
+                <h3>{{ services_count }}</h3>
+                <p>Servicios Publicados</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🤝</div>
+            <div class="stat-content">
+                <h3>{{ contracts_count }}</h3>
+                <p>Contratos Realizados</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">⭐</div>
+            <div class="stat-content">
+                <h3>{{ reviews_count }}</h3>
+                <p>Reseñas Recibidas</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="stats-charts">
+        <div class="chart-section">
+            <h2>Evolución Mensual</h2>
+            <div class="chart-container">
+                <canvas id="monthlyChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-section">
+            <h2>Distribución de Calificaciones</h2>
+            <div class="chart-container">
+                <canvas id="ratingChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="stats-details">
+        <div class="detail-section">
+            <h2>Servicios Mejor Valorados</h2>
+            {% if top_services %}
+                <div class="top-services-list">
+                    {% for service in top_services %}
+                        <div class="service-rank">
+                            <div class="rank-number">#{{ forloop.counter }}</div>
+                            <div class="service-info">
+                                <h4>{{ service.name }}</h4>
+                                <div class="service-stats">
+                                    <span class="rating">⭐ {{ service.avg_rating|floatformat:1 }}</span>
+                                    <span class="reviews">({{ service.review_count }} reseñas)</span>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p>No tienes reseñas aún.</p>
+            {% endif %}
+        </div>
+
+        <div class="detail-section">
+            <h2>Actividad Reciente</h2>
+            <div class="activity-tabs">
+                <button class="tab-btn active" onclick="showTab('contracts')">Contratos</button>
+                <button class="tab-btn" onclick="showTab('reviews')">Reseñas</button>
+            </div>
+
+            <div id="contracts-tab" class="activity-content active">
+                {% if recent_contracts %}
+                    <div class="activity-list">
+                        {% for contract in recent_contracts %}
+                            <div class="activity-item">
+                                <div class="activity-icon">🤝</div>
+                                <div class="activity-details">
+                                    <h4>Contrato con {{ contract.service.name }}</h4>
+                                    <p>Estado: <span class="status-{{ contract.status }}">{{ contract.status|title }}</span></p>
+                                    <small>{{ contract.created_at|date:"d/m/Y H:i" }}</small>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p>No hay contratos recientes.</p>
+                {% endif %}
+            </div>
+
+            <div id="reviews-tab" class="activity-content">
+                {% if recent_reviews %}
+                    <div class="activity-list">
+                        {% for review in recent_reviews %}
+                            <div class="activity-item">
+                                <div class="activity-icon">⭐</div>
+                                <div class="activity-details">
+                                    <h4>Reseña en {{ review.service.name }}</h4>
+                                    <div class="review-rating">
+                                        {% for i in "12345"|make_list %}
+                                            {% if forloop.counter <= review.rating %}
+                                                <span class="star filled">★</span>
+                                            {% else %}
+                                                <span class="star">☆</span>
+                                            {% endif %}
+                                        {% endfor %}
+                                        <span class="rating-number">{{ review.rating }}/5</span>
+                                    </div>
+                                    <small>{{ review.created_at|date:"d/m/Y H:i" }}</small>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p>No hay reseñas recientes.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% load static %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Monthly evolution chart
+    const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+
+    // Data from Django context
+    const servicesData = {{ services_by_month|safe }};
+    const contractsData = {{ contracts_by_month|safe }};
+    const reviewsData = {{ reviews_by_month|safe }};
+
+    // Create last 12 months labels
+    const months = [];
+    const now = new Date();
+    for (let i = 11; i >= 0; i--) {
+        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        months.push(date.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' }));
+    }
+
+    // Fill data arrays with zeros initially
+    const servicesCount = new Array(12).fill(0);
+    const contractsCount = new Array(12).fill(0);
+    const reviewsCount = new Array(12).fill(0);
+
+    // Fill with actual data
+    servicesData.forEach(item => {
+        const itemDate = new Date(item.month);
+        const monthIndex = (itemDate.getFullYear() - now.getFullYear()) * 12 + itemDate.getMonth() - now.getMonth() + 11;
+        if (monthIndex >= 0 && monthIndex < 12) {
+            servicesCount[monthIndex] = item.count;
+        }
+    });
+
+    contractsData.forEach(item => {
+        const itemDate = new Date(item.month);
+        const monthIndex = (itemDate.getFullYear() - now.getFullYear()) * 12 + itemDate.getMonth() - now.getMonth() + 11;
+        if (monthIndex >= 0 && monthIndex < 12) {
+            contractsCount[monthIndex] = item.count;
+        }
+    });
+
+    reviewsData.forEach(item => {
+        const itemDate = new Date(item.month);
+        const monthIndex = (itemDate.getFullYear() - now.getFullYear()) * 12 + itemDate.getMonth() - now.getMonth() + 11;
+        if (monthIndex >= 0 && monthIndex < 12) {
+            reviewsCount[monthIndex] = item.count;
+        }
+    });
+
+    new Chart(monthlyCtx, {
+        type: 'line',
+        data: {
+            labels: months,
+            datasets: [{
+                label: 'Servicios',
+                data: servicesCount,
+                borderColor: '#6366f1',
+                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                tension: 0.4
+            }, {
+                label: 'Contratos',
+                data: contractsCount,
+                borderColor: '#0ea5e9',
+                backgroundColor: 'rgba(14, 165, 233, 0.1)',
+                tension: 0.4
+            }, {
+                label: 'Reseñas',
+                data: reviewsCount,
+                borderColor: '#f59e0b',
+                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Rating distribution chart
+    const ratingCtx = document.getElementById('ratingChart').getContext('2d');
+    const ratingData = {{ rating_distribution|safe }};
+
+    const ratingValues = [0, 0, 0, 0, 0];
+
+    ratingData.forEach(item => {
+        ratingValues[item.rating - 1] = item.count;
+    });
+
+    new Chart(ratingCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['1 estrella', '2 estrellas', '3 estrellas', '4 estrellas', '5 estrellas'],
+            datasets: [{
+                data: ratingValues,
+                backgroundColor: [
+                    '#ef4444',
+                    '#f97316',
+                    '#eab308',
+                    '#22c55e',
+                    '#16a34a'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                }
+            }
+        }
+    });
+});
+
+function showTab(tabName) {
+    // Hide all tabs
+    document.querySelectorAll('.activity-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    // Show selected tab
+    document.getElementById(tabName + '-tab').classList.add('active');
+    event.target.classList.add('active');
+}
+</script>
+
+<style>
+.stats-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.stats-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--light-gray);
+}
+
+.stats-header h1 {
+    color: var(--dark);
+    margin: 0;
+}
+
+.stats-overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.stat-card {
+    background: var(--white);
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+}
+
+.stat-content h3 {
+    margin: 0;
+    font-size: 2rem;
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
+.stat-content p {
+    margin: 0.5rem 0 0 0;
+    color: var(--gray);
+}
+
+.stats-charts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.chart-section {
+    background: var(--white);
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+}
+
+.chart-section h2 {
+    margin-bottom: 1.5rem;
+    color: var(--dark);
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+}
+
+.stats-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+}
+
+.detail-section {
+    background: var(--white);
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+}
+
+.detail-section h2 {
+    margin-bottom: 1.5rem;
+    color: var(--dark);
+}
+
+.top-services-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.service-rank {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--light-gray);
+    border-radius: var(--border-radius);
+}
+
+.rank-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    min-width: 40px;
+}
+
+.service-info h4 {
+    margin: 0 0 0.5rem 0;
+    color: var(--dark);
+}
+
+.service-stats {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.rating {
+    color: #f59e0b;
+    font-weight: 600;
+}
+
+.reviews {
+    color: var(--gray);
+    font-size: 0.9rem;
+}
+
+.activity-tabs {
+    display: flex;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--light-gray);
+}
+
+.tab-btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    background: none;
+    color: var(--gray);
+    cursor: pointer;
+    font-weight: 600;
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.tab-btn.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+.activity-content {
+    display: none;
+}
+
+.activity-content.active {
+    display: block;
+}
+
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.activity-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--light-gray);
+    border-radius: var(--border-radius);
+}
+
+.activity-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.activity-details h4 {
+    margin: 0 0 0.5rem 0;
+    color: var(--dark);
+    font-size: 1rem;
+}
+
+.activity-details p {
+    margin: 0.25rem 0;
+    color: var(--gray);
+    font-size: 0.9rem;
+}
+
+.activity-details small {
+    color: var(--gray);
+    font-size: 0.8rem;
+}
+
+.status-active {
+    color: #16a34a;
+    font-weight: 600;
+}
+
+.status-paused {
+    color: #f59e0b;
+    font-weight: 600;
+}
+
+.status-cancelled {
+    color: #ef4444;
+    font-weight: 600;
+}
+
+.status-finished {
+    color: #0ea5e9;
+    font-weight: 600;
+}
+
+.review-rating {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.5rem 0;
+}
+
+.star {
+    color: #fbbf24;
+    font-size: 1rem;
+}
+
+.star.filled {
+    color: #f59e0b;
+}
+
+.rating-number {
+    font-weight: 600;
+    color: var(--dark);
+    font-size: 0.9rem;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    font-weight: 600;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: none;
+    font-size: 1rem;
+}
+
+.btn-secondary {
+    background: var(--light-gray);
+    color: var(--dark);
+}
+
+.btn-secondary:hover {
+    background: #e2e8f0;
+}
+
+@media (max-width: 768px) {
+    .stats-container {
+        padding: 1rem;
+    }
+
+    .stats-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+
+    .stats-overview {
+        grid-template-columns: 1fr;
+    }
+
+    .stats-charts {
+        grid-template-columns: 1fr;
+    }
+
+    .stats-details {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-card {
+        padding: 1.5rem;
+    }
+
+    .chart-container {
+        height: 250px;
+    }
+}
+</style>
+{% endblock %}
