@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from slugify import slugify
 
-from taskify_app.models import Category, Service, Review, Contract, Favorite
+from taskify_app.models import Category, Service, Review, Contract, Favorite, CustomUser
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -13,7 +13,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
+        model = CustomUser
         fields = ['id', 'username', 'email', 'password']
 
 

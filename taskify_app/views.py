@@ -1,7 +1,12 @@
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
+from urllib import response
 
-from taskify_app.models import Service, Contract
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import authenticate, login
+from django.shortcuts import render, redirect
+
+from taskify_app.forms import RegisterForm
+from taskify_app.models.user import CustomUser
+
 
 def home(request):
     return render(request, 'home.html')
@@ -9,11 +14,37 @@ def home(request):
 def search(request):
     return render(request, 'search.html')
 
-def login(request):
-    return render(request, 'login.html')
+def user_login(request):
+    if request.method == "POST":
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = CustomUser.objects.filter(username=username, is_active=True).first()
+        if user is not None:
+            authenticated_user = authenticate(username=username, password=password)
+            if authenticated_user is not None:
+                login(request, authenticated_user)
+                return redirect("home")
+        error_message = "Usuario o contraseña incorrectos. Por favor, inténtalo de nuevo."
+        return render(request, "registration/login.html", {"error_message": error_message})
+    return render(request, "registration/login.html")
 
 def signup(request):
-    return render(request, 'signup.html')
+    if request.method == "POST":
+        form = RegisterForm(request.POST)
+        if form.is_valid():
+            form.save()
+            username = request.POST.get('username')
+            password = request.POST.get('password1')
+            user = CustomUser.objects.filter(username=username, is_active=True).first()
+            if user is not None:
+                authenticated_user = authenticate(username=username, password=password)
+                if authenticated_user is not None:
+                    login(request, authenticated_user)
+                    return redirect("home")
+            return redirect("home")
+    else:
+        form = RegisterForm()
+    return render(request, "registration/signup.html", {"form": form})
 
 @login_required
 def chats(request):
