@@ -1,24 +1,15 @@
-<<<<<<< HEAD
+from urllib import response
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db import models
 from django.http import JsonResponse
 from django.db.models import Count, Avg
 
-from taskify_app.models import Service, Contract, Review, UserProfile, Notification
-=======
-from urllib import response
-
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth import authenticate, login
-from django.shortcuts import render, redirect
-
-from taskify_app.forms import RegisterForm
-from taskify_app.models.user import CustomUser
-
->>>>>>> 020cacb733420d29f20291f6ff612f4e0899bb04
+from .forms import RegisterForm
+from .models import Service, Contract, Review, UserProfile, Notification, CustomUser
 
 def home(request):
     return render(request, 'home.html')
