@@ -7,9 +7,15 @@ from django.core.paginator import Paginator
 from django.db import models
 from django.http import JsonResponse
 from django.db.models import Count, Avg
+from django.core.mail import send_mail
+from django.views.decorators.csrf import csrf_exempt
+from django.utils import timezone
+from datetime import timedelta
+
+
 
 from .forms import RegisterForm
-from .models import Service, Contract, Review, UserProfile, Notification, CustomUser
+from .models import Service, Contract, Review, UserProfile, Notification, CustomUser, EmailVerification
 
 def home(request):
     return render(request, 'home.html')
@@ -31,23 +37,38 @@ def user_login(request):
         return render(request, "registration/login.html", {"error_message": error_message})
     return render(request, "registration/login.html")
 
+
 def signup(request):
-    if request.method == "POST":
-        form = RegisterForm(request.POST)
-        if form.is_valid():
-            form.save()
-            username = request.POST.get('username')
-            password = request.POST.get('password1')
-            user = CustomUser.objects.filter(username=username, is_active=True).first()
-            if user is not None:
-                authenticated_user = authenticate(username=username, password=password)
-                if authenticated_user is not None:
-                    login(request, authenticated_user)
-                    return redirect("home")
-            return redirect("home")
-    else:
-        form = RegisterForm()
-    return render(request, "registration/signup.html", {"form": form})
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+
+        if CustomUser.objects.filter(email=email).exists():
+            messages.error(request, "Ya existe un usuario con ese correo.")
+            return redirect('signup')
+
+        user = CustomUser.objects.create_user(username=username, email=email, password=password)
+        user.is_active = False
+        user.save()
+
+        verification, _ = EmailVerification.objects.get_or_create(user=user)
+        verification.generate_code()
+
+        # Enviar correo
+        send_mail(
+            subject="Verifica tu cuenta en Taskify",
+            message=f"Tu código de verificación es: {verification.code}",
+            from_email="no-reply@taskify.com",
+            recipient_list=[email],
+        )
+
+        request.session['pending_email'] = email
+
+        return redirect('verify_email')
+
+    return render(request, 'registration/signup.html')
+
 
 @login_required
 def chats(request):
@@ -257,4 +278,57 @@ def create_notification(user, title, message, notification_type='system', **kwar
         **kwargs
     )
     return notification
+
+
+def verify_email(request):
+    email = request.session.get('pending_email')
+    if not email:
+        messages.error(request, 'Sesión expirada. Por favor, regístrate nuevamente.')
+        return redirect('signup')
+
+    error_message = None
+
+    if request.method == 'POST':
+        code = request.POST.get('verification_code', '').strip()
+        try:
+            user = CustomUser.objects.get(email=email)
+            verification = EmailVerification.objects.get(user=user)
+        except (CustomUser.DoesNotExist, EmailVerification.DoesNotExist):
+            error_message = "Error interno, inténtalo más tarde."
+        else:
+            if verification.code == code and verification.created_at > timezone.now() - timedelta(minutes=10):
+                user.is_active = True
+                user.save()
+                verification.delete()
+                del request.session['pending_email']
+
+                login(request, user)
+                messages.success(request, '¡Cuenta verificada exitosamente! Bienvenido.')
+                return redirect('home')
+            else:
+                error_message = "Código incorrecto o expirado."
+
+    return render(request, 'verify_email.html', {'email': email, 'error_message': error_message})
+
+
+@csrf_exempt
+def resend_verification_code(request):
+    email = request.session.get('pending_email')
+    if not email:
+        return JsonResponse({'success': False, 'error': 'Sesión expirada.'})
+
+    try:
+        user = CustomUser.objects.get(email=email)
+        verification, _ = EmailVerification.objects.get_or_create(user=user)
+        verification.generate_code()
+
+        send_mail(
+            subject="Tu código de verificación",
+            message=f"Tu código de verificación es: {verification.code}",
+            from_email="no-reply@taskify.com",
+            recipient_list=[email],
+        )
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
 

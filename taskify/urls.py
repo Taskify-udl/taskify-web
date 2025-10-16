@@ -13,20 +13,23 @@ router = DefaultRouter()
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include("api.urls")),
-    # Home
+
     path("", views.home, name='home'),
 
-    # Header
+    path("login/", views.user_login , name='login'),
+    path("signup/", views.signup, name='signup'),
+
     path("search/", views.search, name='search'),
     path("chats/", views.chats, name='chats'),
     path("my_services/", views.my_services, name='my_services'),
     path("my_orders/", views.my_orders, name='my_orders'),
     path("profile/", views.profile, name='profile'),
+
     path("profile/edit/", views.edit_profile, name='edit_profile'),
     path("profile/stats/", views.advanced_stats, name='advanced_stats'),
     path("notifications/", views.notifications, name='notifications'),
     path("notifications/mark-read/<int:notification_id>/", views.mark_notification_read, name='mark_notification_read'),
 
-    path("login/", views.user_login , name='login'),
-    path("signup/", views.signup, name='signup'),
+    path("verify-email/", views.verify_email, name="verify_email"),
+    path("resend-verification-code/", views.resend_verification_code, name="resend_verification_code"),
 ]
