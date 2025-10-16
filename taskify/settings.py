@@ -92,14 +92,16 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.SessionAuthentication",  # útil con login de Django (CSRF aplica)
-        # "rest_framework_simplejwt.authentication.JWTAuthentication",  # ⬅️ si usas JWT, descomenta e instala simplejwt
-        # "rest_framework.authentication.BasicAuthentication",  # opcional
+        # "rest_framework_simplejwt.authentication.JWTAuthentication",
+        # "rest_framework.authentication.BasicAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.AllowAny",  # ⬅️ clave: por defecto no exige autenticación
+        "rest_framework.permissions.AllowAny",
     ],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,
 }
 
 AUTH_USER_MODEL = 'taskify_app.CustomUser'
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
