@@ -99,38 +99,42 @@ def profile(request):
     user = request.user
 
     # Get or create user profile
-    profile, created = UserProfile.objects.get_or_create(user=user)
+    profile, _ = UserProfile.objects.get_or_create(user=user)
 
-    # Get user's services with pagination
+    # Avatar URL (fallback a una imagen estática si no hay)
+    avatar_url = profile.avatar.url if getattr(profile, "avatar", None) else static('images/default-avatar.png')
+
+    # Services (paginated)
     services_list = Service.objects.filter(provider=user).order_by('-created_at')
-    services_paginator = Paginator(services_list, 5)  # 5 services per page
+    services_paginator = Paginator(services_list, 5)
     services_page = request.GET.get('services_page')
     user_services = services_paginator.get_page(services_page)
 
-    # Get user's contracts with pagination
+    # Contracts (paginated)
     contracts_list = Contract.objects.filter(user=user).order_by('-created_at')
-    contracts_paginator = Paginator(contracts_list, 5)  # 5 contracts per page
+    contracts_paginator = Paginator(contracts_list, 5)
     contracts_page = request.GET.get('contracts_page')
     user_contracts = contracts_paginator.get_page(contracts_page)
 
-    # Get reviews received for user's services
+    # Reviews received
     user_reviews = Review.objects.filter(service__provider=user).order_by('-created_at')
 
-    # Calculate statistics
+    # Stats
     services_count = services_list.count()
     contracts_count = contracts_list.count()
     reviews_count = user_reviews.count()
-    average_rating = user_reviews.aggregate(models.Avg('rating'))['rating__avg'] if user_reviews.exists() else 0
+    average_rating = user_reviews.aggregate(avg=Avg('rating'))['avg'] or 0
 
-    # Get unread notifications count
+    # Unread notifications
     unread_notifications = Notification.objects.filter(user=user, is_read=False).count()
 
     context = {
         'user': user,
         'profile': profile,
+        'avatar_url': avatar_url,       # <-- pásalo al template
         'user_services': user_services,
         'user_contracts': user_contracts,
-        'user_reviews': user_reviews[:3],  # Show only latest 3 reviews
+        'user_reviews': user_reviews[:3],
         'services_count': services_count,
         'contracts_count': contracts_count,
         'reviews_count': reviews_count,

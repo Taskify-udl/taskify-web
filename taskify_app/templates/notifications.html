@@ -1,16 +1,16 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Notificaciones - Taskify{% endblock %}
+{% block title %}Notifications - Taskify{% endblock %}
 
 {% block content %}
 <div class="notifications-container">
     <div class="notifications-header">
-        <h1>Notificaciones</h1>
+        <h1>Notifications</h1>
         {% if unread_count > 0 %}
-            <span class="unread-badge">{{ unread_count }} sin leer</span>
+            <span class="unread-badge">{{ unread_count }} unread</span>
         {% else %}
-            <span class="all-read">Todas leídas</span>
+            <span class="all-read">All read</span>
         {% endif %}
     </div>
 
@@ -18,10 +18,10 @@
         {% if unread_count > 0 %}
             <form method="post" style="display: inline;">
                 {% csrf_token %}
-                <button type="submit" name="mark_all_read" class="btn btn-secondary">Marcar todas como leídas</button>
+                <button type="submit" name="mark_all_read" class="btn btn-secondary">Mark all as read</button>
             </form>
         {% endif %}
-        <a href="{% url 'profile' %}" class="btn btn-primary">Volver al Perfil</a>
+        <a href="{% url 'profile' %}" class="btn btn-primary">Back to Profile</a>
     </div>
 
     <div class="notifications-list">
@@ -44,23 +44,23 @@
                         <p>{{ notification.message }}</p>
                         {% if notification.contract %}
                             <div class="notification-meta">
-                                <small>Contrato: {{ notification.contract.service.name }}</small>
+                                <small>Contract: {{ notification.contract.service.name }}</small>
                             </div>
                         {% endif %}
                         {% if notification.review %}
                             <div class="notification-meta">
-                                <small>Reseña en: {{ notification.review.service.name }}</small>
+                                <small>Review on: {{ notification.review.service.name }}</small>
                             </div>
                         {% endif %}
                         {% if notification.service %}
                             <div class="notification-meta">
-                                <small>Servicio: {{ notification.service.name }}</small>
+                                <small>Service: {{ notification.service.name }}</small>
                             </div>
                         {% endif %}
                     </div>
                     <div class="notification-actions">
                         {% if not notification.is_read %}
-                            <button class="mark-read-btn" onclick="markAsRead('{{ notification.id }}')">Marcar como leída</button>
+                            <button class="mark-read-btn" onclick="markAsRead('{{ notification.id }}')">Mark as read</button>
                         {% endif %}
                     </div>
                 </div>
@@ -69,19 +69,19 @@
             {% if notifications.has_other_pages %}
                 <div class="pagination">
                     {% if notifications.has_previous %}
-                        <a href="?page={{ notifications.previous_page_number }}" class="page-link">« Anterior</a>
+                        <a href="?page={{ notifications.previous_page_number }}" class="page-link">« Previous</a>
                     {% endif %}
-                    <span class="page-info">Página {{ notifications.number }} de {{ notifications.paginator.num_pages }}</span>
+                    <span class="page-info">Page {{ notifications.number }} of {{ notifications.paginator.num_pages }}</span>
                     {% if notifications.has_next %}
-                        <a href="?page={{ notifications.next_page_number }}" class="page-link">Siguiente »</a>
+                        <a href="?page={{ notifications.next_page_number }}" class="page-link">Next »</a>
                     {% endif %}
                 </div>
             {% endif %}
         {% else %}
             <div class="no-notifications">
                 <div class="no-notifications-icon">🔔</div>
-                <h3>No tienes notificaciones</h3>
-                <p>Cuando tengas actividad en tu cuenta, aparecerá aquí.</p>
+                <h3>You have no notifications</h3>
+                <p>When you have activity on your account, it will appear here.</p>
             </div>
         {% endif %}
     </div>
@@ -337,25 +337,29 @@ function markAsRead(notificationId) {
     fetch(`/notifications/mark-read/${notificationId}/`, {
         method: 'GET',
         headers: {
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
         }
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
             const notificationItem = document.querySelector(`[data-id="${notificationId}"]`);
-            notificationItem.classList.remove('unread');
-            notificationItem.querySelector('.mark-read-btn').style.display = 'none';
+            if (!notificationItem) return;
 
-            // Update unread count
+            notificationItem.classList.remove('unread');
+            const btn = notificationItem.querySelector('.mark-read-btn');
+            if (btn) btn.style.display = 'none';
+
+            // Update unread count badge
             const unreadBadge = document.querySelector('.unread-badge');
             if (unreadBadge) {
-                const currentCount = parseInt(unreadBadge.textContent);
+                const currentCount = parseInt(unreadBadge.textContent) || 0;
                 if (currentCount > 1) {
-                    unreadBadge.textContent = `${currentCount - 1} sin leer`;
+                    unreadBadge.textContent = `${currentCount - 1} unread`;
                 } else {
                     unreadBadge.style.display = 'none';
-                    document.querySelector('.all-read').style.display = 'inline';
+                    const allRead = document.querySelector('.all-read');
+                    if (allRead) allRead.style.display = 'inline';
                 }
             }
         }

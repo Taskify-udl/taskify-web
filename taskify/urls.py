@@ -1,14 +1,10 @@
 # taskify/urls.py
 from django.contrib import admin
-from django.template.context_processors import request
 from django.urls import path, include
-from rest_framework.routers import DefaultRouter
+from django.conf import settings
+from django.conf.urls.static import static
 
 from taskify_app import views
-
-from rest_framework.authtoken import views as token_views
-
-router = DefaultRouter()
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -16,7 +12,7 @@ urlpatterns = [
 
     path("", views.home, name='home'),
 
-    path("login/", views.user_login , name='login'),
+    path("login/", views.user_login, name='login'),
     path("signup/", views.signup, name='signup'),
     path("logout/", views.user_logout, name="logout"),
 
@@ -34,3 +30,7 @@ urlpatterns = [
     path("verify-email/", views.verify_email, name="verify_email"),
     path("resend-verification-code/", views.resend_verification_code, name="resend_verification_code"),
 ]
+
+# Servir MEDIA en desarrollo
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

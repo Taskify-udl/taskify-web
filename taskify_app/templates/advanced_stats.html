@@ -6,9 +6,10 @@
 {% block content %}
     <div class="stats-container">
         <div class="d-flex ">
-            <a href="{% url 'profile' %}" class="btn btn-secondary my-0 d-flex align-items-center justify-content-center px-4">
-  <i class="fa fa-arrow-left" aria-hidden="true"></i>
-</a>
+            <a href="{% url 'profile' %}"
+               class="btn btn-secondary my-0 d-flex align-items-center justify-content-center px-4">
+                <i class="fa fa-arrow-left" aria-hidden="true"></i>
+            </a>
 
             <h1 class="ml-2">Advanced Statistics</h1>
         </div>
@@ -37,25 +38,25 @@
             </div>
         </div>
 
-<div class="row g-3 my-3">
-  <div class="col-12 col-lg-6">
-    <div class="chart-section h-100">
-      <h2 class="h5 mb-3">Monthly Trend</h2>
-      <div class="ratio ratio-16x9">
-        <canvas id="monthlyChart"></canvas>
-      </div>
-    </div>
-  </div>
+        <div class="row g-3 my-3">
+            <div class="col-12 col-lg-6">
+                <div class="chart-section h-100">
+                    <h2 class="h5 mb-3">Monthly Trend</h2>
+                    <div class="ratio ratio-16x9">
+                        <canvas id="monthlyChart"></canvas>
+                    </div>
+                </div>
+            </div>
 
-  <div class="col-12 col-lg-6">
-    <div class="chart-section h-100">
-      <h2 class="h5 mb-3">Ratings Distribution</h2>
-      <div class="ratio ratio-16x9">
-        <canvas id="ratingChart"></canvas>
-      </div>
-    </div>
-  </div>
-</div>
+            <div class="col-12 col-lg-6">
+                <div class="chart-section h-100">
+                    <h2 class="h5 mb-3">Ratings Distribution</h2>
+                    <div class="ratio ratio-16x9">
+                        <canvas id="ratingChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
 
 
         <div class="stats-details">
@@ -257,15 +258,6 @@
             padding: 2rem;
         }
 
-        .stats-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--light-gray);
-        }
-
         .stats-header h1 {
             color: var(--dark);
             margin: 0;
@@ -445,25 +437,6 @@
             font-size: 0.8rem;
         }
 
-        .status-active {
-            color: #16a34a;
-            font-weight: 600;
-        }
-
-        .status-paused {
-            color: #f59e0b;
-            font-weight: 600;
-        }
-
-        .status-cancelled {
-            color: #ef4444;
-            font-weight: 600;
-        }
-
-        .status-finished {
-            color: #0ea5e9;
-            font-weight: 600;
-        }
 
         .review-rating {
             display: flex;
@@ -513,12 +486,6 @@
                 padding: 1rem;
             }
 
-            .stats-header {
-                flex-direction: column;
-                gap: 1rem;
-                text-align: center;
-            }
-
             .stats-overview {
                 grid-template-columns: 1fr;
             }
@@ -535,9 +502,6 @@
                 padding: 1.5rem;
             }
 
-            .chart-container {
-                height: 250px;
-            }
         }
     </style>
 {% endblock %}

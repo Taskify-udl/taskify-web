@@ -7,7 +7,8 @@
 <div class="mx-auto col-10 mt-3">
     <div class="profile-header">
         <div class="profile-avatar">
-            <img src="{% static 'images/user-icon.png' %}" alt="Avatar de {{ user.username }}" class="avatar-img">
+            <img src="{{ avatar_url }}" alt="Avatar de {{ user.username }}" class="avatar-img">
+
         </div>
         <div class="profile-info">
             <h1>{{ user.username }}</h1>

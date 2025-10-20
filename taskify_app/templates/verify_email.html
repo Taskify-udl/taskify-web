@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}Verificar Email{% endblock %}
+{% block title %}Verify Email{% endblock %}
 
 {% block content %}
 <section class="vh-100 d-flex align-items-center bg-light">
@@ -10,8 +10,8 @@
         <div class="card shadow p-4 rounded-4">
           <div class="text-center mb-4">
             <img src="{% static 'images/logo.png' %}" style="width:120px;">
-            <h4 class="mt-3">Verifica tu correo</h4>
-            <p class="text-muted">Hemos enviado un código a:</p>
+            <h4 class="mt-3">Verify your email</h4>
+            <p class="text-muted">We have sent a code to:</p>
             <p class="fw-bold">{{ email }}</p>
           </div>
 
@@ -28,13 +28,13 @@
               <div class="invalid-feedback text-center">{{ error_message }}</div>
             {% endif %}
             <div class="w-100 mt-4 justify-content-center d-flex">
-              <button type="submit" class="btn btn-primary btn-lg ">Verificar</button>
+              <button type="submit" class="btn btn-primary btn-lg">Verify</button>
             </div>
           </form>
 
           <div class="text-center mt-3">
-            <p class="text-muted">¿No recibiste el código?</p>
-            <button id="resendBtn" class="btn btn-link p-0">Reenviar código</button>
+            <p class="text-muted">Didn't receive the code?</p>
+            <button id="resendBtn" class="btn btn-link p-0">Resend code</button>
           </div>
         </div>
       </div>
@@ -46,7 +46,7 @@
 const btn = document.getElementById('resendBtn');
 btn.addEventListener('click', () => {
   btn.disabled = true;
-  btn.textContent = 'Enviando...';
+  btn.textContent = 'Sending...';
 
   fetch("{% url 'resend_verification_code' %}", {
     method: 'POST',
@@ -58,22 +58,22 @@ btn.addEventListener('click', () => {
   .then(r => r.json())
   .then(d => {
     if (d.success) {
-      alert('Código reenviado. Revisa tu correo.');
-      btn.textContent = 'Código enviado';
+      alert('Code resent. Please check your email.');
+      btn.textContent = 'Code sent';
       setTimeout(() => {
         btn.disabled = false;
-        btn.textContent = 'Reenviar código';
+        btn.textContent = 'Resend code';
       }, 30000);
     } else {
       alert('Error: ' + d.error);
       btn.disabled = false;
-      btn.textContent = 'Reenviar código';
+      btn.textContent = 'Resend code';
     }
   })
   .catch(() => {
-    alert('Error de conexión.');
+    alert('Connection error.');
     btn.disabled = false;
-    btn.textContent = 'Reenviar código';
+    btn.textContent = 'Resend code';
   });
 });
 </script>

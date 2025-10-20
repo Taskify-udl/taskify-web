@@ -1,7 +1,8 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.conf import settings
-from .models import Contract, Review, Notification
+from .models import Contract, Review, Notification, CustomUser
+
 
 @receiver(post_save, sender=Contract)
 def create_contract_notification(sender, instance, created, **kwargs):
@@ -15,6 +16,7 @@ def create_contract_notification(sender, instance, created, **kwargs):
             contract=instance
         )
 
+
 @receiver(post_save, sender=Review)
 def create_review_notification(sender, instance, created, **kwargs):
     if created:
@@ -26,6 +28,7 @@ def create_review_notification(sender, instance, created, **kwargs):
             notification_type='review_received',
             review=instance
         )
+
 
 @receiver(post_save, sender=Contract)
 def update_contract_status_notification(sender, instance, created, **kwargs):
@@ -47,3 +50,28 @@ def update_contract_status_notification(sender, instance, created, **kwargs):
             notification_type='contract_status_changed',
             contract=instance
         )
+
+
+from django.db.models.signals import pre_save, post_delete
+from django.dispatch import receiver
+
+
+@receiver(pre_save, sender=CustomUser)
+def delete_old_avatar_on_change(sender, instance, **kwargs):
+    if not instance.pk:
+        return
+    try:
+        old = sender.objects.get(pk=instance.pk)
+    except sender.DoesNotExist:
+        return
+    old_file = getattr(old, "avatar", None)
+    new_file = getattr(instance, "avatar", None)
+    if old_file and old_file.name and old_file != new_file:
+        old_file.storage.delete(old_file.name)
+
+
+@receiver(post_delete, sender=CustomUser)
+def delete_avatar_on_delete(sender, instance, **kwargs):
+    avatar = getattr(instance, "avatar", None)
+    if avatar and avatar.name:
+        avatar.storage.delete(avatar.name)
