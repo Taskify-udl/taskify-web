@@ -11,6 +11,7 @@ from django.core.mail import send_mail
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from datetime import timedelta
+from django.contrib.auth import logout
 
 
 
@@ -68,6 +69,17 @@ def signup(request):
         return redirect('verify_email')
 
     return render(request, 'registration/signup.html')
+
+
+@login_required
+def user_logout(request):
+    # Recomendado: cerrar sesión solo por POST para evitar CSRF por enlaces GET
+    if request.method == "POST":
+        logout(request)
+        messages.success(request, "Has cerrado sesión correctamente.")
+        return redirect("login")  # o "home", como prefieras
+    # Si alguien entra por GET, lo devolvemos a algún sitio seguro
+    return redirect("home")
 
 
 @login_required
