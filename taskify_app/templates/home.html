@@ -1,570 +1,172 @@
 {% extends "base.html" %}
 
-{% block title %}
-Taskify – Conecta con profesionales
-{% endblock %}
-
 {% block content %}
-<div class="home-container">
-    <!-- Hero Section -->
+<div class="container">
     <section class="hero-section">
-        <div class="hero-content">
-            <h1 class="hero-title">Conecta con expertos. Haz realidad tus ideas.</h1>
-            <p class="hero-subtitle">Publica tu necesidad o contrata directamente servicios listos para usar.</p>
-            <div class="hero-links">
-                <a href="#" class="hero-link">Publicar tarea</a>
-                <a href="#" class="hero-link">Explorar servicios</a>
+        <div class="hero-content row align-items-center">
+            <div class="col-md-9">
+                <h1 class="hero-title">Connect with local experts. Bring your ideas to life.</h1>
+                <p class="hero-subtitle">Find trusted professionals for any service you can imagine, right in your neighborhood.</p>
             </div>
-            <ul class="hero-stats">
-                <li class="hero-stat-item">
-                    <strong class="stat-number">5k</strong>
-                    <span class="stat-label">Profesionales</span>
-                </li>
-                <li class="hero-stat-item">
-                    <strong class="stat-number">12k</strong>
-                    <span class="stat-label">Proyectos</span>
-                </li>
-                <li class="hero-stat-item">
-                    <strong class="stat-number">98%</strong>
-                    <span class="stat-label">Satisfacción</span>
-                </li>
-            </ul>
-        </div>
-        <!--<div class="hero-visual">
-            <div class="hero-slogan-box">Slogan</div>
-        </div>-->
-    </section>
-
-    <!-- Categories Section -->
-    <section class="categories-container">
-        <div class="categories-wrapper">
-            <button class="category-chip active">Ver todos</button>
-            <button class="category-chip">Design</button>
-            <button class="category-chip">Development</button>
-            <button class="category-chip">Marketing</button>
-            <button class="category-chip">Writing</button>
-            <button class="category-chip">SEO</button>
-            <button class="category-chip">Video</button>
-            <button class="category-chip">Audio</button>
-            <button class="category-chip">Más...</button>
+            <div class="col-md-3">
+                <ul class="hero-stats">
+                    <li class="hero-stat-item">
+                        <strong class="stat-number">5k+</strong>
+                        <span class="stat-label">Verified Professionals</span>
+                    </li>
+                    <li class="hero-stat-item">
+                        <strong class="stat-number">12k+</strong>
+                        <span class="stat-label">Projects Completed</span>
+                    </li>
+                    <li class="hero-stat-item">
+                        <strong class="stat-number">98%</strong>
+                        <span class="stat-label">Customer Satisfaction</span>
+                    </li>
+                </ul>
+            </div>
         </div>
     </section>
 
-    <!-- Featured Services Section -->
-    <section class="featured-container">
-        <div class="featured-header">
-            <h2 class="featured-title">Destacados</h2>
-            <a href="#" class="view-all-link">Ver todos</a>
-        </div>
-        <div class="services-wrapper">
-            {% for service in featured_services %}
-            <div class="service-card">
-                <div class="service-image-wrapper">
-                    {% if service.cover %}
-                    <img src="{{ service.cover.url }}" alt="{{ service.title }}" class="service-img">
-                    {% else %}
-                    <div class="service-img-placeholder"></div>
-                    {% endif %}
+    <div class="content-box">
+        <section class="services-container">
+            <div class="section-header">
+                <h2 class="section-title">Explore Our Services</h2>
+            </div>
+            
+            <div class="categories-wrapper">
+                <button class="category-chip active" data-category="all">View all</button>
+                <button class="category-chip" data-category="plumbing">Plumbing</button>
+                <button class="category-chip" data-category="electrical">Electrical</button>
+                <button class="category-chip" data-category="carpentry">Carpentry</button>
+                <button class="category-chip" data-category="cleaning">Cleaning</button>
+                <button class="category-chip" data-category="painting">Painting</button>
+            </div>
+            
+            <div class="services-wrapper">
+                <div class="service-card-wrapper" data-category="plumbing">
+                    <div class="service-card"><div class="service-image-wrapper"><img src="/static/images/plumber2.jpg" alt="Service" class="service-img"></div><div class="service-details"><span class="service-category">Plumbing</span><h3 class="service-title">Leaky Faucet Repair</h3></div></div>
                 </div>
-                <div class="service-details">
-                    <h3 class="service-name">{{ service.title }}</h3>
-                    <p class="service-cat">Category</p>
+                <div class="service-card-wrapper" data-category="electrical">
+                    <div class="service-card"><div class="service-image-wrapper"><img src="/static/images/electrician2.jpg" alt="Service" class="service-img"></div><div class="service-details"><span class="service-category">Electrical</span><h3 class="service-title">Light Fixture Installation</h3></div></div>
+                </div>
+                <div class="service-card-wrapper" data-category="carpentry">
+                    <div class="service-card"><div class="service-image-wrapper"><img src="/static/images/carpenter.jpg" alt="Service" class="service-img"></div><div class="service-details"><span class="service-category">Carpentry</span><h3 class="service-title">Custom Shelving</h3></div></div>
+                </div>
+                <div class="service-card-wrapper" data-category="plumbing">
+                    <div class="service-card"><div class="service-image-wrapper"><img src="/static/images/plumber1.jpg" alt="Service" class="service-img"></div><div class="service-details"><span class="service-category">Plumbing</span><h3 class="service-title">Clogged Drain Service</h3></div></div>
+                </div>
+                <div class="service-card-wrapper" data-category="painting">
+                    <div class="service-card"><div class="service-image-wrapper"><img src="/static/images/painter.jpeg" alt="Service" class="service-img"></div><div class="service-details"><span class="service-category">Painting</span><h3 class="service-title">Interior Room Painting</h3></div></div>
+                </div>
+                <div class="service-card-wrapper" data-category="electrical">
+                    <div class="service-card"><div class="service-image-wrapper"><img src="/static/images/electrician1.jpeg" alt="Service" class="service-img"></div><div class="service-details"><span class="service-category">Electrical</span><h3 class="service-title">Outlet Replacement</h3></div></div>
                 </div>
             </div>
-            {% empty %}
-            <div class="service-card">
-                <div class="service-image-wrapper">
-                    <div class="service-img-placeholder"></div>
-                </div>
-                <div class="service-details">
-                    <h3 class="service-name">Category</h3>
-                    <p class="service-cat">Category</p>
-                </div>
-            </div>
-            <div class="service-card">
-                <div class="service-image-wrapper">
-                    <div class="service-img-placeholder"></div>
-                </div>
-                <div class="service-details">
-                    <h3 class="service-name">Category</h3>
-                    <p class="service-cat">Category</p>
-                </div>
-            </div>
-            <div class="service-card">
-                <div class="service-image-wrapper">
-                    <div class="service-img-placeholder"></div>
-                </div>
-                <div class="service-details">
-                    <h3 class="service-name">Category</h3>
-                    <p class="service-cat">Category</p>
-                </div>
-            </div>
-            <div class="service-card">
-                <div class="service-image-wrapper">
-                    <div class="service-img-placeholder"></div>
-                </div>
-                <div class="service-details">
-                    <h3 class="service-name">Category</h3>
-                    <p class="service-cat">Category</p>
-                </div>
-            </div>
-            <div class="service-card">
-                <div class="service-image-wrapper">
-                    <div class="service-img-placeholder"></div>
-                </div>
-                <div class="service-details">
-                    <h3 class="service-name">Category</h3>
-                    <p class="service-cat">Category</p>
-                </div>
-            </div>
-            {% endfor %}
-            <button class="scroll-arrow">›</button>
-        </div>
-    </section>
-
-    <!-- Footer Section -->
-    <section class="footer-banner">
-        <h2 class="footer-title">Listo para empezar?</h2>
-        <p class="footer-text">Crea una cuenta gratuita y recibe propuestas personalizadas en minutos.</p>
-        <div class="footer-actions">
-            <a href="{% url 'signup' %}" class="footer-btn primary">Comenzar ahora</a>
-            <a href="#" class="footer-btn secondary">Ver ejemplos</a>
-        </div>
-    </section>
+        </section>
+    </div>
 </div>
 
 <style>
-.home-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
-}
-
-/* Hero Section */
-.hero-section {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 16px;
-    padding: 3rem 2rem;
-    margin-bottom: 2rem;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 3rem;
-    align-items: center;
-}
-
-.hero-content {
-    color: white;
-}
-
-.hero-title {
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin-bottom: 1rem;
-    line-height: 1.2;
-    color: white;
-}
-
-.hero-subtitle {
-    font-size: 1.1rem;
-    margin-bottom: 1.5rem;
-    opacity: 0.95;
-    line-height: 1.6;
-}
-
-.hero-links {
-    display: flex;
-    gap: 2rem;
-    margin-bottom: 2rem;
-}
-
-.hero-link {
-    color: white;
-    text-decoration: underline;
-    font-weight: 500;
-    font-size: 1rem;
-    transition: opacity 0.3s ease;
-}
-
-.hero-link:hover {
-    opacity: 0.8;
-}
-
-.hero-stats {
-    display: flex;
-    gap: 2rem;
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.hero-stat-item {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-}
-
-.stat-number {
-    font-size: 2rem;
-    font-weight: 700;
-    display: block;
-    line-height: 1;
-    margin-bottom: 0.25rem;
-}
-
-.stat-label {
-    font-size: 0.9rem;
-    opacity: 0.9;
-}
-
-.hero-visual {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.hero-slogan-box {
-    background: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 12px;
-    padding: 4rem 3rem;
-    font-size: 1.5rem;
-    font-weight: 500;
-    color: white;
-    text-align: center;
-    min-width: 300px;
-}
-
-/* Categories Section */
-.categories-container {
-    background: #f8f9fa;
-    border-radius: 16px;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.categories-wrapper {
-    display: flex;
-    gap: 0.75rem;
-    overflow-x: auto;
-    padding-bottom: 0.5rem;
-    scrollbar-width: thin;
-    scrollbar-color: #cbd5e1 transparent;
-}
-
-.categories-wrapper::-webkit-scrollbar {
-    height: 6px;
-}
-
-.categories-wrapper::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.categories-wrapper::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 3px;
-}
-
-.category-chip {
-    background: white;
-    border: 2px solid #e2e8f0;
-    padding: 0.6rem 1.5rem;
-    border-radius: 24px;
-    font-family: 'Inter', sans-serif;
-    font-weight: 500;
-    font-size: 0.9rem;
-    color: #1e293b;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-
-.category-chip:hover {
-    border-color: #6366f1;
-    background: rgba(99, 102, 241, 0.05);
-}
-
-.category-chip.active {
-    background: #6366f1;
-    color: white;
-    border-color: #6366f1;
-}
-
-/* Featured Section */
-.featured-container {
-    background: white;
-    border-radius: 16px;
-    padding: 2rem;
-    margin-bottom: 2rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.featured-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-}
-
-.featured-title {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: #1e293b;
-    margin: 0;
-}
-
-.view-all-link {
-    color: #6366f1;
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 0.95rem;
-    transition: opacity 0.3s ease;
-}
-
-.view-all-link:hover {
-    opacity: 0.8;
-    text-decoration: underline;
-}
-
-.services-wrapper {
-    display: flex;
-    gap: 1.5rem;
-    overflow-x: auto;
-    padding-bottom: 1rem;
-    position: relative;
-    scrollbar-width: thin;
-    scrollbar-color: #cbd5e1 #f1f5f9;
-}
-
-.services-wrapper::-webkit-scrollbar {
-    height: 8px;
-}
-
-.services-wrapper::-webkit-scrollbar-track {
-    background: #f1f5f9;
-    border-radius: 4px;
-}
-
-.services-wrapper::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 4px;
-}
-
-.service-card {
-    background: white;
-    border: 2px solid #e2e8f0;
-    border-radius: 12px;
-    min-width: 240px;
-    flex-shrink: 0;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    overflow: hidden;
-}
-
-.service-card:hover {
-    border-color: #6366f1;
-    transform: translateY(-4px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-}
-
-.service-image-wrapper {
-    width: 100%;
-    height: 150px;
-    overflow: hidden;
-    background: #f1f5f9;
-}
-
-.service-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.service-img-placeholder {
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
-}
-
-.service-details {
-    padding: 1rem;
-}
-
-.service-name {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #1e293b;
-    margin: 0 0 0.5rem 0;
-}
-
-.service-cat {
-    font-size: 0.85rem;
-    color: #64748b;
-    margin: 0;
-}
-
-.scroll-arrow {
-    position: absolute;
-    right: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: white;
-    border: 2px solid #6366f1;
-    color: #6366f1;
-    font-size: 1.5rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.scroll-arrow:hover {
-    background: #6366f1;
-    color: white;
-}
-
-/* Footer Banner */
-.footer-banner {
-    background: #f8f9fa;
-    border-radius: 16px;
-    padding: 3rem 2rem;
-    text-align: center;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.footer-title {
-    font-size: 2rem;
-    font-weight: 700;
-    color: #1e293b;
-    margin: 0 0 1rem 0;
-}
-
-.footer-text {
-    font-size: 1rem;
-    color: #64748b;
-    margin: 0 0 2rem 0;
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.footer-actions {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
-.footer-btn {
-    padding: 0.875rem 2rem;
-    border-radius: 12px;
-    font-weight: 600;
-    font-size: 1rem;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    display: inline-block;
-}
-
-.footer-btn.primary {
-    background: #6366f1;
-    color: white;
-    border: 2px solid #6366f1;
-}
-
-.footer-btn.primary:hover {
-    background: #4f46e5;
-    border-color: #4f46e5;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.footer-btn.secondary {
-    background: transparent;
-    color: #1e293b;
-    border: 2px solid #1e293b;
-}
-
-.footer-btn.secondary:hover {
-    background: #1e293b;
-    color: white;
-    transform: translateY(-2px);
-}
-
-/* Responsive */
-@media (max-width: 968px) {
-    .hero-section {
-        grid-template-columns: 1fr;
-        gap: 2rem;
+    :root {
+        --primary-color: #6366f1;
+        --secondary-color: #1e293b;
+        --medium-gray-color: #e2e8f0;
+        --light-gray-bg: #f8f9fa;
+        --text-color: #334155;
+        --text-color-light: #64748b;
+        --white-color: #ffffff;
+        --border-radius-lg: 16px;
+        --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        --transition-fast: all 0.2s ease-in-out;
     }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
+    .section-header { margin-bottom: 1.5rem; }
+    .section-title { font-size: 2rem; font-weight: 700; color: var(--secondary-color); margin: 0; }
+    
+    /* Hero Section */
+    .hero-section { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: var(--border-radius-lg); padding: 1.5rem 2rem; margin: 2rem 0; color: var(--white-color); }
+    .hero-title { font-size: 2.5rem; font-weight: 600; line-height: 1.2; margin-bottom: 1rem; }
+    .hero-subtitle { font-size: 1.15rem; opacity: 0.9; max-width: 90%; }
+    .hero-stats { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 1.5rem; align-items: flex-start; }
+    .hero-stat-item .stat-number { font-size: 2.25rem; font-weight: 700; }
+    .hero-stat-item .stat-label { font-size: 0.9rem; opacity: 0.9; }
 
-    .hero-title {
-        font-size: 2rem;
+    /* Content Box for Services */
+    .content-box {
+        background-color: var(--light-gray-bg);
+        border: 1px solid var(--medium-gray-color);
+        border-radius: var(--border-radius-lg);
+        padding: 2rem;
+        margin-top: 3rem;
+        box-shadow: var(--shadow-sm);
     }
-
-    .hero-slogan-box {
-        min-width: auto;
-        width: 100%;
-    }
-
-    .hero-stats {
-        gap: 1.5rem;
-    }
-
-    .stat-number {
-        font-size: 1.5rem;
-    }
-}
-
-@media (max-width: 640px) {
-    .home-container {
-        padding: 1rem;
-    }
-
-    .hero-section {
-        padding: 2rem 1.5rem;
-    }
-
-    .hero-title {
-        font-size: 1.6rem;
-    }
-
-    .hero-subtitle {
-        font-size: 1rem;
-    }
-
-    .hero-links {
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-
-    .hero-stats {
-        flex-direction: column;
-        gap: 1rem;
-    }
-
-    .footer-title {
-        font-size: 1.6rem;
-    }
-
-    .footer-actions {
-        flex-direction: column;
-    }
-
-    .footer-btn {
-        width: 100%;
-    }
-
+    
+    .services-container { margin: 0; }
+    .categories-wrapper { display: flex; gap: 0.75rem; overflow-x: auto; padding-bottom: 1rem; margin-bottom: 1.5rem; }
+    .category-chip { background: var(--white-color); border: 1px solid var(--medium-gray-color); padding: 0.75rem 1.5rem; border-radius: 50px; font-weight: 500; color: var(--text-color-light); cursor: pointer; transition: var(--transition-fast); white-space: nowrap; font-size: 1rem; }
+    .category-chip:hover { border-color: var(--primary-color); color: var(--primary-color); box-shadow: var(--shadow-sm); }
+    .category-chip.active { background: var(--primary-color); color: var(--white-color); border-color: var(--primary-color); }
+    
+    .services-wrapper { display: flex; gap: 1.5rem; overflow-x: auto; padding-bottom: 1.5rem; scrollbar-width: thin; scrollbar-color: var(--medium-gray-color) transparent; }
+    .services-wrapper::-webkit-scrollbar { height: 8px; }
+    .services-wrapper::-webkit-scrollbar-track { background: transparent; }
+    .services-wrapper::-webkit-scrollbar-thumb { background-color: var(--medium-gray-color); border-radius: 4px; }
+    .service-card-wrapper { min-width: 280px; flex-shrink: 0; display: block; }
+    
+    /* MODIFICADO: La transición ahora está en el elemento base para que la animación sea suave al entrar y al salir. */
     .service-card {
-        min-width: 200px;
+        background: var(--white-color);
+        border: 1px solid var(--medium-gray-color);
+        border-radius: var(--border-radius-lg);
+        overflow: hidden;
+        height: 100%;
+        cursor: pointer;
+        /* La transición se aplica a las propiedades que van a cambiar */
+        transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
     }
-}
+    
+    /* MODIFICADO: Eliminado el 'transform: scale'. Ahora solo cambia la sombra y el borde. */
+    .service-card-wrapper:hover .service-card {
+        border-color: var(--primary-color);
+        box-shadow: var(--shadow-md);
+    }
+
+    .service-image-wrapper { height: 180px; }
+    .service-img { width: 100%; height: 100%; object-fit: cover; }
+    .service-details { padding: 1rem; }
+    .service-category { font-size: 0.8rem; color: var(--text-color-light); font-weight: 500; text-transform: uppercase; }
+    .service-title { font-size: 1.1rem; font-weight: 600; margin: 0.25rem 0; }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+        .hero-title { font-size: 2.5rem; }
+        .hero-content { text-align: center; }
+        .hero-stats { flex-direction: row; justify-content: center; padding-left: 0; }
+    }
 </style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const categoryButtons = document.querySelectorAll('.category-chip');
+        const serviceCards = document.querySelectorAll('.service-card-wrapper');
+
+        categoryButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const filterCategory = button.dataset.category;
+                categoryButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                serviceCards.forEach(card => {
+                    const cardCategory = card.dataset.category;
+                    if (filterCategory === 'all' || cardCategory === filterCategory) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        });
+    });
+</script>
+
 {% endblock %}
