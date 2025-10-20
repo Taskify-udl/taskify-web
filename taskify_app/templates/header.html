@@ -24,9 +24,6 @@
     </form>
 
     <ul class="navbar-nav order-2 order-lg-1 mr-lg-3">
-      <li class="nav-item active">
-        <a class="nav-link" href="{% url 'home' %}">Home <span class="sr-only">(current)</span></a>
-      </li>
       {% if user.is_authenticated %}
         <li class="nav-item"><a class="nav-link" href="{% url 'chats' %}">Chat</a></li>
         <li class="nav-item"><a class="nav-link text-nowrap" href="{% url 'my_services' %}">My Services</a></li>
@@ -47,7 +44,7 @@
             <div class="dropdown-divider"></div>
             <form action="{% url 'logout' %}" method="post" class="m-0">
               {% csrf_token %}
-              <button type="submit" class="dropdown-item ">Cerrar sesión</button>
+              <button type="submit" class="dropdown-item">Log out</button>
             </form>
           </div>
         </li>

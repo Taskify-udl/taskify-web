@@ -1,27 +1,39 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Editar Perfil - Taskify{% endblock %}
+{% block title %}Edit Profile - Taskify{% endblock %}
 
 {% block content %}
 <div class="edit-profile-container">
     <div class="edit-profile-header">
-        <h1>Editar Perfil</h1>
-        <a href="{% url 'profile' %}" class="btn btn-secondary">← Volver al Perfil</a>
+        <h1>Edit Profile</h1>
+        <a href="{% url 'profile' %}" class="btn btn-secondary">← Back to Profile</a>
     </div>
 
     <div class="edit-profile-content">
         <form method="post" enctype="multipart/form-data" class="edit-profile-form">
             {% csrf_token %}
-
             <div class="form-section">
-                <h2>Información Básica</h2>
+                <h2>Profile Picture</h2>
+                <div class="avatar-upload">
+                    <div class="current-avatar">
+                        <img src="{{ profile.avatar_url }}" alt="Current avatar" class="avatar-preview">
+                    </div>
+                    <div class="upload-controls">
+                        <label for="avatar" class="upload-btn">Choose new image</label>
+                        <input type="file" id="avatar" name="avatar" accept="image/*" style="display: none;">
+                        <p class="upload-info">Allowed formats: JPG, PNG, GIF. Max size: 5MB</p>
+                    </div>
+                </div>
+            </div>
+            <div class="form-section">
+                <h2>Basic Information</h2>
                 <div class="form-group">
-                    <label for="first_name">Nombre</label>
+                    <label for="first_name">First name</label>
                     <input type="text" id="first_name" name="first_name" value="{{ user.first_name }}" class="form-control">
                 </div>
                 <div class="form-group">
-                    <label for="last_name">Apellido</label>
+                    <label for="last_name">Last name</label>
                     <input type="text" id="last_name" name="last_name" value="{{ user.last_name }}" class="form-control">
                 </div>
                 <div class="form-group">
@@ -30,43 +42,29 @@
                 </div>
             </div>
 
-            <div class="form-section">
-                <h2>Información Adicional</h2>
+            <div class="">
+                <h2>Additional Information</h2>
                 <div class="form-group">
-                    <label for="bio">Biografía</label>
-                    <textarea id="bio" name="bio" class="form-control" rows="4" placeholder="Cuéntanos sobre ti...">{{ profile.bio }}</textarea>
+                    <label for="bio">Biography</label>
+                    <textarea id="bio" name="bio" class="form-control" rows="4" placeholder="Tell us about yourself...">{{ profile.bio }}</textarea>
                 </div>
                 <div class="form-group">
-                    <label for="phone">Teléfono</label>
+                    <label for="phone">Phone</label>
                     <input type="tel" id="phone" name="phone" value="{{ profile.phone }}" class="form-control">
                 </div>
                 <div class="form-group">
-                    <label for="location">Ubicación</label>
-                    <input type="text" id="location" name="location" value="{{ profile.location }}" class="form-control" placeholder="Ciudad, País">
+                    <label for="location">Location</label>
+                    <input type="text" id="location" name="location" value="{{ profile.location }}" class="form-control" placeholder="City, Country">
                 </div>
                 <div class="form-group">
-                    <label for="website">Sitio Web</label>
+                    <label for="website">Website</label>
                     <input type="url" id="website" name="website" value="{{ profile.website }}" class="form-control" placeholder="https://...">
                 </div>
             </div>
 
-            <div class="form-section">
-                <h2>Foto de Perfil</h2>
-                <div class="avatar-upload">
-                    <div class="current-avatar">
-                        <img src="{{ profile.avatar_url }}" alt="Avatar actual" class="avatar-preview">
-                    </div>
-                    <div class="upload-controls">
-                        <label for="avatar" class="upload-btn">Seleccionar nueva imagen</label>
-                        <input type="file" id="avatar" name="avatar" accept="image/*" style="display: none;">
-                        <p class="upload-info">Formatos permitidos: JPG, PNG, GIF. Tamaño máximo: 5MB</p>
-                    </div>
-                </div>
-            </div>
-
             <div class="form-actions">
-                <button type="submit" class="btn btn-primary">Guardar Cambios</button>
-                <a href="{% url 'profile' %}" class="btn btn-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <a href="{% url 'profile' %}" class="btn btn-secondary">Cancel</a>
             </div>
         </form>
     </div>

@@ -4,7 +4,7 @@
 {% block title %}Perfil de {{ user.username }} - Taskify{% endblock %}
 
 {% block content %}
-<div class="profile-container">
+<div class="mx-auto col-10 mt-3">
     <div class="profile-header">
         <div class="profile-avatar">
             <img src="{% static 'images/user-icon.png' %}" alt="Avatar de {{ user.username }}" class="avatar-img">
@@ -146,11 +146,7 @@
 </div>
 
 <style>
-.profile-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
-}
+
 
 .profile-header {
     display: flex;
