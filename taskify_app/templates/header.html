@@ -1,35 +1,64 @@
 {% load static %}
-<header class="navbar">
-    <div class="navbar-left">
-        <a href="{% url 'home' %}">
-            <img src="{% static 'images/logo.png' %}" alt="Taskify Logo" class="logo">
-        </a>
-    </div>
 
-    <div class="navbar-center">
-        <form action="{% url 'search'%}" method="get">
-            <input type="text" name="q" placeholder="Search services..." class="search-bar">
-            <button type="submit">Search</button>
-        </form>
-    </div>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <a class="navbar-brand" href="{% url 'home' %}">
+    <img src="{% static 'images/logo_no_background.png' %}" alt="Taskify Logo" style="max-width:90px">
+  </a>
 
-    <div class="navbar-right">
-        {% if user.is_authenticated %}
-            <a href="{% url 'chats' %}">Chat</a>
-            <a href="{% url 'my_services' %}">My Services</a>
-            <a href="{% url 'my_orders' %}">My Orders</a>
-            <a href="{% url 'notifications' %}" class="notifications-link">
-                <span class="notification-icon">🔔</span>
-                {% if unread_notifications_count > 0 %}
-                    <span class="notification-badge">{{ unread_notifications_count }}</span>
-                {% endif %}
-            </a>
-            <a href="{% url 'profile' %}">
-                <img src="{% static 'images/user-icon.png' %}" alt="Profile" class="profile-icon">
-            </a>
-        {% else %}
-            <a href="{% url 'login' %}" class="btn">Login</a>
-            <a href="{% url 'signup' %}" class="btn btn-primary">Sign up</a>
-        {% endif %}
-    </div>
-</header>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <form action="{% url 'search' %}" method="get"
+          class="form-inline my-2 order-1 order-lg-2 w-100 justify-content-center">
+      <div class="input-group w-100" style="max-width:560px">
+        <input type="text" name="q" class="form-control" placeholder="Start finding" aria-label="Search">
+        <div class="input-group-append">
+          <button class="btn btn-outline-secondary py-0" type="submit">
+            <i class="fa fa-search" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+    </form>
+
+    <ul class="navbar-nav order-2 order-lg-1 mr-lg-3">
+      <li class="nav-item active">
+        <a class="nav-link" href="{% url 'home' %}">Home <span class="sr-only">(current)</span></a>
+      </li>
+      {% if user.is_authenticated %}
+        <li class="nav-item"><a class="nav-link" href="{% url 'chats' %}">Chat</a></li>
+        <li class="nav-item"><a class="nav-link text-nowrap" href="{% url 'my_services' %}">My Services</a></li>
+        <li class="nav-item"><a class="nav-link text-nowrap" href="{% url 'my_orders' %}">My Orders</a></li>
+      {% endif %}
+    </ul>
+
+    <ul class="navbar-nav order-3 ml-lg-auto">
+      {% if user.is_authenticated %}
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown"
+             role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <span class="d-lg-none">Profile</span>
+            <i class="fa fa-user-circle fa-lg d-none d-lg-inline" aria-hidden="true"></i>
+          </a>
+          <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
+            <a class="dropdown-item" href="{% url 'profile' %}">Profile</a>
+            <div class="dropdown-divider"></div>
+            <form action="{% url 'logout' %}" method="post" class="m-0">
+              {% csrf_token %}
+              <button type="submit" class="dropdown-item">Cerrar sesión</button>
+            </form>
+          </div>
+        </li>
+      {% else %}
+        <li class="nav-item d-flex align-items-center">
+          <a href="{% url 'login' %}" class="nav-link text-nowrap">Login</a>
+        </li>
+        <li class="nav-item d-flex align-items-center">
+          <a href="{% url 'signup' %}" class="nav-link text-nowrap">Sign up</a>
+        </li>
+      {% endif %}
+    </ul>
+  </div>
+</nav>

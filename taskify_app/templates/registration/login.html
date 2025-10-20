@@ -6,11 +6,11 @@
 <section class="h-100 gradient-form">
     <div class="container py-5 h-100">
         <div class="row d-flex justify-content-center align-items-center h-100">
-            <div class="col-xl-10">
-                <div class="card rounded-3 text-black">
-                    <div class="row g-0">
-                        <div class="col-lg-6">
-                            <div class="card-body p-md-5 mx-md-4">
+            <div class="col-xl-10 row ">
+                <div class=" col-6 card rounded-3 text-black mx-auto">
+                    <div class=" g-0">
+                        <div class="">
+                            <div class="card-body p-md-5 mx-auto">
                                 <div class="text-center">
                                     <img src="{% static 'images/logo.png' %}" style="width: 185px;" alt="logo">
                                     <h4 class="mt-1 mb-5 pb-1">Iniciar sesión</h4>
@@ -21,13 +21,13 @@
                                         <label for="userInput">Usuario</label>
                                         <input type="text" name="username" required=""
                                                class="form-control {% if error_message %}is-invalid{% endif %}"
-                                               id="userInput" placeholder="name@example.com">
+                                               id="userInput" placeholder="Username">
                                     </div>
                                     <div class="mb-4 form-floating {% if error_message %}has-danger{% endif %}">
                                         <label for="passwordInput">Contraseña</label>
                                         <input type="password" name="password" required=""
                                                class="form-control {% if error_message %}is-invalid{% endif %}"
-                                               id="passwordInput" placeholder="name@example.com">
+                                               id="passwordInput" placeholder="Password">
                                     </div>
 
                                     <div class="modal fade" id="exampleModal" tabindex="-1"
@@ -53,15 +53,6 @@
                                         </button>
                                     </div>
                                 </form>
-                            </div>
-                        </div>
-                        <div class="col-lg-6 d-flex align-items-center d-none d-lg-block">
-                            <div class="text-white px-3 py-4 p-md-5 h-100"
-                                 style="background-image: url({% static 'img/login-img.jpg'%});background-repeat: no-repeat;background-size: cover;">
-                                <div class="px-3 mt-5 py-5 mx-md-4 h-100 align-middle">
-                                    <h4 class="mb-4 fw-bolder"></h4>
-                                    <p class="small mb-0 fw-bolder"></p>
-                                </div>
                             </div>
                         </div>
                     </div>
