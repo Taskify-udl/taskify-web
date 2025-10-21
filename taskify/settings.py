@@ -8,25 +8,19 @@ SECRET_KEY = 'django-insecure-6g^(^%@g&e6o3ey2w=0d&b+ju&dg)awfs0gfpnp8^+-1+reez$
 DEBUG = True
 
 # Para desarrollo local
-ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
+ALLOWED_HOSTS = ["127.0.0.1", "localhost", "10.0.2.2"]
 CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:8000", "http://localhost:8000"]
 
 INSTALLED_APPS = [
-    # Django
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
-    # Terceros
     'rest_framework',
-    # 'rest_framework.authtoken',  # ← descomenta si usarás TokenAuthentication
-
-    # Tus apps (ajusta nombres)
-    # 'blog',
-    # 'core',
+    'rest_framework.authtoken',
+    'taskify_app',
 ]
 
 MIDDLEWARE = [
@@ -52,6 +46,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'taskify_app.context_processors.unread_notifications',
             ],
         },
     },
@@ -93,15 +88,20 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Django REST Framework
+# 👉 Por defecto, API PÚBLICA. Luego exiges login por vista/acción.
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.SessionAuthentication",  # útil con login de Django
-        # "rest_framework.authentication.TokenAuthentication",  # si activas authtoken
+        "rest_framework.authentication.SessionAuthentication",  # útil con login de Django (CSRF aplica)
+        # "rest_framework_simplejwt.authentication.JWTAuthentication",
         # "rest_framework.authentication.BasicAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.IsAuthenticatedOrReadOnly",
+        "rest_framework.permissions.AllowAny",
     ],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,
 }
+
+AUTH_USER_MODEL = 'taskify_app.CustomUser'
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

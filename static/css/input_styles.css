@@ -1,0 +1,67 @@
+/* Contenedor aislado */
+.fx-input-container {
+  position: relative;
+  margin: 30px auto;
+}
+
+/* Input aislado */
+.fx-input-container .fx-input {
+  font-size: 20px;
+  width: 100%;
+  border: none;
+  border-bottom: 2px solid #ccc;
+  padding: 5px 0;
+  background-color: transparent;
+  outline: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+
+.fx-input-container .fx-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: #ccc;
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+
+.fx-input-container .fx-underline {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  width: 100%;
+  background-color: #333;
+  transform: scaleX(0);
+  transition: all 0.3s ease;
+}
+
+
+.fx-input-container .fx-input:focus ~ .fx-label,
+.fx-input-container .fx-input:valid ~ .fx-label,
+.fx-input-container .fx-input:not(:placeholder-shown) ~ .fx-label {
+  top: -20px;
+  font-size: 16px;
+  color: #333;
+}
+
+.fx-input-container .fx-input:focus ~ .fx-underline,
+.fx-input-container .fx-input:valid ~ .fx-underline,
+.fx-input-container .fx-input:not(:placeholder-shown) ~ .fx-underline {
+  transform: scaleX(1);
+}
+
+
+.fx-input-container .fx-input.form-control {
+  border-top: none !important;
+  border-right: none !important;
+  border-left: none !important;
+  border-bottom: 2px solid #ccc !important;
+  background-color: transparent;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
