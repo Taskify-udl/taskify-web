@@ -102,7 +102,7 @@ def profile(request):
     profile, _ = UserProfile.objects.get_or_create(user=user)
 
     # Avatar URL (fallback a una imagen estática si no hay)
-    avatar_url = profile.avatar.url if getattr(profile, "avatar", None) else static('images/default-avatar.png')
+    avatar_url = profile.avatar.url if getattr(profile, "avatar", None) else ('/static/images/default-avatar.png')
 
     # Services (paginated)
     services_list = Service.objects.filter(provider=user).order_by('-created_at')
