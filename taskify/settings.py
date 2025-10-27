@@ -1,7 +1,14 @@
 # taskify/settings.py
+import os
 from pathlib import Path
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+load_dotenv(BASE_DIR / ".env")
+
+NPM_BIN_PATH = os.getenv("NPM_BIN_PATH", default=r"C:\Program Files\nodejs\npm.cmd")
+
 
 # ⚠️ En producción, mueve la SECRET_KEY a variables de entorno
 SECRET_KEY = 'django-insecure-6g^(^%@g&e6o3ey2w=0d&b+ju&dg)awfs0gfpnp8^+-1+reez$'
@@ -21,7 +28,11 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'taskify_app',
+    'tailwind',
+    'theme',
 ]
+
+TAILWIND_APP_NAME = "theme"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
