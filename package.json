@@ -1,0 +1,10 @@
+{
+  "name": "taskify-dev",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -k -n django,tailwind \"python manage.py runserver\" \"python manage.py tailwind start\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}

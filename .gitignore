@@ -15,7 +15,7 @@ venv/
 env/
 ENV/
 .venv/
-.ENV/
+.env/
 
 # Archivos de Django
 *.log
@@ -50,3 +50,4 @@ htmlcov/
 Thumbs.db
 *.swp
 *.swo
+/node_modules
