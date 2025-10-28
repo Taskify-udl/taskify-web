@@ -1,61 +1,454 @@
 {% load static %}
 
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
-  <a class="navbar-brand" href="{% url 'home' %}">
-    <img src="{% static 'images/logo_no_background.png' %}" alt="Taskify Logo" style="max-width:90px">
-  </a>
+<nav class="fixed left-0 right-0 top-0 h-14 bg-white shadow-sm px-4 z-50 items-center">
+    <div class="flex flex-wrap justify-between items-center pt-2">
+        <div class="flex justify-start items-center">
+            <button data-drawer-target="drawer-navigation" data-drawer-toggle="drawer-navigation"
+                    aria-controls="drawer-navigation"
+                    class="p-2 mr-2 text-acent1 rounded-lg cursor-pointer lg:hidden hover:bg-bgLight focus:bg-bgLight focus:ring-2 focus:ring-acent1">
+                <svg aria-hidden="true" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"
+                     xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd"
+                          d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+                          clip-rule="evenodd"></path>
+                </svg>
+                <span class="sr-only">Toggle sidebar</span>
+            </button>
 
-  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
-          aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-  </button>
+            <!-- Logo -->
+            <a href="/" class="flex items-center justify-between mr-4">
+                <img src="{% static 'images/logo.png' %}" class="mr-3 h-8 hidden md:inline" alt="Logo"/>
+                <!-- Institute Short Name-->
+            </a>
 
-  <div class="collapse navbar-collapse" id="navbarSupportedContent">
-    <form action="{% url 'search' %}" method="get"
-          class="form-inline my-2 order-1 order-lg-2 w-100 justify-content-center">
-      <div class="input-group w-100" style="max-width:560px">
-        <input type="text" name="q" class="form-control" placeholder="Start finding" aria-label="Search">
-        <div class="input-group-append">
-          <button class="btn btn-outline-secondary py-0" type="submit">
-            <i class="fa fa-search" aria-hidden="true"></i>
-          </button>
+            <!-- Tab Name -->
         </div>
-      </div>
-    </form>
 
-    <ul class="navbar-nav order-2 order-lg-1 mr-lg-3">
-      {% if user.is_authenticated %}
-        <li class="nav-item"><a class="nav-link" href="{% url 'chats' %}">Chat</a></li>
-        <li class="nav-item"><a class="nav-link text-nowrap" href="{% url 'my_services' %}">My Services</a></li>
-        <li class="nav-item"><a class="nav-link text-nowrap" href="{% url 'my_orders' %}">My Orders</a></li>
-      {% endif %}
-    </ul>
+        <!-- Institute Name -->
 
-    <ul class="navbar-nav order-3 ml-lg-auto">
-      {% if user.is_authenticated %}
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown"
-             role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            <span class="d-lg-none">Profile</span>
-            <i class="fa fa-user-circle fa-lg d-none d-lg-inline" aria-hidden="true"></i>
-          </a>
-          <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
-            <a class="dropdown-item" href="{% url 'profile' %}">Profile</a>
-            <div class="dropdown-divider"></div>
-            <form action="{% url 'logout' %}" method="post" class="m-0">
-              {% csrf_token %}
-              <button type="submit" class="dropdown-item">Log out</button>
-            </form>
-          </div>
-        </li>
-      {% else %}
-        <li class="nav-item d-flex align-items-center">
-          <a href="{% url 'login' %}" class="nav-link text-nowrap">Login</a>
-        </li>
-        <li class="nav-item d-flex align-items-center">
-          <a href="{% url 'signup' %}" class="nav-link text-nowrap">Sign up</a>
-        </li>
-      {% endif %}
-    </ul>
-  </div>
+        <div class="flex items-center gap-3 lg:order-2">
+            <!-- Notification icon -->
+            <button type="button" data-dropdown-toggle="notification-dropdown"
+                    class="flex items-center justify-center relative w-9 h-9 rounded-xl text-acent1 bg-bgLight hover:bg-acent1 hover:text-white focus:bg-acent1 focus:text-white transition-all duration-200">
+						<span class="absolute flex h-5 w-6 -top-2 -right-3">
+							<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-acent1 opacity-75"></span>
+							<span class="relative flex items-center justify-center rounded-full h-6 w-6 bg-acent1 text-[9px] text-white">02</span>
+						</span>
+                <i class="text-lg fa-regular fa-bell"></i>
+            </button>
+
+            <!-- Notification Dropdown menu -->
+            <div class="hidden overflow-hidden z-50 my-4 max-w-sm text-base list-none bg-white divide-y divide-gray-100 shadow-lg dark:divide-gray-600 dark:bg-gray-700 rounded-xl"
+                 id="notification-dropdown">
+                <h4 class="block py-2 px-4 text-base font-medium text-center text-white bg-acent1">Notifications</h4>
+                <div>
+                    <a href="#" class="flex py-3 px-4 border-b border-gray-300 hover:bg-bgLight">
+                        <div class="flex-shrink-0">
+                            <img class="w-11 h-11 rounded-full object-cover" src="../assets/images/teachers/8.png"
+                                 alt="Rubel Islam"/>
+                        </div>
+                        <div class="pl-3 w-full">
+                            <div class="text-gray-500 font-normal text-sm mb-1.5 dark:text-gray-400">
+                                New message from
+                                <span class="font-semibold text-gray">Rubel Islam</span>: "Create a new class text for
+                                class 10."
+                            </div>
+                            <div class="text-xs font-medium text-primary">a few moments ago</div>
+                        </div>
+                    </a>
+                    <a href="#" class="flex py-3 px-4 border-b border-gray-300 hover:bg-bgLight">
+                        <div class="flex-shrink-0">
+                            <img class="w-11 h-11 rounded-full object-cover" src="../assets/images/teachers/8.png"
+                                 alt="Rubel Islam"/>
+                        </div>
+                        <div class="pl-3 w-full">
+                            <div class="text-gray-500 font-normal text-sm mb-1.5 dark:text-gray-400">
+                                New message from
+                                <span class="font-semibold text-gray">Rubel Islam</span>: "Create a new class text for
+                                class 10."
+                            </div>
+                            <div class="text-xs font-medium text-primary">a few moments ago</div>
+                        </div>
+                    </a>
+                    <a href="#" class="flex py-3 px-4 border-b border-gray-300 hover:bg-bgLight">
+                        <div class="flex-shrink-0">
+                            <img class="w-11 h-11 rounded-full object-cover" src="../assets/images/teachers/8.png"
+                                 alt="Rubel Islam"/>
+                        </div>
+                        <div class="pl-3 w-full">
+                            <div class="text-gray-500 font-normal text-sm mb-1.5 dark:text-gray-400">
+                                New message from
+                                <span class="font-semibold text-gray">Rubel Islam</span>: "Create a new class text for
+                                class 10."
+                            </div>
+                            <div class="text-xs font-medium text-primary">a few moments ago</div>
+                        </div>
+                    </a>
+                    <a href="#" class="flex py-3 px-4 hover:bg-bgLight">
+                        <div class="flex-shrink-0">
+                            <img class="w-11 h-11 rounded-full object-cover" src="../assets/images/teachers/8.png"
+                                 alt="Rubel Islam"/>
+                        </div>
+                        <div class="pl-3 w-full">
+                            <div class="text-gray-500 font-normal text-sm mb-1.5 dark:text-gray-400">
+                                New message from
+                                <span class="font-semibold text-gray">Rubel Islam</span>: "Create a new class text for
+                                class 10."
+                            </div>
+                            <div class="text-xs font-medium text-primary">a few moments ago</div>
+                        </div>
+                    </a>
+                </div>
+                <a href="#" class="block py-2 text-md font-medium text-center text-white bg-acent1 hover:bg-secondary">
+                    <div class="inline-flex items-center">
+                        <i class="fa-solid fa-eye mr-2 text-lg text-white"></i>
+                        View all
+                    </div>
+                </a>
+            </div>
+            <!-- End of the Notification -->
+
+            <!-- Setting -->
+            <button type="button" data-dropdown-toggle="apps-dropdown"
+                    class="flex items-center justify-center relative w-9 h-9 rounded-xl text-acent1 bg-bgLight hover:bg-acent1 hover:text-white focus:bg-acent1 focus:text-white transition-all duration-200">
+						<span class="absolute flex h-5 w-6 -top-2 -right-3">
+							<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-acent1 opacity-75"></span>
+							<span class="relative flex items-center justify-center rounded-full h-6 w-6 bg-acent1 text-[9px] text-white">02</span>
+						</span>
+                <i class="fa-solid fa-gear text-lg"></i>
+            </button>
+
+            <!-- Setting Dropdown menu -->
+            <div class="hidden overflow-hidden z-50 my-4 max-w-sm text-base list-none bg-white divide-y divide-gray-100 shadow-lg dark:bg-gray-700 dark:divide-gray-600 rounded-xl"
+                 id="apps-dropdown">
+                <h4 class="block py-2 px-4 text-base font-medium text-center text-white bg-acent1">Setting</h4>
+                <div class="grid grid-cols-3 gap-4 p-4">
+                    <a href="#" class="block p-4 text-center rounded-lg hover:bg-bgLight transition-all">
+                        <i class="fa-solid fa-graduation-cap text-xl text-acent1"></i>
+                        <div class="text-sm text-gray-900">Student</div>
+                    </a>
+                    <a href="#" class="block p-4 text-center rounded-lg hover:bg-bgLight transition-all">
+                        <i class="fa-solid fa-chalkboard-user text-xl text-acent1"></i>
+                        <div class="text-sm text-gray-900">Teacher</div>
+                    </a>
+                    <a href="#" class="block p-4 text-center rounded-lg hover:bg-bgLight transition-all">
+                        <i class="fa-solid fa-users text-xl text-acent1"></i>
+                        <div class="text-sm text-gray-900">Staff</div>
+                    </a>
+                    <a href="#" class="block p-4 text-center rounded-lg hover:bg-bgLight transition-all">
+                        <i class="fa-solid fa-circle-user text-xl text-acent1"></i>
+                        <div class="text-sm text-gray-900">Profile</div>
+                    </a>
+                    <a href="#" class="block p-4 text-center rounded-lg hover:bg-bgLight transition-all">
+                        <i class="fa-solid fa-gear text-xl text-acent1"></i>
+                        <div class="text-sm text-gray-900">Settings</div>
+                    </a>
+                    <a href="#" class="block p-4 text-center rounded-lg hover:bg-bgLight transition-all">
+                        <i class="fa-solid fa-chart-simple text-xl text-acent1"></i>
+                        <div class="text-sm text-gray-900">Analysis</div>
+                    </a>
+                </div>
+            </div>
+            <!-- End of the Setting -->
+
+            <!-- User Profile -->
+            <button type="button"
+                    class="flex mx-3 text-sm rounded-full md:mr-0 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
+                    id="user-menu-button" aria-expanded="false" data-dropdown-toggle="dropdown">
+                <span class="sr-only">Open user menu</span>
+                <img class="w-8 h-8 rounded-full object-cover"
+                     src="https://cdn.pixabay.com/photo/2015/04/13/12/07/business-720429_1280.jpg" alt="user photo"/>
+            </button>
+            <!-- Dropdown menu -->
+            <div class="hidden z-50 my-4 w-56 text-base list-none bg-white divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600 rounded-xl"
+                 id="dropdown">
+                <div class="py-3 px-4">
+                    <span class="block text-sm font-semibold text-gray-900">Adnan Kabir</span>
+                    <span class="block text-sm text-gray-900 truncate">Admin</span>
+                </div>
+                <ul class="py-1 text-gray-700" aria-labelledby="dropdown">
+                    <li>
+                        <a href="#" class="block py-2 px-4 text-sm hover:bg-bgLight">My profile</a>
+                    </li>
+                    <li>
+                        <a href="#" class="block py-2 px-4 text-sm hover:bg-bgLight">Account settings</a>
+                    </li>
+                </ul>
+                <ul class="py-1 text-gray-700 dark:text-gray-300" aria-labelledby="dropdown">
+                    <li>
+                        <a href="#" class="flex items-center py-2 px-4 text-sm hover:bg-bgLight">
+                            <svg class="mr-2 w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"></path>
+                            </svg>
+                            Shedule</a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex justify-between items-center py-2 px-4 text-sm hover:bg-bgLight">
+									<span class="flex items-center">
+										<i class="fa-solid fa-dollar-sign mr-2 text-md text-primary-600 dark:text-primary-500"></i>
+										Payments
+									</span>
+                            <i class="fa-solid fa-chevron-right text-base text-gray-400"></i>
+                        </a>
+                    </li>
+                </ul>
+                <ul class="py-1 text-gray-700 dark:text-gray-300" aria-labelledby="dropdown">
+                    <li>
+                        <a href="#" class="block py-2 px-4 text-sm hover:bg-bgLight">Log out</a>
+                    </li>
+                </ul>
+            </div>
+            <!-- End of the user profile -->
+        </div>
+    </div>
 </nav>
+<!-- End of the Navbar -->
+
+<!-- Sidebar -->
+<aside
+        id="drawer-navigation"
+        class="scrollbar fixed left-0 top-14 z-40 w-72 lg:w-56 h-[calc(100vh-3.5rem)]
+         transition-transform -translate-x-full bg-white border-r border-gray-200 lg:translate-x-0"
+        aria-label="Sidenav">
+    <div class="overflow-y-auto pt-2 px-3 h-full bg-white">
+        <!-- Menu (It's for mobile) -->
+        <ul class="space-y-0.5 inline lg:hidden">
+            <li>
+                <a href="index.html"
+                   class="flex items-center p-2 text-base font-medium text-primary rounded-lg hover:bg-acent1 group transition duration-75">
+                    <i class="fa-solid fa-house text-lg text-acent1 group-hover:text-black transition duration-75"></i>
+                    <span class="ml-3">Dashboar</span>
+                </a>
+            </li>
+            <li>
+                <button type="button"
+                        class="flex items-center p-2 w-full text-base font-medium text-primary rounded-lg transition duration-75 group hover:bg-acent1"
+                        aria-controls="dropdown-teacher" data-collapse-toggle="dropdown-teacher">
+                    <i class="fa-solid fa-chalkboard-user text-lg text-acent1 transition duration-75 group-hover:text-black"></i>
+                    <span class="flex-1 ml-3 text-left whitespace-nowrap">Teacher</span>
+                    <i class="fa-solid fa-chevron-down text-base font-bold"></i>
+                </button>
+                <ul id="dropdown-teacher" class="tabs hidden py-2 space-y-1 pl-2">
+                    <li>
+                        <a href="#"
+                           class="flex items-center p-2 text-sm font-medium text-primary rounded-lg hover:bg-acent1 hover:text-white group transition duration-75">Teacher</a>
+                    </li>
+                    <li data-tab-target="#add_teacher">
+                        <a href="#"
+                           class="flex items-center p-2 text-sm font-medium text-primary rounded-lg hover:bg-acent1 hover:text-white group transition duration-75">Add
+                            Teacher</a>
+                    </li>
+                    <li data-tab-target="#teacher_billing">
+                        <a href="#"
+                           class="flex items-center p-2 text-sm font-medium text-primary rounded-lg hover:bg-acent1 hover:text-white group transition duration-75">Teacher
+                            Billing</a>
+                    </li>
+                    <li data-tab-target="#upload_data">
+                        <a href="#"
+                           class="flex items-center p-2 text-sm font-medium text-primary rounded-lg hover:bg-acent1 hover:text-white group transition duration-75">Upload
+                            From Excel</a>
+                    </li>
+                    <li data-tab-target="#branch_transfer">
+                        <a href="#"
+                           class="flex items-center p-2 text-sm font-medium text-primary rounded-lg hover:bg-acent1 hover:text-white group transition duration-75">Branch
+                            Transfer</a>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <button type="button"
+                        class="flex items-center p-2 w-full text-base font-medium text-primary rounded-lg transition duration-75 group hover:bg-acent1"
+                        aria-controls="dropdown-student" data-collapse-toggle="dropdown-student">
+                    <i class="fa-solid fa-graduation-cap text-lg text-acent1 transition duration-75 group-hover:text-black"></i>
+                    <span class="flex-1 ml-3 text-left whitespace-nowrap">Student</span>
+                    <i class="fa-solid fa-chevron-down text-base font-bold"></i>
+                </button>
+                <ul id="dropdown-student" class="tabs hidden py-2 space-y-1 pl-2">
+                    <li data-tab-target="#student">
+                        <a href="#"
+                           class="flex items-center p-2 text-sm font-medium text-primary rounded-lg hover:bg-acent1 hover:text-white group transition duration-75">Students</a>
+                    </li>
+                    <li data-tab-target="#change_billing">
+                        <a href="#"
+                           class="flex items-center p-2 text-sm font-medium text-primary rounded-lg hover:bg-acent1 hover:text-white group transition duration-75">Change
+                            Billing</a>
+                    </li>
+                    <li data-tab-target="#upload_data">
+                        <a href="#"
+                           class="flex items-center p-2 text-sm font-medium text-primary rounded-lg hover:bg-acent1 hover:text-white group transition duration-75">Upload
+                            From Excel</a>
+                    </li>
+                    <li data-tab-target="#admit_tc_report">
+                        <a href="#"
+                           class="flex items-center p-2 text-sm font-medium text-primary rounded-lg hover:bg-acent1 hover:text-white group transition duration-75">Admit
+                            and TC Report</a>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <a type="button" href="#"
+                   class="flex items-center p-2 w-full text-base font-medium text-primary rounded-lg transition duration-75 group hover:bg-acent1">
+                    <i class="fa-solid fa-clipboard-user text-lg text-acent1 transition duration-75 group-hover:text-black"></i>
+                    <span class="flex-1 ml-3 text-left whitespace-nowrap">Attendance</span>
+                </a>
+            </li>
+
+            <li>
+                <button type="button"
+                        class="flex items-center p-2 w-full text-base font-medium text-primary rounded-lg transition duration-75 group hover:bg-acent1">
+                    <i class="fa-solid fa-file-pen text-lg text-acent1 transition duration-75 group-hover:text-black"></i>
+                    <span class="flex-1 ml-3 text-left whitespace-nowrap">Exam</span>
+                </button>
+            </li>
+            <li>
+                <a href="subject.html"
+                   class="flex items-center p-2 text-base font-medium text-primary rounded-lg hover:bg-acent1 group transition duration-75">
+                    <i class="fa-solid fa-book text-lg text-acent1 group-hover:text-black transition duration-75"></i>
+                    <span class="ml-3">Subject</span>
+                </a>
+            </li>
+            <li>
+                <button type="button"
+                        class="flex items-center p-2 w-full text-base font-medium text-primary rounded-lg transition duration-75 group hover:bg-acent1"
+                >
+                    <i class="fa-solid fa-square-poll-vertical text-lg text-acent1 transition duration-75 group-hover:text-black"></i>
+                    <span class="flex-1 ml-3 text-left whitespace-nowrap">Result</span>
+                </button>
+            </li>
+            <li>
+                <button type="button"
+                        class="flex items-center p-2 w-full text-base font-medium text-primary rounded-lg transition duration-75 group hover:bg-acent1">
+                    <i class="fa-solid fa-chart-simple text-lg text-acent1 transition duration-75 group-hover:text-black"></i>
+                    <span class="flex-1 ml-3 text-left whitespace-nowrap">Mark Analysis</span>
+                </button>
+            </li>
+            <li>
+                <button type="button"
+                        class="flex items-center p-2 w-full text-base font-medium text-primary rounded-lg transition duration-75 group hover:bg-acent1">
+                    <i class="fa-solid fa-thumbtack text-lg text-acent1 transition duration-75 group-hover:text-black"></i>
+                    <span class="flex-1 ml-3 text-left whitespace-nowrap">Task</span>
+                </button>
+            </li>
+
+            <li>
+                <a href="setting.html"
+                   class="flex items-center p-2 text-base font-medium text-primary rounded-lg hover:bg-acent1 group transition duration-75">
+                    <i class="fa-solid fa-gear text-lg text-acent1 transition duration-75 group-hover:text-black"></i>
+                    <span class="ml-3">Setting</span>
+                </a>
+            </li>
+        </ul>
+
+        <!-- Menu (It's for Lablet and Desktop) -->
+        <ul class="hidden lg:inline space-y-0.5">
+            <li>
+                <a href="index.html"
+                   class="flex items-center p-2 text-base font-medium text-primary rounded-lg hover:bg-acent1 group transition duration-75">
+                    <i class="fa-solid fa-house text-lg text-acent1 group-hover:text-black transition duration-75"></i>
+                    <span class="ml-3">Dashboard</span>
+                </a>
+            </li>
+            <li>
+                <a href="teacher.html"
+                   class="flex items-center p-2 w-full text-base font-medium text-primary rounded-lg transition duration-75 group hover:bg-acent1">
+                    <i class="fa-solid fa-chalkboard-user text-lg text-acent1 transition duration-75 group-hover:text-black"></i>
+                    <span class="flex-1 ml-3 text-left whitespace-nowrap">Teacher</span>
+                </a>
+            </li>
+            <li>
+                <a href="student.html"
+                   class="flex items-center p-2 w-full text-base font-medium text-primary rounded-lg transition duration-75 group hover:bg-acent1">
+                    <i class="fa-solid fa-graduation-cap text-lg text-acent1 transition duration-75 group-hover:text-black"></i>
+                    <span class="flex-1 ml-3 text-left whitespace-nowrap">Student</span>
+                </a>
+            </li>
+            <li>
+                <a href="attendance.html" type="button"
+                   class="flex items-center p-2 w-full text-base font-medium text-primary rounded-lg transition duration-75 group hover:bg-acent1">
+                    <i class="fa-solid fa-clipboard-user text-lg text-acent1 transition duration-75 group-hover:text-black"></i>
+                    <span class="flex-1 ml-3 text-left whitespace-nowrap">Attendance</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="exam.html"
+                   class="flex items-center p-2 w-full text-base font-medium text-primary rounded-lg transition duration-75 group hover:bg-acent1">
+                    <i class="fa-solid fa-file-pen text-lg text-acent1 transition duration-75 group-hover:text-black"></i>
+                    <span class="flex-1 ml-3 text-left whitespace-nowrap">Exam</span>
+                </a>
+            </li>
+            <li>
+                <a href="subject.html"
+                   class="flex items-center p-2 text-base font-medium text-primary rounded-lg hover:bg-acent1 group transition duration-75">
+                    <i class="fa-solid fa-book text-lg text-acent1 group-hover:text-black transition duration-75"></i>
+                    <span class="ml-3">Subject</span>
+                </a>
+            </li>
+            <li>
+                <a href="result.html"
+                   class="flex items-center p-2 w-full text-base font-medium text-primary rounded-lg transition duration-75 group hover:bg-acent1">
+                    <i class="fa-solid fa-square-poll-vertical text-lg text-acent1 transition duration-75 group-hover:text-black"></i>
+                    <span class="flex-1 ml-3 text-left whitespace-nowrap">Result</span>
+                </a>
+            </li>
+            <li>
+                <a href="analysis.html"
+                   class="flex items-center p-2 w-full text-base font-medium text-primary rounded-lg transition duration-75 group hover:bg-acent1">
+                    <i class="fa-solid fa-chart-simple text-lg text-acent1 transition duration-75 group-hover:text-black"></i>
+                    <span class="flex-1 ml-3 text-left whitespace-nowrap">Mark Analysis</span>
+                </a>
+            </li>
+            <li>
+                <a href="task.html"
+                   class="flex items-center p-2 w-full text-base font-medium text-primary rounded-lg transition duration-75 group hover:bg-acent1">
+                    <i class="fa-solid fa-thumbtack text-lg text-acent1 transition duration-75 group-hover:text-black"></i>
+                    <span class="flex-1 ml-3 text-left whitespace-nowrap">Task</span>
+                </a>
+            </li>
+            <li>
+                <a href="setting.html"
+                   class="flex items-center p-2 text-base font-medium text-primary rounded-lg hover:bg-acent1 group transition duration-75">
+                    <i class="fa-solid fa-gear text-lg text-acent1 transition duration-75 group-hover:text-black"></i>
+                    <span class="ml-3">Setting</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+    <div class="hidden absolute bottom-0 left-0 justify-center p-4 space-x-4 w-full lg:flex bg-white z-20">
+        <a href="setting.html" data-tooltip-target="tooltip-settings"
+           class="inline-flex w-9 h-9 justify-center items-center bg-bgLight text-acent1 rounded-xl cursor-pointer hover:text-white hover:bg-acent1">
+            <i class="fa-solid fa-gear text-md"></i>
+        </a>
+        <div id="tooltip-settings" role="tooltip"
+             class="inline-block absolute invisible z-10 py-2 px-3 text-sm font-medium text-white bg-acent1 rounded-lg shadow-sm opacity-0 transition-opacity duration-300 tooltip">
+            Settings page
+            <div class="tooltip-arrow" data-popper-arrow></div>
+        </div>
+        <a href="#" data-tooltip-target="tooltip-tutorial"
+           class="inline-flex w-9 h-9 justify-center items-center bg-bgLight text-acent1 rounded-xl cursor-pointer hover:text-white hover:bg-acent1">
+            <i class="fa-solid fa-video text-md"></i>
+        </a>
+        <div id="tooltip-tutorial" role="tooltip"
+             class="inline-block absolute invisible z-10 py-2 px-3 text-sm font-medium text-white bg-acent1 rounded-lg shadow-sm opacity-0 transition-opacity duration-300 tooltip">
+            Tutorials
+            <div class="tooltip-arrow" data-popper-arrow></div>
+        </div>
+        <a href="#" data-tooltip-target="tooltip-support"
+           class="inline-flex w-9 h-9 justify-center items-center bg-bgLight text-acent1 rounded-xl cursor-pointer hover:text-white hover:bg-acent1">
+            <i class="fa-solid fa-headset text-md"></i>
+        </a>
+        <div id="tooltip-support" role="tooltip"
+             class="inline-block absolute invisible z-10 py-2 px-3 text-sm font-medium text-white bg-acent1 rounded-lg shadow-sm opacity-0 transition-opacity duration-300 tooltip">
+            Support
+            <div class="tooltip-arrow" data-popper-arrow></div>
+        </div>
+    </div>
+</aside>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<!-- Flowbite Js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.1/flowbite.min.js"></script>
+<!-- Apex Chart JS -->
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<!-- End of the Sidebar -->

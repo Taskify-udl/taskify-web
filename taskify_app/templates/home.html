@@ -32,7 +32,7 @@
             <div class="section-header">
                 <h2 class="section-title">Explore Our Services</h2>
             </div>
-            
+
             <div class="categories-wrapper">
                 <button class="category-chip active" data-category="all">View all</button>
                 <button class="category-chip" data-category="plumbing">Plumbing</button>
@@ -41,7 +41,7 @@
                 <button class="category-chip" data-category="cleaning">Cleaning</button>
                 <button class="category-chip" data-category="painting">Painting</button>
             </div>
-            
+
             <div class="services-wrapper">
                 <div class="service-card-wrapper" data-category="plumbing">
                     <div class="service-card"><div class="service-image-wrapper"><img src="/static/images/plumber2.jpg" alt="Service" class="service-img"></div><div class="service-details"><span class="service-category">Plumbing</span><h3 class="service-title">Leaky Faucet Repair</h3></div></div>
@@ -83,7 +83,7 @@
     .container { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
     .section-header { margin-bottom: 1.5rem; }
     .section-title { font-size: 2rem; font-weight: 700; color: var(--secondary-color); margin: 0; }
-    
+
     /* Hero Section */
     .hero-section { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: var(--border-radius-lg); padding: 1.5rem 2rem; margin: 2rem 0; color: var(--white-color); }
     .hero-title { font-size: 2.5rem; font-weight: 600; line-height: 1.2; margin-bottom: 1rem; }
@@ -101,19 +101,19 @@
         margin-top: 3rem;
         box-shadow: var(--shadow-sm);
     }
-    
+
     .services-container { margin: 0; }
     .categories-wrapper { display: flex; gap: 0.75rem; overflow-x: auto; padding-bottom: 1rem; margin-bottom: 1.5rem; }
     .category-chip { background: var(--white-color); border: 1px solid var(--medium-gray-color); padding: 0.75rem 1.5rem; border-radius: 50px; font-weight: 500; color: var(--text-color-light); cursor: pointer; transition: var(--transition-fast); white-space: nowrap; font-size: 1rem; }
     .category-chip:hover { border-color: var(--primary-color); color: var(--primary-color); box-shadow: var(--shadow-sm); }
     .category-chip.active { background: var(--primary-color); color: var(--white-color); border-color: var(--primary-color); }
-    
+
     .services-wrapper { display: flex; gap: 1.5rem; overflow-x: auto; padding-bottom: 1.5rem; scrollbar-width: thin; scrollbar-color: var(--medium-gray-color) transparent; }
     .services-wrapper::-webkit-scrollbar { height: 8px; }
     .services-wrapper::-webkit-scrollbar-track { background: transparent; }
     .services-wrapper::-webkit-scrollbar-thumb { background-color: var(--medium-gray-color); border-radius: 4px; }
     .service-card-wrapper { min-width: 280px; flex-shrink: 0; display: block; }
-    
+
     /* MODIFICADO: La transición ahora está en el elemento base para que la animación sea suave al entrar y al salir. */
     .service-card {
         background: var(--white-color);
@@ -125,7 +125,7 @@
         /* La transición se aplica a las propiedades que van a cambiar */
         transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
     }
-    
+
     /* MODIFICADO: Eliminado el 'transform: scale'. Ahora solo cambia la sombra y el borde. */
     .service-card-wrapper:hover .service-card {
         border-color: var(--primary-color);
