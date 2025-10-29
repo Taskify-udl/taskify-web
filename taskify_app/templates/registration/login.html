@@ -1,96 +1,212 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %} Iniciar Sesión {% endblock %}
+{% block title %}Iniciar Sesión{% endblock %}
 {% block content %}
+<section class="relative flex min-h-screen items-center justify-center bg-white px-4 py-16 sm:py-24">
+    <div class="relative w-full max-w-md mx-auto">
+        <div class="mb-10 text-center">
+            <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-black shadow-[0_12px_32px_rgba(15,15,15,0.3)]">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="1.8" class="h-8 w-8 text-white">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <h1 class="mt-6 text-2xl font-semibold text-black">Bienvenido a Taskify</h1>
+            <p class="mt-2 text-sm text-black/60">Conecta con los mejores profesionales</p>
+        </div>
 
-    <section class="h-100 gradient-form">
-        <div class="container py-5 h-100">
-            <div class="row d-flex justify-content-center align-items-center h-100">
-                <div class="col-xl-10 row ">
-                    <div class=" col-6 card rounded-3 text-black mx-auto">
-                        <div class=" g-0">
-                            <div class="">
-                                <div class="card-body p-md-5 mx-auto">
-                                    <div class="text-center">
-                                        <img src="{% static 'images/logo.png' %}" style="width: 185px;" alt="logo">
-                                        <h4 class="mt-1 mb-5 pb-1">Iniciar sesión</h4>
-                                    </div>
-                                    <form method="post" action="{% url 'login' %}">
-                                        <form method="post" action="{% url 'login' %}">
-                                            {% csrf_token %}
-                                            <div class="fx-input-container">
-                                                <input
-                                                        type="text"
-                                                        name="username"
-                                                        id="login-username"
-                                                        class="form-control fx-input {% if error_message %}is-invalid{% endif %}"
-                                                        placeholder=" "
-                                                        required
-                                                        value="{{ request.POST.username|default:'' }}"
-                                                />
-                                                <label class="fx-label" for="login-username">Usuario</label>
-                                                <span class="fx-underline"></span>
-                                            </div>
+    <div class="rounded-3xl bg-white px-18 py-20 shadow-xl ring-1 ring-black/10 sm:px-16 sm:py-20">
+            <div class="mb-10 text-center">
+                <h2 class="text-xl font-semibold text-black">Iniciar Sesión</h2>
+                <p class="mt-1 text-sm text-black/60">Accede a tu cuenta</p>
+            </div>
 
-                                            <div class="fx-input-container">
-                                                <input
-                                                        type="password"
-                                                        name="password"
-                                                        id="login-password"
-                                                        class="form-control fx-input {% if error_message %}is-invalid{% endif %}"
-                                                        placeholder=" "
-                                                        required
-                                                />
-                                                <label class="fx-label" for="login-password">Contraseña</label>
-                                                <span class="fx-underline"></span>
-                                            </div>
+            <div>
+                <div class="mb-10 grid grid-cols-2 overflow-hidden rounded-full bg-black/10 p-1 text-sm font-medium text-black/60">
+                    <button type="button" data-tab-target="login"
+                            class="tab-trigger w-full rounded-full py-3 text-black shadow-sm transition-all duration-150 ease-out bg-white">
+                        Iniciar Sesión
+                    </button>
+                    <button type="button" data-tab-target="demo"
+                            class="tab-trigger w-full rounded-full py-3 transition-all duration-150 ease-out text-black/60">
+                        Modo Demo
+                    </button>
+                </div>
 
-                                            <!-- Modal de error (igual que antes) -->
-                                            <div class="modal fade" id="exampleModal" tabindex="-1"
-                                                 aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                                <div class="modal-dialog">
-                                                    <div class="modal-content">
-                                                        <div class="modal-header">
-                                                            <h5 class="modal-title" id="exampleModalLabel">Error</h5>
-                                                            <button type="button" class="close pt-16px" data-dismiss="modal"
-                                                                    aria-label="Close"><i class="fa fa-times"
-                                                                                          aria-hidden="true"></i>
-                                                            </button>
+                <div data-tab-panel="login" class="space-y-8">
+                    <form method="post" action="{% url 'login' %}" class="space-y-6" id="login-form">
+                        {% csrf_token %}
+                        {% if error_message %}
+                            <div class="rounded-2xl border border-black/20 bg-black/5 p-3 text-sm text-black">
+                                {{ error_message }}
+                            </div>
+                        {% endif %}
 
-                                                        </div>
-                                                        <div class="modal-body">
-                                                            {% if error_message %}
-                                                                <p>{{ error_message }}</p>
-                                                            {% endif %}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div class="text-center mt-2 mb-5 pb-1">
-                                                <button class="mt-3 mx-auto btn btn-primary">
-                                                    Log in
-                                                </button>
-                                            </div>
-                                        </form>
-                                </div>
+                        <div class="space-y-2">
+                            <label for="login-username" class="text-sm font-medium text-black">
+                                Correo Electrónico
+                            </label>
+                            <div>
+                                <input type="text" name="username" id="login-username"
+                                       class="w-full rounded-2xl border border-black/10 bg-black/5 py-3 px-4 text-sm font-medium text-black placeholder-black/40 focus:border-black focus:bg-white focus:outline-none focus:ring-2 focus:ring-black/20"
+                                       placeholder="tu@email.com" required
+                                       value="{{ request.POST.username|default:'' }}">
                             </div>
                         </div>
-                    </div>
+
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between text-sm">
+                                <label for="login-password" class="font-medium text-black">Contraseña</label>
+                                <button type="button" class="text-black transition-colors hover:text-black/60">
+                                    ¿Olvidaste tu contraseña?
+                                </button>
+                            </div>
+                            <div>
+                                <input type="password" name="password" id="login-password"
+                                       class="w-full rounded-2xl border border-black/10 bg-black/5 py-3 px-4 text-sm font-medium text-black placeholder-black/40 focus:border-black focus:bg-white focus:outline-none focus:ring-2 focus:ring-black/20"
+                                       placeholder="••••••••" required>
+                            </div>
+                        </div>
+
+                        <button type="submit"
+                                class="mt-4 w-full rounded-2xl bg-black py-3 text-sm font-semibold text-white transition-transform duration-150 hover:-translate-y-0.5 hover:bg-black/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
+                            Iniciar Sesión
+                        </button>
+                    </form>
+                </div>
+
+                <div data-tab-panel="demo" class="hidden space-y-4">
+                    <p class="text-sm text-black/60">
+                        Prueba la plataforma con cuentas de demostración:
+                    </p>
+
+                    <button type="button" data-demo-user data-username="cliente_demo" data-password="demo123"
+                            class="flex w-full items-center gap-3 rounded-2xl border border-black/10 bg-white px-4 py-3 text-left text-sm font-medium text-black shadow-sm transition-all hover:-translate-y-0.5 hover:border-black/30 hover:shadow-md">
+                        <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-black/10 text-black">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="1.6" class="h-5 w-5">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M15.75 7.5a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.5 19.125a7.125 7.125 0 0114.25 0V21H4.5v-1.875z"/>
+                            </svg>
+                        </span>
+                        <span class="flex flex-col">
+                            <span>Cliente Demo</span>
+                            <span class="text-xs font-normal text-black/60">Explorar y contratar servicios</span>
+                        </span>
+                    </button>
+
+                    <button type="button" data-demo-user data-username="proveedor_freelancer" data-password="demo123"
+                            class="flex w-full items-center gap-3 rounded-2xl border border-black/10 bg-white px-4 py-3 text-left text-sm font-medium text-black shadow-sm transition-all hover:-translate-y-0.5 hover:border-black/30 hover:shadow-md">
+                        <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-black/10 text-black">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="1.6" class="h-5 w-5">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M9 6.75V5.25A2.25 2.25 0 0111.25 3h1.5A2.25 2.25 0 0115 5.25V6.75m3 0h-12A1.5 1.5 0 005.5 8.25v9a1.5 1.5 0 001.5 1.5h10.5a1.5 1.5 0 001.5-1.5v-9A1.5 1.5 0 0018 6.75zM9.75 11.25h4.5M9.75 15h4.5"/>
+                            </svg>
+                        </span>
+                        <span class="flex flex-col">
+                            <span>Proveedor Freelancer Demo</span>
+                            <span class="text-xs font-normal text-black/60">Ofrecer servicios como autónomo</span>
+                        </span>
+                    </button>
+
+                    <button type="button" data-demo-user data-username="admin_empresa" data-password="demo123"
+                            class="flex w-full items-center gap-3 rounded-2xl border border-black/10 bg-white px-4 py-3 text-left text-sm font-medium text-black shadow-sm transition-all hover:-translate-y-0.5 hover:border-black/30 hover:shadow-md">
+                        <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-black/10 text-black">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="1.6" class="h-5 w-5">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M3 20.25V8.25a1.5 1.5 0 011.5-1.5h4.5v13.5m0 0H3m6 0h6m0 0V6.75h4.5a1.5 1.5 0 011.5 1.5v12h-6zm0 0H9"/>
+                            </svg>
+                        </span>
+                        <span class="flex flex-col">
+                            <span>Administrador Empresa Demo</span>
+                            <span class="text-xs font-normal text-black/60">Gestionar equipo y empleados</span>
+                        </span>
+                    </button>
                 </div>
             </div>
+
+            <div class="mt-10 border-t border-black/10 pt-8 pb-2 text-center text-sm text-black/60">
+                <p>
+                    ¿No tienes cuenta?
+                    <a href="{% url 'signup' %}" class="font-medium text-black hover:text-black/60">
+                        Regístrate gratis
+                    </a>
+                </p>
+            </div>
         </div>
-    </section>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            {% if error_message %}
-                var myModal = new bootstrap.Modal(document.getElementById('exampleModal'));
-                myModal.show();
-            {% endif %}
+        <p class="mt-10 text-center text-xs text-black/60">
+            Al continuar, aceptas nuestros Términos de Servicio y Política de Privacidad
+        </p>
+    </div>
+</section>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const navBar = document.querySelector('nav.navbar');
+        if (navBar) {
+            navBar.classList.add('hidden');
+        }
+        const placeholder = document.querySelector('main > div');
+        if (placeholder) {
+            placeholder.classList.add('hidden');
+        }
+        const footer = document.querySelector('footer');
+        if (footer) {
+            footer.classList.add('hidden');
+        }
+
+        const triggers = document.querySelectorAll('.tab-trigger');
+        const panels = document.querySelectorAll('[data-tab-panel]');
+
+        function activateTab(targetId) {
+            triggers.forEach((trigger) => {
+                const isActive = trigger.getAttribute('data-tab-target') === targetId;
+                if (isActive) {
+                    trigger.classList.add('bg-white', 'text-black', 'shadow-sm');
+                    trigger.classList.remove('text-black/60');
+                } else {
+                    trigger.classList.remove('bg-white', 'text-black', 'shadow-sm');
+                    trigger.classList.add('text-black/60');
+                }
+            });
+            panels.forEach((panel) => {
+                panel.classList.toggle('hidden', panel.getAttribute('data-tab-panel') !== targetId);
+            });
+        }
+
+        triggers.forEach((trigger) => {
+            trigger.addEventListener('click', () => {
+                activateTab(trigger.getAttribute('data-tab-target'));
+            });
         });
-    </script>
 
+        activateTab('login');
+
+        const usernameInput = document.getElementById('login-username');
+        const passwordInput = document.getElementById('login-password');
+
+        document.querySelectorAll('[data-demo-user]').forEach((button) => {
+            button.addEventListener('click', () => {
+                const username = button.getAttribute('data-username') || '';
+                const password = button.getAttribute('data-password') || '';
+                if (usernameInput) {
+                    usernameInput.value = username;
+                }
+                if (passwordInput) {
+                    passwordInput.value = password;
+                }
+                activateTab('login');
+                if (usernameInput) {
+                    usernameInput.focus();
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}
 
 
