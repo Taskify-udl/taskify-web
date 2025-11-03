@@ -24,6 +24,7 @@ urlpatterns = [
 
     path("my_orders/", views.my_orders, name='my_orders'),
     path("profile/", views.profile, name='profile'),
+    path("favourites/", views.favourites, name='favourites'),
 
     path("profile/edit/", views.edit_profile, name='edit_profile'),
     path("profile/stats/", views.advanced_stats, name='advanced_stats'),
