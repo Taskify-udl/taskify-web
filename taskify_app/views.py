@@ -348,44 +348,58 @@ def my_services(request):
         name = request.POST.get('name')
         description = request.POST.get('description', '')
         price_str = request.POST.get('price')
-        cover_images = request.FILES.getlist('cover_image')
+        cover_images = request.FILES.getlist('cover_images')  # Cambiado a plural
         category_ids = request.POST.getlist('categories')
         service_id = request.POST.get('service_id')
 
         if not name or not price_str:
+            messages.error(request, 'El nombre y el precio son obligatorios.')
             return redirect('my_services')
+        
         try:
             price = float(price_str)
         except ValueError:
+            messages.error(request, 'El precio debe ser un número válido.')
             return redirect('my_services')
 
         if service_id:
+            # EDITAR SERVICIO EXISTENTE
             try:
                 service = Service.objects.get(id=service_id, provider=request.user)
                 service.name = name
                 service.description = description
                 service.price = price
 
-                if request.POST.get('delete_cover_image') == 'on':
-                    pass
-
+                # Eliminar imágenes marcadas
                 images_to_delete_ids = request.POST.getlist('delete_images')
                 if images_to_delete_ids:
                     ServiceImage.objects.filter(id__in=images_to_delete_ids, service=service).delete()
 
+                # Agregar nuevas imágenes
                 for f in cover_images:
                     ServiceImage.objects.create(service=service, image=f)
 
                 service.save()
 
+                # Actualizar categorías
                 if category_ids:
                     service.categories.set(category_ids)
                 else:
                     service.categories.clear()
+                
+                # Verificar que tenga al menos una imagen
+                if service.images.count() == 0:
+                    messages.error(request, 'El servicio debe tener al menos una imagen.')
+                    return redirect('my_services')
+                
+                messages.success(request, 'Servicio actualizado correctamente.')
+                
             except Service.DoesNotExist:
-                pass
+                messages.error(request, 'Servicio no encontrado.')
         else:
+            # CREAR NUEVO SERVICIO
             if not cover_images:
+                messages.error(request, 'Debes subir al menos una imagen.')
                 return redirect('my_services')
 
             new_service = Service.objects.create(
@@ -394,15 +408,21 @@ def my_services(request):
                 description=description,
                 price=price
             )
+            
+            # Agregar imágenes
             for f in cover_images:
                 ServiceImage.objects.create(service=new_service, image=f)
+            
+            # Agregar categorías
             if category_ids:
                 new_service.categories.set(category_ids)
+            
+            messages.success(request, 'Servicio creado correctamente.')
 
         return redirect('my_services')
 
-    user_services = Service.objects.filter(provider=request.user).order_by('-created_at')
-
+    # GET request
+    user_services = Service.objects.filter(provider=request.user).prefetch_related('images', 'categories').order_by('-created_at')
     all_categories = Category.objects.all()
 
     context = {
@@ -418,23 +438,6 @@ def delete_service(request, service_id):
 
     if request.method == 'POST':
         service.delete()
+        messages.success(request, 'Servicio eliminado correctamente.')
 
     return redirect('my_services')
-
-
-@login_required
-def favourites(request):
-    """
-    Pantalla de servicios favoritos del usuario autenticado.
-    """
-    from .models import Favorite
-    
-    user = request.user
-    favorite_services = Service.objects.filter(
-        favorited_by__user=user
-    ).prefetch_related('categories', 'images').order_by('-favorited_by__favorited_at')
-
-    context = {
-        'favorite_services': favorite_services,
-    }
-    return render(request, 'favourites.html', context)
