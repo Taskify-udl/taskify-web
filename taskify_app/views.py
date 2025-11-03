@@ -16,10 +16,34 @@ from django.contrib.auth import logout
 from .models import Service, ServiceImage, Contract, Review, UserProfile, Notification, CustomUser, EmailVerification, Category
 
 def home(request):
-    return render(request, 'home.html')
+    categories = Category.objects.all()
+    featured_services = Service.objects.all()[:6]
+    
+    context = {
+        'categories': categories,
+        'featured_services': featured_services,
+    }
+    return render(request, 'home.html', context)
 
 def search(request):
     return render(request, 'search.html')
+
+@login_required
+def favourites(request):
+    """
+    Pantalla de servicios favoritos del usuario autenticado.
+    """
+    from .models import Favorite
+    
+    user = request.user
+    favorite_services = Service.objects.filter(
+        favorited_by__user=user
+    ).prefetch_related('categories', 'images').order_by('-favorited_by__favorited_at')
+
+    context = {
+        'favorite_services': favorite_services,
+    }
+    return render(request, 'favourites.html', context)
 
 def user_login(request):
     if request.method == "POST":
