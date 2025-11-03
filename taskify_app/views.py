@@ -420,4 +420,21 @@ def delete_service(request, service_id):
         service.delete()
 
     return redirect('my_services')
-    return redirect('my_services')
+
+
+@login_required
+def favourites(request):
+    """
+    Pantalla de servicios favoritos del usuario autenticado.
+    """
+    from .models import Favorite
+    
+    user = request.user
+    favorite_services = Service.objects.filter(
+        favorited_by__user=user
+    ).prefetch_related('categories', 'images').order_by('-favorited_by__favorited_at')
+
+    context = {
+        'favorite_services': favorite_services,
+    }
+    return render(request, 'favourites.html', context)
