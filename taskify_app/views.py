@@ -4,7 +4,6 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from django.core.paginator import Paginator
-from django.db import models
 from django.http import JsonResponse
 from django.db.models import Count, Avg
 from django.core.mail import send_mail
@@ -14,9 +13,7 @@ from datetime import timedelta
 from django.contrib.auth import logout
 
 
-
-from .forms import RegisterForm
-from .models import Service, Contract, Review, UserProfile, Notification, CustomUser, EmailVerification
+from .models import Service, ServiceImage, Contract, Review, UserProfile, Notification, CustomUser, EmailVerification, Category
 
 def home(request):
     return render(request, 'home.html')
@@ -85,10 +82,6 @@ def user_logout(request):
 @login_required
 def chats(request):
     return render(request, 'chats.html')
-
-@login_required
-def my_services(request):
-    return render(request, 'my_services.html')
 
 @login_required
 def my_orders(request):
@@ -348,3 +341,83 @@ def resend_verification_code(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
 
+
+@login_required
+def my_services(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        description = request.POST.get('description', '')
+        price_str = request.POST.get('price')
+        cover_images = request.FILES.getlist('cover_image')
+        category_ids = request.POST.getlist('categories')
+        service_id = request.POST.get('service_id')
+
+        if not name or not price_str:
+            return redirect('my_services')
+        try:
+            price = float(price_str)
+        except ValueError:
+            return redirect('my_services')
+
+        if service_id:
+            try:
+                service = Service.objects.get(id=service_id, provider=request.user)
+                service.name = name
+                service.description = description
+                service.price = price
+
+                if request.POST.get('delete_cover_image') == 'on':
+                    pass
+
+                images_to_delete_ids = request.POST.getlist('delete_images')
+                if images_to_delete_ids:
+                    ServiceImage.objects.filter(id__in=images_to_delete_ids, service=service).delete()
+
+                for f in cover_images:
+                    ServiceImage.objects.create(service=service, image=f)
+
+                service.save()
+
+                if category_ids:
+                    service.categories.set(category_ids)
+                else:
+                    service.categories.clear()
+            except Service.DoesNotExist:
+                pass
+        else:
+            if not cover_images:
+                return redirect('my_services')
+
+            new_service = Service.objects.create(
+                provider=request.user,
+                name=name,
+                description=description,
+                price=price
+            )
+            for f in cover_images:
+                ServiceImage.objects.create(service=new_service, image=f)
+            if category_ids:
+                new_service.categories.set(category_ids)
+
+        return redirect('my_services')
+
+    user_services = Service.objects.filter(provider=request.user).order_by('-created_at')
+
+    all_categories = Category.objects.all()
+
+    context = {
+        'services': user_services,
+        'categories': all_categories,
+    }
+    return render(request, 'my_services.html', context)
+
+
+@login_required
+def delete_service(request, service_id):
+    service = get_object_or_404(Service, id=service_id, provider=request.user)
+
+    if request.method == 'POST':
+        service.delete()
+
+    return redirect('my_services')
+    return redirect('my_services')

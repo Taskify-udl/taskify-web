@@ -18,7 +18,10 @@ urlpatterns = [
 
     path("search/", views.search, name='search'),
     path("chats/", views.chats, name='chats'),
-    path("my_services/", views.my_services, name='my_services'),
+
+    path('my_services/', views.my_services, name='my_services'),
+    path('my_services/delete/<int:service_id>/', views.delete_service, name='delete_service'),
+
     path("my_orders/", views.my_orders, name='my_orders'),
     path("profile/", views.profile, name='profile'),
 
