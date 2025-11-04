@@ -8,4 +8,6 @@ from .user_profile import UserProfile
 from .notification import Notification
 from .user import CustomUser
 from .email_verification import EmailVerification
+from .conversation import Conversation
+from .message import Message
 
