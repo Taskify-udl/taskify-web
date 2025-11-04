@@ -1,105 +1,801 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %} Sign Up {% endblock %}
+{% block title %} Crear Cuenta {% endblock %}
 
 {% block content %}
-    <section class="h-100 gradient-form">
-        <div class="container py-5 h-100">
-            <div class="row d-flex justify-content-center align-items-center h-100">
-                <div class="col-xl-10">
-                    <div class="col-10 col-md-8 card rounded-3 text-black mx-auto">
-                        <div class="row g-0">
-                            <div class="card-body p-md-5 mx-md-4">
-                                <div class="text-center">
-                                    <img src="{% static 'images/logo.png' %}" style="width: 185px;" alt="logo">
-                                    <h4 class="mt-1 mb-5 pb-1 bg-red">Sign Up</h4>
-                                </div>
-                                <form method="post" action="{% url 'signup' %}">
-                                    {% csrf_token %}
+<style>
+  .step-content {
+    display: none;
+    animation: fadeIn 0.5s ease-in-out;
+  }
+  .step-content.active {
+    display: block;
+  }
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateX(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+</style>
 
-                                    <div class="fx-input-container">
-                                        <input
-                                                type="text"
-                                                name="username"
-                                                id="username"
-                                                class="form-control fx-input"
-                                                placeholder=" "
-                                                required
-                                        />
-                                        <label class="fx-label" for="username">Username</label>
-                                        <span class="fx-underline"></span>
-                                    </div>
-
-                                    <div class="fx-input-container">
-                                        <input
-                                                type="email"
-                                                name="email"
-                                                id="email"
-                                                class="form-control fx-input"
-                                                placeholder=" "
-                                                required
-                                        />
-                                        <label class="fx-label" for="email">Email address</label>
-                                        <span class="fx-underline"></span>
-                                    </div>
-
-                                    <div class="fx-input-container">
-                                        <input
-                                                type="password"
-                                                name="password1"
-                                                id="password1"
-                                                class="form-control fx-input"
-                                                placeholder=" "
-                                                required
-                                        />
-                                        <label class="fx-label" for="password1">Password</label>
-                                        <span class="fx-underline"></span>
-                                    </div>
-
-                                    <div class="fx-input-container">
-                                        <input
-                                                type="password"
-                                                name="password2"
-                                                id="password2"
-                                                class="form-control fx-input"
-                                                placeholder=" "
-                                                required
-                                        />
-                                        <label class="fx-label" for="password2">Confirm password</label>
-                                        <span class="fx-underline"></span>
-                                    </div>
-
-                                    <!-- Error modal -->
-                                    <div class="modal fade" id="exampleModal" tabindex="-1"
-                                         aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title" id="exampleModalLabel">Error</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                            aria-label="Close"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    {% if error_message %}
-                                                        <p>{{ error_message }}</p>
-                                                    {% endif %}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="text-center mt-2 mb-5 pb-1">
-                                        <button class="mt-3 mx-auto btn btn-primary">
-                                            Register
-                                        </button>
-                                    </div>
-                                </form>
-
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<section class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4 py-12">
+  
+  <div class="w-full max-w-2xl bg-white shadow-xl rounded-lg overflow-hidden mx-auto">
+    
+    <div class="p-6 space-y-4 border-b">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-2xl font-semibold text-gray-900">Crear Cuenta</h2>
+          <p id="step-description" class="text-sm text-gray-600">Paso 1 de 2 - Información Personal</p>
         </div>
-    </section>
+        <div id="step-progress-text" class="text-blue-600 text-2xl font-medium">50%</div>
+      </div>
+      <div class="w-full bg-gray-200 rounded-full h-2">
+        <div id="step-progress-bar" class="h-2 bg-blue-600 rounded-full transition-all duration-300" style="width: 50%;"></div>
+      </div>
+    </div>
+
+    <div class="p-6">
+
+      <form method="post" action="{% url 'signup' %}" id="signup-form">
+        {% csrf_token %}
+
+        <input type="hidden" name="role" id="form-role">
+        <input type="hidden" name="provider_sub_role" id="form-provider-sub-role">
+        <input type="hidden" name="company_sub_role" id="form-company-sub-role">
+        <input type="hidden" name="company_code" id="form-company-code">
+
+
+        <div id="step-1" class="step-content active" data-step="1">
+          <div class="space-y-5">
+            
+            <div>
+              <label for="full_name" class="block text-sm font-medium text-gray-700 mb-1">Nombre Completo</label>
+              <input
+                type="text"
+                name="full_name"
+                id="full_name"
+                class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Juan Pérez"
+                required
+              />
+            </div>
+
+            <div>
+              <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico</label>
+              <input
+                type="email"
+                name="email"
+                id="email"
+                class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                placeholder="tu@email.com"
+                required
+              />
+            </div>
+
+            <div>
+              <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+              <input
+                type="password"
+                name="password"
+                id="password"
+                class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Mínimo 8 caracteres"
+                required
+                minlength="8"
+              />
+            </div>
+
+            <div>
+              <label for="confirm_password" class="block text-sm font-medium text-gray-700 mb-1">Confirmar Contraseña</label>
+              <input
+                type="password"
+                name="confirm_password"
+                id="confirm_password"
+                class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Repite tu contraseña"
+                required
+              />
+            </div>
+            <p id="password-error" class="text-sm text-red-500 -mt-3 hidden">Las contraseñas no coinciden</p>
+
+            <button
+              type="button"
+              id="btn-step-1-next"
+              class="w-full mt-6 flex items-center justify-center py-2.5 px-4 bg-gray-900 text-white font-semibold rounded-md shadow-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 transition-colors"
+            >
+              Continuar
+              <span class="w-4 h-4 ml-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" x2="19" y1="12" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <div id="step-2" class="step-content" data-step="2">
+          <div class="text-center mb-6">
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">¿Cómo quieres usar Taskify?</h3>
+            <p class="text-sm text-gray-600">Selecciona el tipo de cuenta que mejor se adapte a tus necesidades</p>
+          </div>
+
+          <div class="grid gap-4">
+            <button
+              type="button"
+              id="btn-select-client"
+              class="p-6 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all text-left group"
+            >
+              <div class="flex items-start gap-4">
+                <div class="p-3 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors">
+                  <span class="w-6 h-6 text-blue-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                  </span>
+                </div>
+                <div class="flex-1">
+                  <h4 class="mb-1 font-semibold text-gray-900">Soy Cliente</h4>
+                  <p class="text-sm text-gray-600">Busco contratar servicios profesionales para mis necesidades</p>
+                  <ul class="mt-3 space-y-1 text-sm text-gray-600">
+                    <li class="flex items-center gap-2">
+                      <span class="w-4 h-4 text-green-600"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                      Buscar y contratar servicios
+                    </li>
+                    <li class="flex items-center gap-2">
+                      <span class="w-4 h-4 text-green-600"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                      Gestionar pedidos
+                    </li>
+                    <li class="flex items-center gap-2">
+                      <span class="w-4 h-4 text-green-600"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                      Dejar reseñas
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              id="btn-select-provider"
+              class="p-6 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all text-left group"
+            >
+              <div class="flex items-start gap-4">
+                <div class="p-3 bg-purple-100 rounded-lg group-hover:bg-purple-200 transition-colors">
+                  <span class="w-6 h-6 text-purple-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                  </span>
+                </div>
+                <div class="flex-1">
+                  <h4 class="mb-1 font-semibold text-gray-900">Soy Proveedor</h4>
+                  <p class="text-sm text-gray-600">Ofrezco servicios profesionales y quiero conseguir clientes</p>
+                  <ul class="mt-3 space-y-1 text-sm text-gray-600">
+                    <li class="flex items-center gap-2">
+                      <span class="w-4 h-4 text-green-600"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                      Publicar servicios
+                    </li>
+                    <li class="flex items-center gap-2">
+                      <span class="w-4 h-4 text-green-600"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                      Recibir solicitudes
+                    </li>
+                    <li class="flex items-center gap-2">
+                      <span class="w-4 h-4 text-green-600"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                      Gestionar tu negocio
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </button>
+          </div>
+
+          <div class="flex gap-3 mt-6">
+            <button
+              type="button"
+              class="btn-back flex-1 flex items-center justify-center py-2.5 px-4 bg-white text-gray-700 font-semibold border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 transition-colors"
+              data-back-to="step-1"
+            >
+              <span class="w-4 h-4 mr-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" x2="5" y1="12" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+              </span>
+              Atrás
+            </button>
+          </div>
+        </div>
+
+        <div id="step-client-summary" class="step-content" data-step="2">
+          <div class="text-center py-8">
+            <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span class="w-10 h-10 text-green-600">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">¡Todo listo!</h3>
+            <p class="text-gray-600 mb-6">Tu cuenta de cliente está configurada. Comienza a explorar servicios.</p>
+            
+            <div class="bg-gray-50 rounded-lg p-4 mb-6 text-left">
+              <p class="text-sm text-gray-600 mb-2">Resumen de tu cuenta:</p>
+              <div class="space-y-2">
+                <div class="flex justify-between text-sm">
+                  <span class="text-gray-600">Nombre:</span>
+                  <span id="summary-client-name" class="font-medium text-gray-900">(Nombre)</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                  <span class="text-gray-600">Email:</span>
+                  <span id="summary-client-email" class="font-medium text-gray-900">(Email)</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                  <span class="text-gray-600">Tipo de cuenta:</span>
+                  <span class="font-medium text-gray-900">Cliente</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <button
+              type="button"
+              class="btn-back flex-1 flex items-center justify-center py-2.5 px-4 bg-white text-gray-700 font-semibold border border-gray-300 rounded-md shadow-sm hover:bg-gray-50"
+              data-back-to="step-2"
+            >
+              <span class="w-4 h-4 mr-2"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" x2="5" y1="12" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></span>
+              Atrás
+            </button>
+            <button
+              type="submit"
+              class="flex-1 flex items-center justify-center py-2.5 px-4 bg-gray-900 text-white font-semibold rounded-md shadow-md hover:bg-gray-800"
+            >
+              Crear Cuenta
+            </button>
+          </div>
+        </div>
+
+        <div id="step-3-provider" class="step-content" data-step="3">
+          <div class="text-center mb-6">
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">¿Qué tipo de proveedor eres?</h3>
+            <p class="text-sm text-gray-600">Esto nos ayudará a personalizar tu experiencia</p>
+          </div>
+
+          <div class="grid gap-4">
+            <button
+              type="button"
+              id="btn-select-freelancer"
+              class="p-6 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all text-left group"
+            >
+              <div class="flex items-start gap-4">
+                <div class="p-3 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors">
+                  <span class="w-6 h-6 text-blue-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3"/><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/></svg>
+                  </span>
+                </div>
+                <div class="flex-1">
+                  <h4 class="mb-1 font-semibold text-gray-900">Freelancer / Autónomo</h4>
+                  <p class="text-sm text-gray-600">Trabajo de forma independiente ofreciendo mis servicios</p>
+                </div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              id="btn-select-company"
+              class="p-6 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all text-left group"
+            >
+              <div class="flex items-start gap-4">
+                <div class="p-3 bg-purple-100 rounded-lg group-hover:bg-purple-200 transition-colors">
+                  <span class="w-6 h-6 text-purple-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg>
+                  </span>
+                </div>
+                <div class="flex-1">
+                  <h4 class="mb-1 font-semibold text-gray-900">Empresa</h4>
+                  <p class="text-sm text-gray-600">Represento una empresa con múltiples empleados</p>
+                </div>
+              </div>
+            </button>
+          </div>
+
+          <div class="flex gap-3 mt-6">
+            <button
+              type="button"
+              class="btn-back flex-1 flex items-center justify-center py-2.5 px-4 bg-white text-gray-700 font-semibold border border-gray-300 rounded-md shadow-sm hover:bg-gray-50"
+              data-back-to="step-2"
+            >
+              <span class="w-4 h-4 mr-2"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" x2="5" y1="12" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></span>
+              Atrás
+            </button>
+          </div>
+        </div>
+        
+        <div id="step-freelancer-summary" class="step-content" data-step="3">
+          <div class="text-center py-8">
+            <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span class="w-10 h-10 text-green-600">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">¡Perfecto!</h3>
+            <p class="text-gray-600 mb-6">Tu cuenta de proveedor freelancer está lista. Comienza a publicar tus servicios.</p>
+            
+            <div class="bg-gray-50 rounded-lg p-4 mb-6 text-left">
+              <p class="text-sm text-gray-600 mb-2">Resumen de tu cuenta:</p>
+              <div class="space-y-2">
+                <div class="flex justify-between text-sm">
+                  <span class="text-gray-600">Nombre:</span>
+                  <span id="summary-freelancer-name" class="font-medium text-gray-900">(Nombre)</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                  <span class="text-gray-600">Email:</span>
+                  <span id="summary-freelancer-email" class="font-medium text-gray-900">(Email)</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                  <span class="text-gray-600">Tipo de cuenta:</span>
+                  <span class="font-medium text-gray-900">Proveedor Freelancer</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex gap-3">
+            <button
+              type="button"
+              class="btn-back flex-1 flex items-center justify-center py-2.5 px-4 bg-white text-gray-700 font-semibold border border-gray-300 rounded-md shadow-sm hover:bg-gray-50"
+              data-back-to="step-3-provider"
+            >
+              <span class="w-4 h-4 mr-2"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" x2="5" y1="12" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></span>
+              Atrás
+            </button>
+            <button
+              type="submit"
+              class="flex-1 flex items-center justify-center py-2.5 px-4 bg-gray-900 text-white font-semibold rounded-md shadow-md hover:bg-gray-800"
+            >
+              Crear Cuenta
+            </button>
+          </div>
+        </div>
+
+        <div id="step-4-company-role" class="step-content" data-step="4">
+          <div class="text-center mb-6">
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">¿Cuál es tu rol en la empresa?</h3>
+            <p class="text-sm text-gray-600">Esto determinará tus permisos en la plataforma</p>
+          </div>
+
+          <div class="grid gap-4">
+            <button
+              type="button"
+              id="btn-select-admin"
+              class="p-6 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all text-left group"
+            >
+              <div class="flex items-start gap-4">
+                <div class="p-3 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors">
+                  <span class="w-6 h-6 text-blue-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg>
+                  </span>
+                </div>
+                <div class="flex-1">
+                  <h4 class="mb-1 font-semibold text-gray-900">Administrador</h4>
+                  <p class="text-sm text-gray-600">Gestiono la empresa y sus empleados</p>
+                  <ul class="mt-3 space-y-1 text-sm text-gray-600">
+                    <li class="flex items-center gap-2">
+                      <span class="w-4 h-4 text-green-600"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                      Gestionar empleados
+                    </li>
+                    <li class="flex items-center gap-2">
+                      <span class="w-4 h-4 text-green-600"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                      Crear códigos de invitación
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              id="btn-select-employee"
+              class="p-6 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all text-left group"
+            >
+              <div class="flex items-start gap-4">
+                <div class="p-3 bg-purple-100 rounded-lg group-hover:bg-purple-200 transition-colors">
+                  <span class="w-6 h-6 text-purple-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  </span>
+                </div>
+                <div class="flex-1">
+                  <h4 class="mb-1 font-semibold text-gray-900">Empleado</h4>
+                  <p class="text-sm text-gray-600">Trabajo para una empresa existente</p>
+                  <ul class="mt-3 space-y-1 text-sm text-gray-600">
+                    <li class="flex items-center gap-2">
+                      <span class="w-4 h-4 text-green-600"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                      Ofrecer servicios
+                    </li>
+                    <li class="flex items-center gap-2">
+                      <span class="w-4 h-4 text-green-600"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                      Gestionar mis pedidos
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </button>
+          </div>
+
+          <div class="flex gap-3 mt-6">
+            <button
+              type="button"
+              class="btn-back flex-1 flex items-center justify-center py-2.5 px-4 bg-white text-gray-700 font-semibold border border-gray-300 rounded-md shadow-sm hover:bg-gray-50"
+              data-back-to="step-3-provider"
+            >
+              <span class="w-4 h-4 mr-2"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" x2="5" y1="12" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></span>
+              Atrás
+            </button>
+          </div>
+        </div>
+
+        <div id="step-admin-summary" class="step-content" data-step="4">
+          <div class="text-center py-8">
+            <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span class="w-10 h-10 text-green-600">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">¡Excelente!</h3>
+            <p class="text-gray-600 mb-6">Tu cuenta de administrador está configurada. Podrás gestionar tu empresa y empleados.</p>
+            
+            <div class="bg-gray-50 rounded-lg p-4 mb-6 text-left">
+              <p class="text-sm text-gray-600 mb-2">Resumen de tu cuenta:</p>
+              <div class="space-y-2">
+                <div class="flex justify-between text-sm">
+                  <span class="text-gray-600">Nombre:</span>
+                  <span id="summary-admin-name" class="font-medium text-gray-900">(Nombre)</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                  <span class="text-gray-600">Email:</span>
+                  <span id="summary-admin-email" class="font-medium text-gray-900">(Email)</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                  <span class="text-gray-600">Tipo de cuenta:</span>
+                  <span class="font-medium text-gray-900">Proveedor - Empresa (Admin)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex gap-3">
+            <button
+              type="button"
+              class="btn-back flex-1 flex items-center justify-center py-2.5 px-4 bg-white text-gray-700 font-semibold border border-gray-300 rounded-md shadow-sm hover:bg-gray-50"
+              data-back-to="step-4-company-role"
+            >
+              <span class="w-4 h-4 mr-2"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" x2="5" y1="12" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></span>
+              Atrás
+            </button>
+            <button
+              type="submit"
+              class="flex-1 flex items-center justify-center py-2.5 px-4 bg-gray-900 text-white font-semibold rounded-md shadow-md hover:bg-gray-800"
+            >
+              Crear Cuenta
+            </button>
+          </div>
+        </div>
+        
+        <div id="step-5-company-code" class="step-content" data-step="5">
+          <div class="text-center mb-6">
+            <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span class="w-8 h-8 text-purple-600">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg>
+              </span>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">Código de Empresa</h3>
+            <p class="text-sm text-gray-600">Introduce el código proporcionado por tu administrador</Dpara>
+          </div>
+
+          <div class="space-y-2">
+            <label for="company_code_input" class="block text-sm font-medium text-gray-700">Código de Empresa</label>
+            <input
+              type="text"
+              name="company_code_input"
+              id="company_code_input"
+              class="w-full text-center text-lg tracking-wider font-mono px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              placeholder="EMP-XXXXXXXX"
+              required
+            />
+            <p class="text-sm text-gray-500">El código debe ser proporcionado por el administrador de tu empresa.</p>
+          </div>
+          
+          <div class="flex gap-3 mt-8">
+            <button
+              type="button"
+              class="btn-back flex-1 flex items-center justify-center py-2.5 px-4 bg-white text-gray-700 font-semibold border border-gray-300 rounded-md shadow-sm hover:bg-gray-50"
+              data-back-to="step-4-company-role"
+            >
+              <span class="w-4 h-4 mr-2"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" x2="5" y1="12" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></span>
+              Atrás
+            </button>
+            <button
+              type="submit"
+              class="flex-1 flex items-center justify-center py-2.5 px-4 bg-gray-900 text-white font-semibold rounded-md shadow-md hover:bg-gray-800"
+            >
+              Crear Cuenta
+            </button>
+          </div>
+        </div>
+
+        <div id="login-link" class="text-center mt-6">
+          <a href="#" class="text-sm text-blue-600 hover:underline">
+            ¿Ya tienes cuenta? Inicia sesión
+          </a>
+          </div>
+
+      </form>
+    </div>
+  </div>
+</section>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+  // --- Referencias a elementos del DOM ---
+  const form = document.getElementById('signup-form');
+  const steps = form.querySelectorAll('.step-content');
+  const loginLink = document.getElementById('login-link');
+  
+  // Header
+  const headerDesc = document.getElementById('step-description');
+  const progressText = document.getElementById('step-progress-text');
+  const progressBar = document.getElementById('step-progress-bar');
+  
+  // Step 1: Info Personal
+  const step1 = document.getElementById('step-1');
+  const nameInput = document.getElementById('full_name');
+  const emailInput = document.getElementById('email');
+  const passInput = document.getElementById('password');
+  const confirmPassInput = document.getElementById('confirm_password');
+  const passError = document.getElementById('password-error');
+  const btnStep1Next = document.getElementById('btn-step-1-next');
+
+  // Step 2: Tipo de Cuenta
+  const step2 = document.getElementById('step-2');
+  const btnSelectClient = document.getElementById('btn-select-client');
+  const btnSelectProvider = document.getElementById('btn-select-provider');
+
+  // Step 2c: Resumen Cliente
+  const stepClientSummary = document.getElementById('step-client-summary');
+  const summaryClientName = document.getElementById('summary-client-name');
+  const summaryClientEmail = document.getElementById('summary-client-email');
+
+  // Step 3: Tipo de Proveedor
+  const step3Provider = document.getElementById('step-3-provider');
+  const btnSelectFreelancer = document.getElementById('btn-select-freelancer');
+  const btnSelectCompany = document.getElementById('btn-select-company');
+  
+  // Step 3b: Resumen Freelancer
+  const stepFreelancerSummary = document.getElementById('step-freelancer-summary');
+  const summaryFreelancerName = document.getElementById('summary-freelancer-name');
+  const summaryFreelancerEmail = document.getElementById('summary-freelancer-email');
+
+  // Step 4: Rol en Empresa
+  const step4CompanyRole = document.getElementById('step-4-company-role');
+  const btnSelectAdmin = document.getElementById('btn-select-admin');
+  const btnSelectEmployee = document.getElementById('btn-select-employee');
+
+  // Step 4b: Resumen Admin
+  const stepAdminSummary = document.getElementById('step-admin-summary');
+  const summaryAdminName = document.getElementById('summary-admin-name');
+  const summaryAdminEmail = document.getElementById('summary-admin-email');
+  
+  // Step 5: Código de Empresa
+  const step5CompanyCode = document.getElementById('step-5-company-code');
+  const companyCodeInput = document.getElementById('company_code_input');
+
+  // Botones "Atrás"
+  const backButtons = form.querySelectorAll('.btn-back');
+
+  // Inputs ocultos del formulario
+  const hiddenRole = document.getElementById('form-role');
+  const hiddenProviderSubRole = document.getElementById('form-provider-sub-role');
+  const hiddenCompanySubRole = document.getElementById('form-company-sub-role');
+  const hiddenCompanyCode = document.getElementById('form-company-code');
+  
+  // --- Estado ---
+  let formData = {
+    name: '',
+    email: ''
+  };
+
+  // --- Funciones ---
+
+  function showStep(stepToShow) {
+    if (!stepToShow) return; // Comprobación de seguridad
+    steps.forEach(step => {
+      step.classList.remove('active');
+    });
+    stepToShow.classList.add('active');
+    loginLink.style.display = (stepToShow.id === 'step-1') ? 'block' : 'none';
+  }
+
+  function updateHeader(stepNum, totalSteps, description) {
+    if (!headerDesc) return; // Comprobación de seguridad
+    const progress = (stepNum / totalSteps) * 100;
+    headerDesc.textContent = `Paso ${stepNum} de ${totalSteps} - ${description}`;
+    progressText.textContent = `${Math.round(progress)}%`;
+    progressBar.style.width = `${progress}%`;
+  }
+
+  function validateStep1() {
+    passError.classList.add('hidden');
+    
+    if (!nameInput.value || !emailInput.value || !passInput.value || !confirmPassInput.value) {
+      passError.textContent = 'Todos los campos son obligatorios';
+      passError.classList.remove('hidden');
+      return false;
+    }
+    
+    if (passInput.value.length < 8) {
+      passError.textContent = 'La contraseña debe tener al menos 8 caracteres';
+      passError.classList.remove('hidden');
+      passInput.focus();
+      return false;
+    }
+    
+    if (passInput.value !== confirmPassInput.value) {
+      passError.textContent = 'Las contraseñas no coinciden';
+      passError.classList.remove('hidden');
+      confirmPassInput.focus();
+      return false;
+    }
+
+    formData.name = nameInput.value;
+    formData.email = emailInput.value;
+    return true;
+  }
+  
+  function populateSummaries() {
+    summaryClientName.textContent = formData.name || "(Nombre)";
+    summaryClientEmail.textContent = formData.email || "(Email)";
+    summaryFreelancerName.textContent = formData.name || "(Nombre)";
+    summaryFreelancerEmail.textContent = formData.email || "(Email)";
+    summaryAdminName.textContent = formData.name || "(Nombre)";
+    summaryAdminEmail.textContent = formData.email || "(Email)";
+  }
+
+  // --- Lógica de Eventos de Avance ---
+
+  //
+  // ¡¡¡ AQUÍ ESTÁ EL BYPASS DE VALIDACIÓN !!!
+  // (Versión para pruebas de diseño)
+  //
+  if (btnStep1Next) {
+    btnStep1Next.addEventListener('click', () => {
+      
+      // --- MODO DE PRUEBA (BYPASS) ---
+      console.warn("Saltando validación del Paso 1 para ver el diseño.");
+      formData.name = nameInput.value || "Usuario de Prueba";
+      formData.email = emailInput.value || "prueba@dominio.com";
+      showStep(step2); 
+      updateHeader(2, 2, 'Tipo de Cuenta');
+      
+      
+      /* --- MODO DE PRODUCCIÓN ---
+      (Comenta el bloque de "MODO DE PRUEBA" y descomenta este)
+  
+      if (validateStep1()) {
+        showStep(step2);
+        updateHeader(2, 2, 'Tipo de Cuenta');
+      }
+      */
+  
+    });
+  } else {
+    console.error("No se pudo encontrar el botón 'btn-step-1-next'.");
+  }
+
+
+  if (btnSelectClient) {
+    btnSelectClient.addEventListener('click', () => {
+      hiddenRole.value = 'client';
+      hiddenProviderSubRole.value = '';
+      hiddenCompanySubRole.value = '';
+      
+      populateSummaries();
+      showStep(stepClientSummary);
+      updateHeader(2, 2, 'Confirmar Cuenta');
+    });
+  }
+  
+  if (btnSelectProvider) {
+    btnSelectProvider.addEventListener('click', () => {
+      hiddenRole.value = 'provider';
+      showStep(step3Provider);
+      updateHeader(2, 3, 'Tipo de Proveedor');
+    });
+  }
+
+  if (btnSelectFreelancer) {
+    btnSelectFreelancer.addEventListener('click', () => {
+      hiddenProviderSubRole.value = 'freelancer';
+      hiddenCompanySubRole.value = '';
+
+      populateSummaries();
+      showStep(stepFreelancerSummary);
+      updateHeader(3, 3, 'Confirmar Cuenta');
+    });
+  }
+  
+  if (btnSelectCompany) {
+    btnSelectCompany.addEventListener('click', () => {
+      hiddenProviderSubRole.value = 'company';
+      showStep(step4CompanyRole);
+      updateHeader(3, 4, 'Rol en Empresa');
+    });
+  }
+
+  if (btnSelectAdmin) {
+    btnSelectAdmin.addEventListener('click', () => {
+      hiddenCompanySubRole.value = 'admin';
+      
+      populateSummaries();
+      showStep(stepAdminSummary);
+      updateHeader(4, 4, 'Confirmar Cuenta');
+    });
+  }
+
+  if (btnSelectEmployee) {
+    btnSelectEmployee.addEventListener('click', () => {
+      hiddenCompanySubRole.value = 'employee';
+      showStep(step5CompanyCode);
+      updateHeader(4, 4, 'Código de Empresa');
+    });
+  }
+
+  // --- Lógica del Formulario (Submit) ---
+  if (form) {
+    form.addEventListener('submit', (e) => {
+      if (step5CompanyCode.classList.contains('active')) {
+        if (companyCodeInput.value) {
+          hiddenCompanyCode.value = companyCodeInput.value;
+        } else {
+          e.preventDefault(); 
+          alert('Por favor, introduce un código de empresa.');
+        }
+      }
+    });
+  }
+
+
+  // --- Lógica para TODOS los botones "Atrás" ---
+  backButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      const backToStepId = button.dataset.backTo;
+      let stepElement;
+      
+      switch (backToStepId) {
+        case 'step-1':
+          stepElement = step1;
+          updateHeader(1, 2, 'Información Personal');
+          break;
+        case 'step-2':
+          stepElement = step2;
+          updateHeader(2, 2, 'Tipo de Cuenta');
+          break;
+        case 'step-3-provider':
+          stepElement = step3Provider;
+          updateHeader(2, 3, 'Tipo de Proveedor');
+          break;
+        case 'step-4-company-role':
+          stepElement = step4CompanyRole;
+          updateHeader(3, 4, 'Rol en Empresa');
+          break;
+      }
+      
+      if (stepElement) {
+        showStep(stepElement);
+      }
+    });
+  });
+
+  // --- Inicialización ---
+  showStep(step1);
+  updateHeader(1, 2, 'Información Personal');
+
+});
+</script>
+
 {% endblock %}
