@@ -1,172 +1,363 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container">
-    <section class="hero-section">
-        <div class="hero-content row align-items-center">
-            <div class="col-lg-9">
-                <h1 class="hero-title">Connect with local experts. Bring your ideas to life.</h1>
-                <p class="hero-subtitle">Find trusted professionals for any service you can imagine, right in your neighborhood.</p>
-            </div>
-            <div class="col-lg-3">
-                <ul class="hero-stats">
-                    <li class="hero-stat-item">
-                        <strong class="stat-number">5k+</strong>
-                        <span class="stat-label">Verified Professionals</span>
-                    </li>
-                    <li class="hero-stat-item">
-                        <strong class="stat-number">12k+</strong>
-                        <span class="stat-label">Projects Completed</span>
-                    </li>
-                    <li class="hero-stat-item">
-                        <strong class="stat-number">98%</strong>
-                        <span class="stat-label">Customer Satisfaction</span>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </section>
 
-    <div class="content-box">
-        <section class="services-container">
-            <div class="section-header">
-                <h2 class="section-title">Explore Our Services</h2>
-            </div>
-
-            <div class="categories-wrapper">
-                <button class="category-chip active" data-category="all">View all</button>
-                <button class="category-chip" data-category="plumbing">Plumbing</button>
-                <button class="category-chip" data-category="electrical">Electrical</button>
-                <button class="category-chip" data-category="carpentry">Carpentry</button>
-                <button class="category-chip" data-category="cleaning">Cleaning</button>
-                <button class="category-chip" data-category="painting">Painting</button>
-            </div>
-
-            <div class="services-wrapper">
-                <div class="service-card-wrapper" data-category="plumbing">
-                    <div class="service-card"><div class="service-image-wrapper"><img src="/static/images/plumber2.jpg" alt="Service" class="service-img"></div><div class="service-details"><span class="service-category">Plumbing</span><h3 class="service-title">Leaky Faucet Repair</h3></div></div>
+    <div class="w-full">
+        <section class="hero-section">
+            <div class="hero-content row align-items-center">
+                <div class="col-lg-9">
+                    <h1 class="hero-title">Connect with local experts. Bring your ideas to life.</h1>
+                    <p class="hero-subtitle">Find trusted professionals for any service you can imagine, right in your
+                        neighborhood.</p>
                 </div>
-                <div class="service-card-wrapper" data-category="electrical">
-                    <div class="service-card"><div class="service-image-wrapper"><img src="/static/images/electrician2.jpg" alt="Service" class="service-img"></div><div class="service-details"><span class="service-category">Electrical</span><h3 class="service-title">Light Fixture Installation</h3></div></div>
-                </div>
-                <div class="service-card-wrapper" data-category="carpentry">
-                    <div class="service-card"><div class="service-image-wrapper"><img src="/static/images/carpenter.jpg" alt="Service" class="service-img"></div><div class="service-details"><span class="service-category">Carpentry</span><h3 class="service-title">Custom Shelving</h3></div></div>
-                </div>
-                <div class="service-card-wrapper" data-category="plumbing">
-                    <div class="service-card"><div class="service-image-wrapper"><img src="/static/images/plumber1.jpg" alt="Service" class="service-img"></div><div class="service-details"><span class="service-category">Plumbing</span><h3 class="service-title">Clogged Drain Service</h3></div></div>
-                </div>
-                <div class="service-card-wrapper" data-category="painting">
-                    <div class="service-card"><div class="service-image-wrapper"><img src="/static/images/painter.jpeg" alt="Service" class="service-img"></div><div class="service-details"><span class="service-category">Painting</span><h3 class="service-title">Interior Room Painting</h3></div></div>
-                </div>
-                <div class="service-card-wrapper" data-category="electrical">
-                    <div class="service-card"><div class="service-image-wrapper"><img src="/static/images/electrician1.jpeg" alt="Service" class="service-img"></div><div class="service-details"><span class="service-category">Electrical</span><h3 class="service-title">Outlet Replacement</h3></div></div>
+                <div class="col-lg-3">
+                    <ul class="hero-stats">
+                        <li class="hero-stat-item">
+                            <strong class="stat-number">5k+</strong>
+                            <span class="stat-label">Verified Professionals</span>
+                        </li>
+                        <li class="hero-stat-item">
+                            <strong class="stat-number">12k+</strong>
+                            <span class="stat-label">Projects Completed</span>
+                        </li>
+                        <li class="hero-stat-item">
+                            <strong class="stat-number">98%</strong>
+                            <span class="stat-label">Customer Satisfaction</span>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </section>
+
+        <div class="content-box">
+            <section class="services-container">
+                <div class="section-header">
+                    <h2 class="section-title">Explore Our Services</h2>
+                </div>
+
+                <div class="categories-wrapper">
+                    <button class="category-chip active" data-category="all">View all</button>
+                    <button class="category-chip" data-category="plumbing">Plumbing</button>
+                    <button class="category-chip" data-category="electrical">Electrical</button>
+                    <button class="category-chip" data-category="carpentry">Carpentry</button>
+                    <button class="category-chip" data-category="cleaning">Cleaning</button>
+                    <button class="category-chip" data-category="painting">Painting</button>
+                </div>
+
+                <div class="services-wrapper">
+                    <div class="service-card-wrapper" data-category="plumbing">
+                        <div class="service-card">
+                            <div class="service-image-wrapper"><img src="/static/images/plumber2.jpg" alt="Service"
+                                                                    class="service-img"></div>
+                            <div class="service-details"><span class="service-category">Plumbing</span>
+                                <h3 class="service-title">Leaky Faucet Repair</h3></div>
+                        </div>
+                    </div>
+                    <div class="service-card-wrapper" data-category="electrical">
+                        <div class="service-card">
+                            <div class="service-image-wrapper"><img src="/static/images/electrician2.jpg" alt="Service"
+                                                                    class="service-img"></div>
+                            <div class="service-details"><span class="service-category">Electrical</span>
+                                <h3 class="service-title">Light Fixture Installation</h3></div>
+                        </div>
+                    </div>
+                    <div class="service-card-wrapper" data-category="carpentry">
+                        <div class="service-card">
+                            <div class="service-image-wrapper"><img src="/static/images/carpenter.jpg" alt="Service"
+                                                                    class="service-img"></div>
+                            <div class="service-details"><span class="service-category">Carpentry</span>
+                                <h3 class="service-title">Custom Shelving</h3></div>
+                        </div>
+                    </div>
+                    <div class="service-card-wrapper" data-category="plumbing">
+                        <div class="service-card">
+                            <div class="service-image-wrapper"><img src="/static/images/plumber1.jpg" alt="Service"
+                                                                    class="service-img"></div>
+                            <div class="service-details"><span class="service-category">Plumbing</span>
+                                <h3 class="service-title">Clogged Drain Service</h3></div>
+                        </div>
+                    </div>
+                    <div class="service-card-wrapper" data-category="painting">
+                        <div class="service-card">
+                            <div class="service-image-wrapper"><img src="/static/images/painter.jpeg" alt="Service"
+                                                                    class="service-img"></div>
+                            <div class="service-details"><span class="service-category">Painting</span>
+                                <h3 class="service-title">Interior Room Painting</h3></div>
+                        </div>
+                    </div>
+                    <div class="service-card-wrapper" data-category="electrical">
+                        <div class="service-card">
+                            <div class="service-image-wrapper"><img src="/static/images/electrician1.jpeg" alt="Service"
+                                                                    class="service-img"></div>
+                            <div class="service-details"><span class="service-category">Electrical</span>
+                                <h3 class="service-title">Outlet Replacement</h3></div>
+                        </div>
+                    </div>
+                    <div class="service-card-wrapper" data-category="electrical">
+                        <div class="service-card">
+                            <div class="service-image-wrapper"><img src="/static/images/electrician1.jpeg" alt="Service"
+                                                                    class="service-img"></div>
+                            <div class="service-details"><span class="service-category">Electrical</span>
+                                <h3 class="service-title">Outlet Replacement</h3></div>
+                        </div>
+                    </div>
+                    <div class="service-card-wrapper" data-category="electrical">
+                        <div class="service-card">
+                            <div class="service-image-wrapper"><img src="/static/images/electrician1.jpeg" alt="Service"
+                                                                    class="service-img"></div>
+                            <div class="service-details"><span class="service-category">Electrical</span>
+                                <h3 class="service-title">Outlet Replacement</h3></div>
+                        </div>
+                    </div>
+                    <div class="service-card-wrapper" data-category="electrical">
+                        <div class="service-card">
+                            <div class="service-image-wrapper"><img src="/static/images/electrician1.jpeg" alt="Service"
+                                                                    class="service-img"></div>
+                            <div class="service-details"><span class="service-category">Electrical</span>
+                                <h3 class="service-title">Outlet Replacement</h3></div>
+                        </div>
+                    </div>
+                    <div class="service-card-wrapper" data-category="electrical">
+                        <div class="service-card">
+                            <div class="service-image-wrapper"><img src="/static/images/electrician1.jpeg" alt="Service"
+                                                                    class="service-img"></div>
+                            <div class="service-details"><span class="service-category">Electrical</span>
+                                <h3 class="service-title">Outlet Replacement</h3></div>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+        </div>
     </div>
-</div>
 
-<style>
-    :root {
-        --primary-color: #6366f1;
-        --secondary-color: #1e293b;
-        --medium-gray-color: #e2e8f0;
-        --light-gray-bg: #f8f9fa;
-        --text-color: #334155;
-        --text-color-light: #64748b;
-        --white-color: #ffffff;
-        --border-radius-lg: 16px;
-        --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.05);
-        --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        --transition-fast: all 0.2s ease-in-out;
-    }
-    .container { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
-    .section-header { margin-bottom: 1.5rem; }
-    .section-title { font-size: 2rem; font-weight: 700; color: var(--secondary-color); margin: 0; }
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #1e293b;
+            --medium-gray-color: #e2e8f0;
+            --light-gray-bg: #f8f9fa;
+            --text-color: #334155;
+            --text-color-light: #64748b;
+            --white-color: #ffffff;
+            --border-radius-lg: 16px;
+            --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --transition-fast: all 0.2s ease-in-out;
+        }
 
-    /* Hero Section */
-    .hero-section { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: var(--border-radius-lg); padding: 1.5rem 2rem; margin: 2rem 0; color: var(--white-color); }
-    .hero-title { font-size: 2.5rem; font-weight: 600; line-height: 1.2; margin-bottom: 1rem; }
-    .hero-subtitle { font-size: 1.15rem; opacity: 0.9; max-width: 100%; }
-    .hero-stats { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 1.5rem; align-items: flex-start; }
-    .hero-stat-item .stat-number { font-size: 2.25rem; font-weight: 700; }
-    .hero-stat-item .stat-label { font-size: 0.9rem; opacity: 0.9; }
+        .section-header {
+            margin-bottom: 1.5rem;
+        }
 
-    /* Content Box for Services */
-    .content-box {
-        background-color: var(--light-gray-bg);
-        border: 1px solid var(--medium-gray-color);
-        border-radius: var(--border-radius-lg);
-        padding: 2rem;
-        margin-top: 3rem;
-        box-shadow: var(--shadow-sm);
-    }
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--secondary-color);
+            margin: 0;
+        }
 
-    .services-container { margin: 0; }
-    .categories-wrapper { display: flex; gap: 0.75rem; overflow-x: auto; padding-bottom: 1rem; margin-bottom: 1.5rem; }
-    .category-chip { background: var(--white-color); border: 1px solid var(--medium-gray-color); padding: 0.75rem 1.5rem; border-radius: 50px; font-weight: 500; color: var(--text-color-light); cursor: pointer; transition: var(--transition-fast); white-space: nowrap; font-size: 1rem; }
-    .category-chip:hover { border-color: var(--primary-color); color: var(--primary-color); box-shadow: var(--shadow-sm); }
-    .category-chip.active { background: var(--primary-color); color: var(--white-color); border-color: var(--primary-color); }
+        /* Hero Section */
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: var(--border-radius-lg);
+            padding: 1.5rem 2rem;
+            margin: 2rem 0;
+            color: var(--white-color);
+        }
 
-    .services-wrapper { display: flex; gap: 1.5rem; overflow-x: auto; padding-bottom: 1.5rem; scrollbar-width: thin; scrollbar-color: var(--medium-gray-color) transparent; }
-    .services-wrapper::-webkit-scrollbar { height: 8px; }
-    .services-wrapper::-webkit-scrollbar-track { background: transparent; }
-    .services-wrapper::-webkit-scrollbar-thumb { background-color: var(--medium-gray-color); border-radius: 4px; }
-    .service-card-wrapper { min-width: 280px; flex-shrink: 0; display: block; }
+        .hero-title {
+            font-size: 2.5rem;
+            font-weight: 600;
+            line-height: 1.2;
+            margin-bottom: 1rem;
+        }
 
-    /* MODIFICADO: La transición ahora está en el elemento base para que la animación sea suave al entrar y al salir. */
-    .service-card {
-        background: var(--white-color);
-        border: 1px solid var(--medium-gray-color);
-        border-radius: var(--border-radius-lg);
-        overflow: hidden;
-        height: 100%;
-        cursor: pointer;
-        /* La transición se aplica a las propiedades que van a cambiar */
-        transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
-    }
+        .hero-subtitle {
+            font-size: 1.15rem;
+            opacity: 0.9;
+            max-width: 100%;
+        }
 
-    /* MODIFICADO: Eliminado el 'transform: scale'. Ahora solo cambia la sombra y el borde. */
-    .service-card-wrapper:hover .service-card {
-        border-color: var(--primary-color);
-        box-shadow: var(--shadow-md);
-    }
+        .hero-stats {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            align-items: flex-start;
+        }
 
-    .service-image-wrapper { height: 180px; }
-    .service-img { width: 100%; height: 100%; object-fit: cover; }
-    .service-details { padding: 1rem; }
-    .service-category { font-size: 0.8rem; color: var(--text-color-light); font-weight: 500; text-transform: uppercase; }
-    .service-title { font-size: 1.1rem; font-weight: 600; margin: 0.25rem 0; }
+        .hero-stat-item .stat-number {
+            font-size: 2.25rem;
+            font-weight: 700;
+        }
 
-    /* Responsive */
-    @media (max-width: 992px) {
-        .hero-title { font-size: 2.5rem; }
-        .hero-content { text-align: center; }
-        .hero-stats { flex-direction: row; justify-content: center; padding-left: 0; }
-    }
-</style>
+        .hero-stat-item .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const categoryButtons = document.querySelectorAll('.category-chip');
-        const serviceCards = document.querySelectorAll('.service-card-wrapper');
+        /* Content Box for Services */
+        .content-box {
+            background-color: var(--light-gray-bg);
+            border: 1px solid var(--medium-gray-color);
+            border-radius: var(--border-radius-lg);
+            padding: 2rem;
+            margin-top: 3rem;
+            box-shadow: var(--shadow-sm);
+        }
 
-        categoryButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const filterCategory = button.dataset.category;
-                categoryButtons.forEach(btn => btn.classList.remove('active'));
-                button.classList.add('active');
-                serviceCards.forEach(card => {
-                    const cardCategory = card.dataset.category;
-                    if (filterCategory === 'all' || cardCategory === filterCategory) {
-                        card.style.display = 'block';
-                    } else {
-                        card.style.display = 'none';
-                    }
+        .services-container {
+            margin: 0;
+        }
+
+        .categories-wrapper {
+            display: flex;
+            gap: 0.75rem;
+            overflow-x: auto;
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .category-chip {
+            background: var(--white-color);
+            border: 1px solid var(--medium-gray-color);
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 500;
+            color: var(--text-color-light);
+            cursor: pointer;
+            transition: var(--transition-fast);
+            white-space: nowrap;
+            font-size: 1rem;
+        }
+
+        .category-chip:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .category-chip.active {
+            background: var(--primary-color);
+            color: var(--white-color);
+            border-color: var(--primary-color);
+        }
+
+        .services-wrapper {
+            display: flex;
+            gap: 1.5rem;
+            overflow-x: auto;
+            padding-bottom: 1.5rem;
+            scrollbar-width: thin;
+            scrollbar-color: var(--medium-gray-color) transparent;
+        }
+
+        .services-wrapper::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .services-wrapper::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .services-wrapper::-webkit-scrollbar-thumb {
+            background-color: var(--medium-gray-color);
+            border-radius: 4px;
+        }
+
+        .service-card-wrapper {
+            min-width: 280px;
+            flex-shrink: 0;
+            display: block;
+        }
+
+        /* MODIFICADO: La transición ahora está en el elemento base para que la animación sea suave al entrar y al salir. */
+        .service-card {
+            background: var(--white-color);
+            border: 1px solid var(--medium-gray-color);
+            border-radius: var(--border-radius-lg);
+            overflow: hidden;
+            height: 100%;
+            cursor: pointer;
+            /* La transición se aplica a las propiedades que van a cambiar */
+            transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
+        }
+
+        /* MODIFICADO: Eliminado el 'transform: scale'. Ahora solo cambia la sombra y el borde. */
+        .service-card-wrapper:hover .service-card {
+            border-color: var(--primary-color);
+            box-shadow: var(--shadow-md);
+        }
+
+        .service-image-wrapper {
+            height: 180px;
+        }
+
+        .service-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .service-details {
+            padding: 1rem;
+        }
+
+        .service-category {
+            font-size: 0.8rem;
+            color: var(--text-color-light);
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .service-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0.25rem 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+
+            .hero-content {
+                text-align: center;
+            }
+
+            .hero-stats {
+                flex-direction: row;
+                justify-content: center;
+                padding-left: 0;
+            }
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const categoryButtons = document.querySelectorAll('.category-chip');
+            const serviceCards = document.querySelectorAll('.service-card-wrapper');
+
+            categoryButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const filterCategory = button.dataset.category;
+                    categoryButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    serviceCards.forEach(card => {
+                        const cardCategory = card.dataset.category;
+                        if (filterCategory === 'all' || cardCategory === filterCategory) {
+                            card.style.display = 'block';
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
                 });
             });
         });
-    });
-</script>
+    </script>
 
 {% endblock %}
