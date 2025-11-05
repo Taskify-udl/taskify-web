@@ -1,5 +1,6 @@
 from django.urls import path
 from .views import review_views, contract_views, category_views, service_views, favorite_views, auth_views
+from taskify_app import views
 
 urlpatterns = [
     path('register', auth_views.register),
@@ -15,5 +16,5 @@ urlpatterns = [
     path('category/<int:pk>', category_views.category_detail),
     path('favorite', favorite_views.favorites),  # GET y POST
     path('favorite/<int:pk>', favorite_views.favorite_detail),  # DELETE
-
+    path('chat/<int:conversation_id>/new-messages/', views.get_new_messages, name='get_new_messages'),
 ]

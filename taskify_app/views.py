@@ -11,10 +11,11 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth import logout
+
+from django.utils.dateparse import parse_datetime
+from .forms import RegisterForm
 from django.templatetags.static import static
-
-
-from .models import Service, ServiceImage, Contract, Review, UserProfile, Notification, CustomUser, EmailVerification, Category
+from .models import Service, ServiceImage, Contract, Review, UserProfile, Notification, CustomUser, EmailVerification, Category, Conversation, Message
 
 def home(request):
     categories = Category.objects.all()
@@ -103,11 +104,7 @@ def user_logout(request):
     # Si alguien entra por GET, lo devolvemos a algún sitio seguro
     return redirect("home")
 
-
-@login_required
-def chats(request):
-    return render(request, 'chats.html')
-
+  
 @login_required
 def my_orders(request):
     return render(request, 'my_orders.html')
@@ -369,6 +366,105 @@ def resend_verification_code(request):
 
 
 @login_required
+def chat_list_view(request):
+    """
+    Vista para la "bandeja de entrada" (chat_list.html).
+    Muestra todas las conversaciones del usuario logueado.
+    """
+    conversations_qs = Conversation.objects.filter(participants=request.user)
+
+    context_conversations = []
+
+    for conv in conversations_qs:
+        otro_usuario = conv.get_other_participant(request.user)
+        ultimo_mensaje = conv.messages.order_by('-timestamp').first()
+        no_leidos = conv.messages.filter(is_read=False).exclude(sender=request.user).count()
+
+        context_conversations.append({
+            'conversation_obj': conv,
+            'otro_usuario': otro_usuario,
+            'ultimo_mensaje': ultimo_mensaje,
+            'no_leidos': no_leidos,
+        })
+
+    context_conversations.sort(
+        key=lambda x: x['ultimo_mensaje'].timestamp if x['ultimo_mensaje'] else x['conversation_obj'].created_at,
+        reverse=True
+    )
+
+    return render(request, 'chats.html', {
+        'conversations': context_conversations
+    })
+
+
+@login_required
+def chat_detail_view(request, conversation_id):
+    try:
+        conversation = get_object_or_404(Conversation, id=conversation_id, participants=request.user)
+        messages = Message.objects.filter(conversation=conversation).order_by('timestamp')
+        otro_usuario = conversation.participants.exclude(id=request.user.id).first()
+
+    except Exception as e:
+        print(f"Error al cargar chat: {e}")
+        return redirect('chats')
+
+    if request.method == "POST":
+        content = request.POST.get('content', '').strip()
+        if content:
+            Message.objects.create(
+                conversation=conversation,
+                sender=request.user,
+                content=content
+            )
+            return redirect('chat_detail', conversation_id=conversation_id)
+
+    context = {
+        'messages': messages,
+        'conversation_id': conversation_id,
+        'otro_usuario': otro_usuario,
+        'conversation': conversation,
+    }
+    return render(request, 'chat_detail.html', context)
+
+
+@login_required
+def get_new_messages(request, conversation_id):
+    """
+    Esta es la vista de API que el JavaScript llama cada 3 segundos.
+    Devuelve mensajes nuevos en formato JSON.
+    """
+
+    since_timestamp_str = request.GET.get('since')
+
+    try:
+        conversation = Conversation.objects.get(id=conversation_id, participants=request.user)
+        messages = Message.objects.filter(conversation=conversation)
+
+    except Conversation.DoesNotExist:
+        return JsonResponse({"error": "No autorizado o no encontrado"}, status=403)
+
+    if since_timestamp_str:
+        try:
+            since_timestamp = parse_datetime(since_timestamp_str)
+            if since_timestamp:
+                messages = messages.filter(timestamp__gt=since_timestamp)
+        except ValueError:
+            pass
+
+    messages = messages.order_by('timestamp')
+
+    new_messages_data = [
+        {
+            'id': message.id,
+            'sender_id': message.sender.id,
+            'content': message.content,
+            'timestamp': message.timestamp.isoformat(),  # Envía en formato ISO
+        }
+        for message in messages
+    ]
+
+    return JsonResponse(new_messages_data, safe=False)
+  
 def my_services(request):
     if request.method == 'POST':
         name = request.POST.get('name')
