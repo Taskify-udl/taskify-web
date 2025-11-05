@@ -96,6 +96,8 @@ STATICFILES_DIRS = [BASE_DIR / 'static']  # crea carpeta /static si la usas
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+LOGIN_URL = 'login'
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Django REST Framework

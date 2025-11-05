@@ -4,7 +4,6 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from django.core.paginator import Paginator
-from django.db import models
 from django.http import JsonResponse
 from django.db.models import Count, Avg
 from django.core.mail import send_mail
@@ -13,16 +12,40 @@ from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth import logout
 
-
-
+from django.utils.dateparse import parse_datetime
 from .forms import RegisterForm
-from .models import Service, Contract, Review, UserProfile, Notification, CustomUser, EmailVerification
+from django.templatetags.static import static
+from .models import Service, ServiceImage, Contract, Review, UserProfile, Notification, CustomUser, EmailVerification, Category, Conversation, Message
 
 def home(request):
-    return render(request, 'home.html')
+    categories = Category.objects.all()
+    featured_services = Service.objects.all()[:6]
+    
+    context = {
+        'categories': categories,
+        'featured_services': featured_services,
+    }
+    return render(request, 'home.html', context)
 
 def search(request):
     return render(request, 'search.html')
+
+@login_required
+def favourites(request):
+    """
+    Pantalla de servicios favoritos del usuario autenticado.
+    """
+    from .models import Favorite
+    
+    user = request.user
+    favorite_services = Service.objects.filter(
+        favorited_by__user=user
+    ).prefetch_related('categories', 'images').order_by('-favorited_by__favorited_at')
+
+    context = {
+        'favorite_services': favorite_services,
+    }
+    return render(request, 'favourites.html', context)
 
 def user_login(request):
     if request.method == "POST":
@@ -81,15 +104,7 @@ def user_logout(request):
     # Si alguien entra por GET, lo devolvemos a algún sitio seguro
     return redirect("home")
 
-
-@login_required
-def chats(request):
-    return render(request, 'chats.html')
-
-@login_required
-def my_services(request):
-    return render(request, 'my_services.html')
-
+  
 @login_required
 def my_orders(request):
     return render(request, 'my_orders.html')
@@ -160,6 +175,7 @@ def edit_profile(request):
         profile.phone = request.POST.get('phone', '')
         profile.location = request.POST.get('location', '')
         profile.website = request.POST.get('website', '')
+        profile.profession = request.POST.get('profession', '')
 
         # Handle avatar upload
         if request.FILES.get('avatar'):
@@ -348,3 +364,202 @@ def resend_verification_code(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
 
+
+@login_required
+def chat_list_view(request):
+    """
+    Vista para la "bandeja de entrada" (chat_list.html).
+    Muestra todas las conversaciones del usuario logueado.
+    """
+    conversations_qs = Conversation.objects.filter(participants=request.user)
+
+    context_conversations = []
+
+    for conv in conversations_qs:
+        otro_usuario = conv.get_other_participant(request.user)
+        ultimo_mensaje = conv.messages.order_by('-timestamp').first()
+        no_leidos = conv.messages.filter(is_read=False).exclude(sender=request.user).count()
+
+        context_conversations.append({
+            'conversation_obj': conv,
+            'otro_usuario': otro_usuario,
+            'ultimo_mensaje': ultimo_mensaje,
+            'no_leidos': no_leidos,
+        })
+
+    context_conversations.sort(
+        key=lambda x: x['ultimo_mensaje'].timestamp if x['ultimo_mensaje'] else x['conversation_obj'].created_at,
+        reverse=True
+    )
+
+    return render(request, 'chats.html', {
+        'conversations': context_conversations
+    })
+
+
+@login_required
+def chat_detail_view(request, conversation_id):
+    try:
+        conversation = get_object_or_404(Conversation, id=conversation_id, participants=request.user)
+        messages = Message.objects.filter(conversation=conversation).order_by('timestamp')
+        otro_usuario = conversation.participants.exclude(id=request.user.id).first()
+
+    except Exception as e:
+        print(f"Error al cargar chat: {e}")
+        return redirect('chats')
+
+    if request.method == "POST":
+        content = request.POST.get('content', '').strip()
+        if content:
+            Message.objects.create(
+                conversation=conversation,
+                sender=request.user,
+                content=content
+            )
+            return redirect('chat_detail', conversation_id=conversation_id)
+
+    context = {
+        'messages': messages,
+        'conversation_id': conversation_id,
+        'otro_usuario': otro_usuario,
+        'conversation': conversation,
+    }
+    return render(request, 'chat_detail.html', context)
+
+
+@login_required
+def get_new_messages(request, conversation_id):
+    """
+    Esta es la vista de API que el JavaScript llama cada 3 segundos.
+    Devuelve mensajes nuevos en formato JSON.
+    """
+
+    since_timestamp_str = request.GET.get('since')
+
+    try:
+        conversation = Conversation.objects.get(id=conversation_id, participants=request.user)
+        messages = Message.objects.filter(conversation=conversation)
+
+    except Conversation.DoesNotExist:
+        return JsonResponse({"error": "No autorizado o no encontrado"}, status=403)
+
+    if since_timestamp_str:
+        try:
+            since_timestamp = parse_datetime(since_timestamp_str)
+            if since_timestamp:
+                messages = messages.filter(timestamp__gt=since_timestamp)
+        except ValueError:
+            pass
+
+    messages = messages.order_by('timestamp')
+
+    new_messages_data = [
+        {
+            'id': message.id,
+            'sender_id': message.sender.id,
+            'content': message.content,
+            'timestamp': message.timestamp.isoformat(),  # Envía en formato ISO
+        }
+        for message in messages
+    ]
+
+    return JsonResponse(new_messages_data, safe=False)
+  
+def my_services(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        description = request.POST.get('description', '')
+        price_str = request.POST.get('price')
+        cover_images = request.FILES.getlist('cover_images')  # Cambiado a plural
+        category_ids = request.POST.getlist('categories')
+        service_id = request.POST.get('service_id')
+
+        if not name or not price_str:
+            messages.error(request, 'El nombre y el precio son obligatorios.')
+            return redirect('my_services')
+        
+        try:
+            price = float(price_str)
+        except ValueError:
+            messages.error(request, 'El precio debe ser un número válido.')
+            return redirect('my_services')
+
+        if service_id:
+            # EDITAR SERVICIO EXISTENTE
+            try:
+                service = Service.objects.get(id=service_id, provider=request.user)
+                service.name = name
+                service.description = description
+                service.price = price
+
+                # Eliminar imágenes marcadas
+                images_to_delete_ids = request.POST.getlist('delete_images')
+                if images_to_delete_ids:
+                    ServiceImage.objects.filter(id__in=images_to_delete_ids, service=service).delete()
+
+                # Agregar nuevas imágenes
+                for f in cover_images:
+                    ServiceImage.objects.create(service=service, image=f)
+
+                service.save()
+
+                # Actualizar categorías
+                if category_ids:
+                    service.categories.set(category_ids)
+                else:
+                    service.categories.clear()
+                
+                # Verificar que tenga al menos una imagen
+                if service.images.count() == 0:
+                    messages.error(request, 'El servicio debe tener al menos una imagen.')
+                    return redirect('my_services')
+                
+                messages.success(request, 'Servicio actualizado correctamente.')
+                
+            except Service.DoesNotExist:
+                messages.error(request, 'Servicio no encontrado.')
+        else:
+            # CREAR NUEVO SERVICIO
+            if not cover_images:
+                messages.error(request, 'Debes subir al menos una imagen.')
+                return redirect('my_services')
+
+            new_service = Service.objects.create(
+                provider=request.user,
+                name=name,
+                description=description,
+                price=price
+            )
+            
+            # Agregar imágenes
+            for f in cover_images:
+                ServiceImage.objects.create(service=new_service, image=f)
+            
+            # Agregar categorías
+            if category_ids:
+                new_service.categories.set(category_ids)
+            
+            messages.success(request, 'Servicio creado correctamente.')
+
+        return redirect('my_services')
+
+    # GET request
+    user_services = Service.objects.filter(provider=request.user).prefetch_related('images', 'categories').order_by('-created_at')
+    all_categories = Category.objects.all()
+
+    context = {
+        'services': user_services,
+        'categories': all_categories,
+    }
+    return render(request, 'my_services.html', context)
+
+
+@login_required
+def delete_service(request, service_id):
+    service = get_object_or_404(Service, id=service_id, provider=request.user)
+
+    if request.method == 'POST':
+        service.delete()
+        messages.success(request, 'Servicio eliminado correctamente.')
+
+    return redirect('my_services')
