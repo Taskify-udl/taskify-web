@@ -178,6 +178,7 @@ def edit_profile(request):
         profile.phone = request.POST.get('phone', '')
         profile.location = request.POST.get('location', '')
         profile.website = request.POST.get('website', '')
+        profile.profession = request.POST.get('profession', '')
 
         # Handle avatar upload
         if request.FILES.get('avatar'):

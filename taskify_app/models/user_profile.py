@@ -8,6 +8,7 @@ class UserProfile(models.Model):
     phone = models.CharField(max_length=20, blank=True)
     location = models.CharField(max_length=100, blank=True)
     website = models.URLField(blank=True)
+    profession = models.CharField(max_length=100, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
