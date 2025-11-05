@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import models
 
+
 class Service(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
@@ -9,7 +10,6 @@ class Service(models.Model):
         on_delete=models.CASCADE,
         related_name="provided_services",
     )
-    # through definido en otro archivo para evitar ciclos
     categories = models.ManyToManyField(
         "taskify_app.Category",
         through="taskify_app.ServiceCategory",
@@ -18,6 +18,13 @@ class Service(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
 
     class Meta:
         ordering = ["name"]

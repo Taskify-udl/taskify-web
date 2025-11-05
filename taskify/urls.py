@@ -22,8 +22,11 @@ urlpatterns = [
     path('chat/<int:conversation_id>/', views.chat_detail_view, name='chat_detail'),
 
     path("my_services/", views.my_services, name='my_services'),
+    path('my_services/delete/<int:service_id>/', views.delete_service, name='delete_service'),
+
     path("my_orders/", views.my_orders, name='my_orders'),
     path("profile/", views.profile, name='profile'),
+    path("favourites/", views.favourites, name='favourites'),
 
     path("profile/edit/", views.edit_profile, name='edit_profile'),
     path("profile/stats/", views.advanced_stats, name='advanced_stats'),

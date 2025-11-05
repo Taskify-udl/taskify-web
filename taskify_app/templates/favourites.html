@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mis Favoritos{% endblock %}
+
+{% block content %}
+<main class="min-h-screen">
+    <div class="bg-white rounded-lg p-4 lg:p-8 m-4 lg:m-8 max-w-7xl mx-auto">
+        <div class="w-full">
+            <h1 class="text-2xl lg:text-3xl font-medium mb-6 text-black">Mis Favoritos</h1>
+
+            {% if favorite_services %}
+                <p class="text-sm lg:text-base text-slate-600 mb-8">
+                    {% if favorite_services.count == 1 %}
+                        {{ favorite_services.count }} servicio guardado
+                    {% else %}
+                        {{ favorite_services.count }} servicios guardados
+                    {% endif %}
+                </p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {% for service in favorite_services %}
+                        <div class="bg-slate-100 rounded-lg overflow-hidden transition-all duration-300 hover:opacity-90 hover:-translate-y-1 cursor-pointer">
+                            <div class="relative w-full h-48 bg-slate-300 overflow-hidden">
+                                {% if service.images.all %}
+                                    {% with service.images.first as image %}
+                                        <img src="{{ image.image.url }}" alt="{{ service.name }}" class="w-full h-full object-cover">
+                                    {% endwith %}
+                                {% else %}
+                                    <div class="w-full h-full bg-slate-400 flex items-center justify-center">
+                                        <span class="text-xs text-gray-600">Sin imagen</span>
+                                    </div>
+                                {% endif %}
+                                <button class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white bg-opacity-90 border-none text-lg cursor-pointer flex items-center justify-center transition-all duration-300 hover:bg-opacity-100 hover:scale-110 bg-red-50" 
+                                        data-service-id="{{ service.id }}" 
+                                        title="Eliminar de favoritos">
+                                    ❤️
+                                </button>
+                            </div>
+                            <div class="p-4 bg-slate-300">
+                                <h3 class="font-medium text-sm text-black mb-2 whitespace-nowrap overflow-hidden text-ellipsis">{{ service.name }}</h3>
+                                <p class="text-xs text-slate-600 mb-2">
+                                    {% if service.categories.all %}
+                                        {{ service.categories.first.name }}
+                                    {% else %}
+                                        Sin categoría
+                                    {% endif %}
+                                </p>
+                                <div class="text-xs text-black mb-2">
+                                    {% if service.average_rating %}
+                                        <span>★ {{ service.average_rating|floatformat:1 }}</span>
+                                    {% else %}
+                                        <span>Sin calificaciones</span>
+                                    {% endif %}
+                                </div>
+                                <p class="font-semibold text-sm text-black mb-3">{{ service.price }} €</p>
+                                <a href="{% url 'service_detail' service.id %}" class="block w-full py-2 px-2 bg-indigo-600 text-white text-center rounded text-xs font-medium transition-colors duration-300 hover:bg-indigo-700 no-underline">Ver servicio</a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-16 px-8 bg-slate-50 rounded-lg flex flex-col items-center justify-center min-h-96">
+                    <div class="text-6xl mb-4 opacity-40">❤️</div>
+                    <p class="text-lg font-medium text-slate-600 mb-2">No tienes servicios favoritos todavía.</p>
+                    <p class="text-sm text-slate-400 mb-8">Marca servicios con el corazón para guardarlos aquí.</p>
+                    <form action="{% url 'home' %}" method="get" style="display: inline;">
+                        <button type="submit" class="flex flex-row gap-x-[5px] text-lg px-3 !py-1.5 items-center bg-[#1c1b2b] text-white !rounded-xl hover:shadow-[0_2px_8px_rgba(0,0,0,0.3)] transition-shadow">
+                            Explorar servicios
+                        </button>
+                    </form>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</main>
+{% endblock %}
