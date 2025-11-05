@@ -11,6 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth import logout
+from django.templatetags.static import static
 
 
 from .models import Service, ServiceImage, Contract, Review, UserProfile, Notification, CustomUser, EmailVerification, Category
