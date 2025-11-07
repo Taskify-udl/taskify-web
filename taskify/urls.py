@@ -25,11 +25,13 @@ urlpatterns = [
     path('my_services/delete/<int:service_id>/', views.delete_service, name='delete_service'),
 
     path("my_orders/", views.my_orders, name='my_orders'),
-    path("profile/", views.profile, name='profile'),
     path("favourites/", views.favourites, name='favourites'),
 
+    path("profile/", views.profile, name='profile'),
+    path("user/<str:username>/", views.public_profile, name="public_profile"),
     path("profile/edit/", views.edit_profile, name='edit_profile'),
     path("profile/stats/", views.advanced_stats, name='advanced_stats'),
+
     path("notifications/", views.notifications, name='notifications'),
     path("notifications/mark-read/<int:notification_id>/", views.mark_notification_read, name='mark_notification_read'),
 

@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+<div class="w-[1024px] mx-auto py-8 space-y-6">
+
+  <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-3 my-4">
+    <div class="flex items-center gap-4">
+      <img class="w-24 h-24 rounded-full object-cover border-2 border-gray-100"
+           src="{{ profile.avatar_url }}"
+           alt="Avatar de {{ profile_user.username }}">
+      <div>
+        <span class="text-xl font-bold text-gray-900">{{ profile_user.get_full_name|default:profile_user.username }}</span>
+        <p class="text-md m-0 text-gray-600">{{ profile.profession|default:"Profesional" }}</p>
+        <div class="flex items-center gap-2 mt-2 text-gray-700">
+          <svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 47.94 47.94" style="enable-background:new 0 0 47.94 47.94;" xml:space="preserve" class="!h-[20px] !w-[20px]">
+            <path style="fill:#ED8A19;" d="M26.285,2.486l5.407,10.956c0.376,0.762,1.103,1.29,1.944,1.412l12.091,1.757
+                c2.118,0.308,2.963,2.91,1.431,4.403l-8.749,8.528c-0.608,0.593-0.886,1.448-0.742,2.285l2.065,12.042
+                c0.362,2.109-1.852,3.717-3.746,2.722l-10.814-5.685c-0.752-0.395-1.651-0.395-2.403,0l-10.814,5.685
+                c-1.894,0.996-4.108-0.613-3.746-2.722l2.065-12.042c0.144-0.837-0.134-1.692-0.742-2.285l-8.749-8.528
+                c-1.532-1.494-0.687-4.096,1.431-4.403l12.091-1.757c0.841-0.122,1.568-0.65,1.944-1.412l5.407-10.956
+                C22.602,0.567,25.338,0.567,26.285,2.486z"></path>
+          </svg>
+          <span class="text-md font-semibold text-gray-800">{{ average_rating|floatformat:1 }}</span>
+          <span class="text-md text-gray-500">·</span>
+          <span class="text-md text-gray-600">{{ reviews_count }} servicios completados</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-3 mb-4">
+    <span class="text-lg font-semibold text-gray-900 mb-3">Sobre mí</span>
+    <p class="text-md text-gray-700 mb-2">
+      {{ profile.bio|default:"Este usuario aún no ha añadido una biografía."|linebreaksbr }}
+    </p>
+    {% if profile.location %}
+      <div class="text-md mb-2 text-gray-600">
+        <div class="flex flex-row gap-1">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 16 16"><path fill="#000000" d="M9.156 14.544C10.899 13.01 14 9.876 14 7A6 6 0 0 0 2 7c0 2.876 3.1 6.01 4.844 7.544a1.736 1.736 0 0 0 2.312 0ZM6 7a2 2 0 1 1 4 0a2 2 0 0 1-4 0Z"/></svg>
+          <span>{{ profile.location }}</span>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  <div>
+    <div class="flex items-center bg-gray-50 border border-gray-200 shadow-sm rounded-full !p-[1px]">
+      <div id="btnServices" class="w-50 py-2 px-3 font-medium text-black rounded-full flex justify-center hover:cursor-pointer border bg-white">
+        Servicios ({{ services.count }})
+      </div>
+      <div id="btnReviews" class="w-50 py-2 px-3 font-medium text-gray-500 rounded-full flex justify-center hover:cursor-pointer hover:bg-gray-100">
+        Reviews ({{ reviews.count }})
+      </div>
+    </div>
+
+    <div id="contentServices" class="pt-3">
+      {% if services %}
+        <div class="grid grid-cols-3 gap-4">
+          {% for service in services %}
+          <article class="rounded-xl border border-gray-200 group shadow-sm">
+            <div class="h-[220px] !border-b border-gray-200 relative rounded-t-xl overflow-hidden">
+              <div class="swiper service-swiper-{{ service.id }} h-full"
+                   style="--swiper-navigation-color: #ffffff;
+                          --swiper-navigation-size: 24px;
+                          filter: drop-shadow(0 0 3px rgba(0,0,0,0.7));">
+
+                <div class="swiper-wrapper">
+                  {% for img in service.images.all %}
+                  <div class="swiper-slide h-full bg-cover bg-center" style="background-image: url('{{ img.image.url }}');">
+                  </div>
+                  {% empty %}
+                  <div class="swiper-slide h-full bg-cover bg-center flex items-center justify-center bg-gray-100">
+                    <span class="text-gray-500">Sin imagen</span>
+                  </div>
+                  {% endfor %}
+                </div>
+                {% if service.images.count > 1 %}
+                <div class="swiper-button-prev opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div class="swiper-button-next opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="p-3 flex flex-col justify-between h-[170px]">
+              <div>
+                <span class="!ml-[1px] text-lg font-medium text-gray-800 line-clamp-1 group-hover:text-blue-600 transition-colors">{{ service.name }}</span>
+                <p class="!ml-[2px] mb-2 text-gray-500 text-sm line-clamp-2">{{ service.description|truncatewords:15 }}</p>
+              </div>
+
+              <div>
+                <div class="flex flex-row flex-wrap max-h-[26px] overflow-y-hidden mb-2">
+                  {% for category in service.categories.all|slice:":2" %}
+                    <span class="text-xs px-2 py-1 mr-1 mb-1 border border-gray-300 bg-gray-50 rounded-full">
+                      {{ category.name }}
+                    </span>
+                  {% endfor %}
+                </div>
+
+                <div class="flex mt-2 mr-1 mb-1 justify-end items-baseline border-t border-gray-100 pt-2">
+                  <span class="text-xs text-gray-500 mr-1">Desde</span>
+                  <span class="text-xl font-bold text-gray-800">€{{ service.price|floatformat:0 }}</span>
+                </div>
+              </div>
+            </div>
+          </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-center py-12 text-gray-500">
+          <p>Este usuario aún no ha publicado ningún servicio.</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <div id="contentReviews" class="pt-3 space-y-3 hidden">
+      {% for review in reviews %}
+      <div class="bg-white border border-gray-200 rounded-xl p-3">
+        <div class="flex items-top justify-between mb-3">
+          <div class="flex items-center gap-3">
+            <img class="w-10 h-10 rounded-full object-cover"
+                 src="{{ review.user.profile.avatar_url }}"
+                 alt="Avatar de {{ review.user.username }}">
+            <div>
+              <span class="font-semibold text-gray-800">{{ review.user.get_full_name|default:review.user.username }}</span>
+              <div class="flex items-center">
+                {% for i in "12345" %}
+                  <svg class="w-4 h-4 {% if forloop.counter <= review.rating %}text-yellow-400{% else %}text-gray-300{% endif %}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 0 0 .95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 0 0-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 0 0-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 0 0-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 0 0 .951-.69l1.07-3.292Z" />
+                  </svg>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+          <span class="text-sm text-gray-500">{{ review.created_at|date:"Y-m-d" }}</span>
+        </div>
+        <p class="m-0 text-gray-700">
+          {{ review.comment|default:"(Sin comentario)" }}
+        </p>
+      </div>
+      {% empty %}
+        <div class="text-center py-12 text-gray-500">
+          <p>Este usuario aún no ha recibido ninguna review.</p>
+        </div>
+      {% endfor %}
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar Swipers
+    document.querySelectorAll('.swiper').forEach((el) => {
+      new Swiper(el, {
+        navigation: {
+          nextEl: el.querySelector('.swiper-button-next'),
+          prevEl: el.querySelector('.swiper-button-prev'),
+        },
+        loop: true,
+      });
+    });
+
+    // Lógica de Pestañas (Tabs)
+    const btnServices = document.getElementById('btnServices');
+    const btnReviews = document.getElementById('btnReviews');
+    const contentServices = document.getElementById('contentServices');
+    const contentReviews = document.getElementById('contentReviews');
+
+    btnServices.addEventListener('click', () => {
+      // Activar botón
+      btnServices.classList.add('border', 'bg-white', 'text-black');
+      btnServices.classList.remove('text-gray-500', 'hover:text-gray-700', 'hover:bg-gray-100');
+      // Desactivar otro botón
+      btnReviews.classList.add('text-gray-500', 'hover:text-gray-700', 'hover:bg-gray-100');
+      btnReviews.classList.remove('border', 'bg-white', 'text-black');
+      // Mostrar contenido
+      contentServices.classList.remove('hidden');
+      contentReviews.classList.add('hidden');
+    });
+
+    btnReviews.addEventListener('click', () => {
+      // Activar botón
+      btnReviews.classList.add('border', 'bg-white', 'text-black');
+      btnReviews.classList.remove('text-gray-500', 'hover:text-gray-700', 'hover:bg-gray-100');
+      // Desactivar otro botón
+      btnServices.classList.add('text-gray-500', 'hover:text-gray-700', 'hover:bg-gray-100');
+      btnServices.classList.remove('border', 'bg-white', 'text-black');
+      // Mostrar contenido
+      contentReviews.classList.remove('hidden');
+      contentServices.classList.add('hidden');
+    });
+  });
+</script>
+{% endblock %}

@@ -20,7 +20,7 @@ from .models import Service, ServiceImage, Contract, Review, UserProfile, Notifi
 def home(request):
     categories = Category.objects.all()
     featured_services = Service.objects.all()[:6]
-    
+
     context = {
         'categories': categories,
         'featured_services': featured_services,
@@ -36,7 +36,7 @@ def favourites(request):
     Pantalla de servicios favoritos del usuario autenticado.
     """
     from .models import Favorite
-    
+
     user = request.user
     favorite_services = Service.objects.filter(
         favorited_by__user=user
@@ -104,7 +104,7 @@ def user_logout(request):
     # Si alguien entra por GET, lo devolvemos a algún sitio seguro
     return redirect("home")
 
-  
+
 @login_required
 def my_orders(request):
     return render(request, 'my_orders.html')
@@ -464,7 +464,7 @@ def get_new_messages(request, conversation_id):
     ]
 
     return JsonResponse(new_messages_data, safe=False)
-  
+
 def my_services(request):
     if request.method == 'POST':
         name = request.POST.get('name')
@@ -477,7 +477,7 @@ def my_services(request):
         if not name or not price_str:
             messages.error(request, 'El nombre y el precio son obligatorios.')
             return redirect('my_services')
-        
+
         try:
             price = float(price_str)
         except ValueError:
@@ -508,14 +508,14 @@ def my_services(request):
                     service.categories.set(category_ids)
                 else:
                     service.categories.clear()
-                
+
                 # Verificar que tenga al menos una imagen
                 if service.images.count() == 0:
                     messages.error(request, 'El servicio debe tener al menos una imagen.')
                     return redirect('my_services')
-                
+
                 messages.success(request, 'Servicio actualizado correctamente.')
-                
+
             except Service.DoesNotExist:
                 messages.error(request, 'Servicio no encontrado.')
         else:
@@ -530,15 +530,15 @@ def my_services(request):
                 description=description,
                 price=price
             )
-            
+
             # Agregar imágenes
             for f in cover_images:
                 ServiceImage.objects.create(service=new_service, image=f)
-            
+
             # Agregar categorías
             if category_ids:
                 new_service.categories.set(category_ids)
-            
+
             messages.success(request, 'Servicio creado correctamente.')
 
         return redirect('my_services')
@@ -563,3 +563,43 @@ def delete_service(request, service_id):
         messages.success(request, 'Servicio eliminado correctamente.')
 
     return redirect('my_services')
+
+
+
+
+
+def public_profile(request, username):
+    """
+    Muestra el perfil público de un usuario, sus servicios y reseñas.
+    """
+    # 1. Obtener el usuario y su perfil
+    try:
+        user = CustomUser.objects.get(username=username)
+    except CustomUser.DoesNotExist:
+        # Aquí podrías redirigir a una página 404
+        messages.error(request, "El usuario no existe.")
+        return redirect('home')
+
+    profile, _ = UserProfile.objects.get_or_create(user=user)
+
+    # 2. Obtener los servicios de este usuario
+    services = Service.objects.filter(provider=user).prefetch_related('images', 'categories')
+
+    # 3. Obtener las reseñas recibidas por este usuario (en cualquiera de sus servicios)
+    reviews = Review.objects.filter(service__provider=user).select_related('user', 'user__profile').order_by(
+        '-created_at')
+
+    # 4. Calcular estadísticas
+    reviews_count = reviews.count()
+    average_rating = reviews.aggregate(avg=Avg('rating'))['avg'] or 0
+
+    context = {
+        'profile_user': user,  # El usuario del perfil que estamos viendo
+        'profile': profile,
+        'services': services,
+        'reviews': reviews,
+        'reviews_count': reviews_count,
+        'average_rating': average_rating,
+    }
+
+    return render(request, 'public_profile.html', context)
