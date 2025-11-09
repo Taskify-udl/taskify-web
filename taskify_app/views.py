@@ -5,7 +5,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.http import JsonResponse
-from django.db.models import Count, Avg
+from django.db.models import Count, Avg, Q
 from django.core.mail import send_mail
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
@@ -603,3 +603,74 @@ def public_profile(request, username):
     }
 
     return render(request, 'public_profile.html', context)
+
+
+def service_detail(request, service_id):
+    """
+    Muestra la página de detalle de un servicio.
+    """
+    service = get_object_or_404(
+        Service.objects.select_related('provider', 'provider__profile')
+        .prefetch_related('images', 'categories'),
+        id=service_id
+    )
+
+    # Obtener reviews y estadísticas
+    reviews = Review.objects.filter(service=service).select_related('user', 'user__profile').order_by('-created_at')
+
+    stats = reviews.aggregate(
+        average_rating=Avg('rating'),
+        reviews_count=Count('id')
+    )
+
+    average_rating = stats.get('average_rating') or 0
+    reviews_count = stats.get('reviews_count') or 0
+
+    # Obtener estadísticas GLOBALES del proveedor
+    provider = service.provider
+    provider_reviews = Review.objects.filter(service__provider=provider)
+    provider_stats = provider_reviews.aggregate(
+        total_avg_rating=Avg('rating'),
+        total_reviews_count=Count('id')
+    )
+    provider_avg_rating = provider_stats.get('total_avg_rating') or 0
+    provider_reviews_count = provider_stats.get('total_reviews_count') or 0
+
+    context = {
+        'service': service,
+        'reviews': reviews,
+        'average_rating': average_rating,
+        'reviews_count': reviews_count,
+        'provider_avg_rating': provider_avg_rating,
+        'provider_reviews_count': provider_reviews_count,
+    }
+    return render(request, 'service_detail.html', context)
+
+@login_required
+def start_chat(request, service_id):
+    """
+    Busca o crea una conversación con el proveedor de un servicio
+    y redirige a la sala de chat.
+    """
+    service = get_object_or_404(Service, id=service_id)
+    provider = service.provider
+    user = request.user
+
+    # No puedes chatear contigo mismo
+    if provider == user:
+        messages.error(request, "No puedes contactar contigo mismo.")
+        return redirect('service_detail', service_id=service.id)
+
+    # Buscar conversación existente entre los dos participantes
+    # Usamos Q para buscar participantes en cualquier orden
+    conversation = Conversation.objects.filter(participants=user).filter(participants=provider).first()
+
+    if conversation:
+        # Ya existe una conversación, redirigir a ella
+        return redirect('chat_detail', conversation_id=conversation.id)
+    else:
+        # Crear una nueva conversación
+        new_convo = Conversation.objects.create()
+        new_convo.participants.add(user, provider)
+        new_convo.save()
+        return redirect('chat_detail', conversation_id=new_convo.id)
