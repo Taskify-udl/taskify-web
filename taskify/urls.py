@@ -24,6 +24,9 @@ urlpatterns = [
     path("my_services/", views.my_services, name='my_services'),
     path('my_services/delete/<int:service_id>/', views.delete_service, name='delete_service'),
 
+    path("service/<int:service_id>/", views.service_detail, name="service_detail"),
+    path("service/<int:service_id>/contact/", views.start_chat, name="start_chat"),
+
     path("my_orders/", views.my_orders, name='my_orders'),
     path("favourites/", views.favourites, name='favourites'),
 
