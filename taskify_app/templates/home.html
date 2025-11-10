@@ -41,7 +41,7 @@
                         {% if categories %}
                             {% for category in categories %}
                                 <a href="{% url 'search' %}?category={{ category.id }}"
-                                   class="inline-flex flex-col items-center justify-center p-3 bg-white rounded-full shadow-sm hover:shadow-md transform hover:scale-105 hover:-translate-y-1 transition-transform duration-200 ease-out text-center !no-underline hover:!no-underline focus:!no-underline active:!no-underline !text-black hover:!text-black visited:!text-black focus:!text-black active:!text-black min-w-[140px] mx-2 focus:outline-none focus:ring-0">
+                                   class="inline-flex flex-col items-center justify-center p-3 bg-white rounded-xl shadow-sm hover:shadow-md transform hover:scale-105 hover:-translate-y-1 transition-transform duration-200 ease-out text-center !no-underline hover:!no-underline focus:!no-underline active:!no-underline !text-black hover:!text-black visited:!text-black focus:!text-black active:!text-black min-w-[140px] mx-2 focus:outline-none focus:ring-0">
                                     <i class="{{ category.icon }} text-2xl"></i>
                                     <span class="mt-1 text-sm !text-black truncate block">{{ category.name }}</span>
                                 </a>
