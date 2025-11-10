@@ -76,7 +76,13 @@
                                             Sin categoría
                                         {% endif %}
                                     </span>
-                                    <button class="text-red-500 hover:text-red-700 transition-colors" title="Añadir a favoritos">❤️</button>
+                                    <button 
+                                        class="favorite-btn transition-colors bg-transparent border-0 p-0 cursor-pointer" 
+                                        data-service-id="{{ service.id }}"
+                                        title="Añadir a favoritos"
+                                        style="outline: none !important; box-shadow: none !important;">
+                                        <i class="fa-regular text-gray-400 hover:text-red-500 fa-heart text-xl" aria-hidden="true"></i>
+                                    </button>
                                 </div>
                                 <h3 class="text-lg font-semibold text-gray-900 mb-2 line-clamp-1">{{ service.name }}</h3>
                                 <div class="flex items-center justify-between mb-3">
@@ -111,6 +117,8 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        const userFavorites = JSON.parse('{{ user_favorites_json|default:"{}"|escapejs }}');
+        
         const categoryButtons = document.querySelectorAll('[data-category]');
         const serviceCards = document.querySelectorAll('[data-service-category]');
 
@@ -132,6 +140,70 @@
                 });
             });
         });
-    </script>
 
-{% endblock %}
+        // Inicializar el estado de los botones de favoritos
+        const favoriteButtons = document.querySelectorAll('.favorite-btn');
+        
+        favoriteButtons.forEach(button => {
+            const serviceId = parseInt(button.dataset.serviceId);
+            const icon = button.querySelector('i');
+            
+            // Establecer estado inicial
+            if (serviceId in userFavorites) {
+                icon.classList.remove('fa-regular', 'text-gray-400');
+                icon.classList.add('fa-solid', 'text-red-500');
+                button.setAttribute('title', 'Quitar de favoritos');
+            }
+            
+            // Manejar click
+            button.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const isFavorite = icon.classList.contains('fa-solid');
+
+                try {
+                    const response = await fetch(`/service/${serviceId}/toggle-favorite/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        }
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        
+                        if (data.action === 'added') {
+                            icon.classList.remove('fa-regular', 'text-gray-400');
+                            icon.classList.add('fa-solid', 'text-red-500');
+                            button.setAttribute('title', 'Quitar de favoritos');
+                            userFavorites[serviceId] = data.favorite_id;
+                        } else if (data.action === 'removed') {
+                            icon.classList.remove('fa-solid', 'text-red-500');
+                            icon.classList.add('fa-regular', 'text-gray-400');
+                            button.setAttribute('title', 'Añadir a favoritos');
+                            delete userFavorites[serviceId];
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error al gestionar favorito:', error);
+                }
+            });
+        });
+
+        // Función para obtener el CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+    </script>{% endblock %}

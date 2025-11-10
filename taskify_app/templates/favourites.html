@@ -20,41 +20,50 @@
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {% for service in favorite_services %}
-                        <div class="bg-slate-100 rounded-lg overflow-hidden transition-all duration-300 hover:opacity-90 hover:-translate-y-1 cursor-pointer">
-                            <div class="relative w-full h-48 bg-slate-300 overflow-hidden">
+                        <div class="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                            <div class="h-48 bg-gray-300 overflow-hidden">
                                 {% if service.images.all %}
                                     {% with service.images.first as image %}
                                         <img src="{{ image.image.url }}" alt="{{ service.name }}" class="w-full h-full object-cover">
                                     {% endwith %}
                                 {% else %}
-                                    <div class="w-full h-full bg-slate-400 flex items-center justify-center">
-                                        <span class="text-xs text-gray-600">Sin imagen</span>
+                                    <div class="w-full h-full flex items-center justify-center bg-gray-400">
+                                        <span class="text-gray-600">Sin imagen</span>
                                     </div>
                                 {% endif %}
-                                <button class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white bg-opacity-90 border-none text-lg cursor-pointer flex items-center justify-center transition-all duration-300 hover:bg-opacity-100 hover:scale-110 bg-red-50" 
-                                        data-service-id="{{ service.id }}" 
-                                        title="Eliminar de favoritos">
-                                    ❤️
-                                </button>
                             </div>
-                            <div class="p-4 bg-slate-300">
-                                <h3 class="font-medium text-sm text-black mb-2 whitespace-nowrap overflow-hidden text-ellipsis">{{ service.name }}</h3>
-                                <p class="text-xs text-slate-600 mb-2">
-                                    {% if service.categories.all %}
-                                        {{ service.categories.first.name }}
-                                    {% else %}
-                                        Sin categoría
-                                    {% endif %}
-                                </p>
-                                <div class="text-xs text-black mb-2">
-                                    {% if service.average_rating %}
-                                        <span>★ {{ service.average_rating|floatformat:1 }}</span>
-                                    {% else %}
-                                        <span>Sin calificaciones</span>
-                                    {% endif %}
+                            <div class="p-4">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-xs font-semibold text-indigo-600 uppercase">
+                                        {% if service.categories.all %}
+                                            {{ service.categories.first.name }}
+                                        {% else %}
+                                            Sin categoría
+                                        {% endif %}
+                                    </span>
+                                    <button 
+                                        class="favorite-btn transition-colors bg-transparent border-0 p-0 cursor-pointer outline-none focus:outline-none" 
+                                        data-service-id="{{ service.id }}"
+                                        title="Quitar de favoritos">
+                                        <i class="fa-solid text-red-500 fa-heart text-xl" aria-hidden="true"></i>
+                                    </button>
                                 </div>
-                                <p class="font-semibold text-sm text-black mb-3">{{ service.price }} €</p>
-                                <a href="{% url 'service_detail' service.id %}" class="block w-full py-2 px-2 bg-indigo-600 text-white text-center rounded text-xs font-medium transition-colors duration-300 hover:bg-indigo-700 no-underline">Ver servicio</a>
+                                <h3 class="text-lg font-semibold text-gray-900 mb-2 line-clamp-1">{{ service.name }}</h3>
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="text-sm text-gray-600">
+                                        {% if service.average_rating %}
+                                            ★ {{ service.average_rating|floatformat:1 }}
+                                        {% else %}
+                                            Sin calificaciones
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xl font-bold text-gray-900">{{ service.price }}€</span>
+                                    <a href="{% url 'service_detail' service.id %}" class="px-4 py-2 bg-indigo-600 text-white text-center rounded text-sm font-medium transition-colors duration-300 hover:bg-indigo-700 no-underline">
+                                        Ver servicio
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     {% endfor %}
@@ -74,4 +83,67 @@
         </div>
     </div>
 </main>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const favoriteButtons = document.querySelectorAll('.favorite-btn');
+        
+        favoriteButtons.forEach(button => {
+            button.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const serviceId = button.dataset.serviceId;
+                const card = button.closest('.bg-white');
+
+                try {
+                    const response = await fetch(`/service/${serviceId}/toggle-favorite/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        }
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        
+                        if (data.action === 'removed') {
+                            // Animar y eliminar la tarjeta
+                            card.style.transition = 'opacity 0.3s, transform 0.3s';
+                            card.style.opacity = '0';
+                            card.style.transform = 'scale(0.9)';
+                            
+                            setTimeout(() => {
+                                card.remove();
+                                
+                                // Si no quedan más servicios, recargar la página para mostrar el mensaje vacío
+                                const remainingCards = document.querySelectorAll('.favorite-btn').length;
+                                if (remainingCards === 0) {
+                                    window.location.reload();
+                                }
+                            }, 300);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error al gestionar favorito:', error);
+                }
+            });
+        });
+
+        // Función para obtener el CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+</script>
 {% endblock %}

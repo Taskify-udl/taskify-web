@@ -1,4 +1,3 @@
-from urllib import response
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
@@ -7,23 +6,31 @@ from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.db.models import Count, Avg, Q
 from django.core.mail import send_mail
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth import logout
+import json
 
 from django.utils.dateparse import parse_datetime
 from .forms import RegisterForm
 from django.templatetags.static import static
-from .models import Service, ServiceImage, Contract, Review, UserProfile, Notification, CustomUser, EmailVerification, Category, Conversation, Message
+from .models import Service, ServiceImage, Contract, Review, UserProfile, Notification, CustomUser, EmailVerification, Category, Conversation, Message, Favorite
 
+@ensure_csrf_cookie
 def home(request):
     categories = Category.objects.all()
     featured_services = Service.objects.all()[:6]
+    
+    user_favorites = {}
+    if request.user.is_authenticated:
+        favorites = Favorite.objects.filter(user=request.user).values('id', 'service_id')
+        user_favorites = {fav['service_id']: fav['id'] for fav in favorites}
 
     context = {
         'categories': categories,
         'featured_services': featured_services,
+        'user_favorites_json': json.dumps(user_favorites),
     }
     return render(request, 'home.html', context)
 
@@ -565,6 +572,41 @@ def delete_service(request, service_id):
     return redirect('my_services')
 
 
+@login_required
+def toggle_favorite(request, service_id):
+    """
+    Vista para añadir/quitar un servicio de favoritos.
+    Devuelve JSON con el estado del favorito.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+    
+    service = get_object_or_404(Service, id=service_id)
+    
+    try:
+        # Intentar obtener el favorito existente
+        favorite = Favorite.objects.filter(user=request.user, service=service).first()
+        
+        if favorite:
+            # Si existe, eliminarlo
+            favorite_id = favorite.id
+            favorite.delete()
+            return JsonResponse({
+                'success': True,
+                'action': 'removed',
+                'message': 'Servicio eliminado de favoritos'
+            })
+        else:
+            # Si no existe, crearlo
+            favorite = Favorite.objects.create(user=request.user, service=service)
+            return JsonResponse({
+                'success': True,
+                'action': 'added',
+                'favorite_id': favorite.id,
+                'message': 'Servicio añadido a favoritos'
+            })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
 
 

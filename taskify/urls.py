@@ -29,6 +29,7 @@ urlpatterns = [
 
     path("my_orders/", views.my_orders, name='my_orders'),
     path("favourites/", views.favourites, name='favourites'),
+    path("service/<int:service_id>/toggle-favorite/", views.toggle_favorite, name='toggle_favorite'),
 
     path("profile/", views.profile, name='profile'),
     path("user/<str:username>/", views.public_profile, name="public_profile"),
