@@ -24,7 +24,7 @@ class CustomUser(AbstractUser):
 
     # Rol
     role = models.CharField(
-        max_length=10,
+        max_length=14,
         choices=Roles.choices,
         default=Roles.CUSTOMER,
         db_index=True,
