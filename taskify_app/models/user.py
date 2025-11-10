@@ -14,8 +14,11 @@ def avatar_upload_to(instance, filename):
 
 class CustomUser(AbstractUser):
     class Roles(models.TextChoices):
-        BASE = "CUSTOMER", "Usuario base"
+        CUSTOMER = "CUSTOMER", "Usuario base"
         PROVIDER = "PROVIDER", "Proveedor"
+        FREELANCER = "FREELANCER", "Freelancer"
+        COMPANY_ADMIN = "COMPANY_ADMIN", "Administrador de empresa"
+        COMPANY_WORKER = "COMPANY_WORKER", "Trabajador de empresa"
 
     phone = models.CharField(max_length=11, blank=True)
 
@@ -23,7 +26,7 @@ class CustomUser(AbstractUser):
     role = models.CharField(
         max_length=10,
         choices=Roles.choices,
-        default=Roles.BASE,
+        default=Roles.CUSTOMER,
         db_index=True,
     )
 
