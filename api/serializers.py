@@ -8,7 +8,7 @@ from taskify_app.models import Category, Service, Review, Contract, Favorite, Cu
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ['name', 'slug', 'description']
+        fields = ['name', 'slug', 'description', 'icon']
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -48,6 +48,7 @@ class ServiceSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         validated_data.pop("provider", None)
         return super().update(instance, validated_data)
+
 
 class ReviewSerializer(serializers.ModelSerializer):
     # Solo lectura
@@ -129,6 +130,7 @@ class ContractSerializer(serializers.ModelSerializer):
         validated_data.pop("service", None)
         return super().update(instance, validated_data)
 
+
 class CategorySerializer(serializers.ModelSerializer):
     # lectura extra: cuántos servicios usan la categoría (anotado en la vista)
     service_count = serializers.IntegerField(read_only=True)
@@ -166,6 +168,7 @@ class CategorySerializer(serializers.ModelSerializer):
         if "name" in validated_data and "slug" not in validated_data:
             validated_data["slug"] = self._ensure_slug(validated_data["name"], instance.slug)
         return super().update(instance, validated_data)
+
 
 class FavoriteSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(read_only=True)
