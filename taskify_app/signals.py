@@ -189,9 +189,56 @@ CATEGORIES = [
 ]
 
 
+def create_default_users(sender=None, **kwargs):
+    """
+    Crea un usuario por cada rol en CustomUser.Roles.
+    - username: user_<role_lower>
+    - email: <role_lower>@example.com
+    - password (solo para usuarios creados): '1234'
+    - role: el rol correspondiente
+    """
+    from django.contrib.auth import get_user_model
+
+    User = get_user_model()
+    created_count = 0
+    updated_count = 0
+
+    for role_value, _ in CustomUser.Roles.choices:
+        username = f"{role_value.lower()}"
+        email = f"{role_value.lower()}@example.com"
+        first_name = role_value.capitalize().replace("_", " ")
+
+        user = User.objects.filter(username=username).first()
+        if not user:
+            user = User(
+                username=username,
+                email=email,
+                first_name=first_name,
+                role=role_value,
+                is_active=True,
+            )
+            user.set_password("1234")
+            user.save()
+            created_count += 1
+        else:
+            changed = False
+            if getattr(user, "role", None) != role_value:
+                user.role = role_value
+                changed = True
+            if changed:
+                user.save()
+                updated_count += 1
+
+    if created_count or updated_count:
+        print(
+            f"[taskify_app] Usuarios por defecto -> "
+            f"creados: {created_count}, actualizados: {updated_count}"
+        )
+    return {"created": created_count, "updated": updated_count}
+
 
 def create_default_categories(sender, **kwargs):
-    from .models import Category  # import aquí, seguro
+    from .models import Category
 
     created_count = 0
     updated_count = 0
@@ -230,7 +277,3 @@ def create_default_categories(sender, **kwargs):
             f"[taskify_app] Categorías por defecto -> "
             f"creadas: {created_count}, actualizadas: {updated_count}"
         )
-
-
-
-
