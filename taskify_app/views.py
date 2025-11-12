@@ -34,8 +34,48 @@ def home(request):
     }
     return render(request, 'home.html', context)
 
+
 def search(request):
-    return render(request, 'search.html')
+    """
+    Vista para la página de resultados de búsqueda.
+    Filtra por término de búsqueda (q).
+    """
+    query = request.GET.get('q', '')
+
+    # Empezamos con todos los servicios y optimizamos la consulta
+    results = Service.objects.all().select_related(
+        'provider__profile'
+    ).prefetch_related(
+        'images', 'categories', 'reviews'
+    )
+
+    # 1. Filtrar por término de búsqueda (en nombre o descripción)
+    if query:
+        results = results.filter(
+            Q(name__icontains=query) |
+            Q(description__icontains=query)
+        )
+
+    # Añadimos anotaciones para la media de estrellas (para mostrar en las tarjetas)
+    results = results.annotate(
+        average_rating=Avg('reviews__rating'),
+        review_count=Count('reviews')
+    ).distinct()
+
+    # (Pasamos los favoritos del usuario para los botones de corazón)
+    user_favorites = {}
+    if request.user.is_authenticated:
+        favorites = Favorite.objects.filter(user=request.user).values('id', 'service_id')
+        user_favorites = {fav['service_id']: fav['id'] for fav in favorites}
+
+    context = {
+        'query': query,
+        'results': results,
+        'user_favorites_json': json.dumps(user_favorites),
+    }
+
+    return render(request, 'search.html', context)
+
 
 @login_required
 def favourites(request):
