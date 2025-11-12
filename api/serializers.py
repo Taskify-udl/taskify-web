@@ -32,7 +32,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "phone",
             "role",
             "bio",
-            "bio2",
             "location",
             "website",
             "avatar",
