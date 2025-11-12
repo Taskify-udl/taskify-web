@@ -56,220 +56,186 @@
 
         <div class="overflow-y-auto pt-2 px-3 h-full bg-white">
             <!-- Menu (It's for mobile) -->
+            {% with current=request.resolver_match.url_name %}
             <ul class="space-y-0.5 lg:hidden">
                 <!-- Home (siempre visible) -->
-                <li class="w-full rounded-xl hover:bg-gray-200 transition-colors duration-300 ease-in-out motion-reduce:transition-none">
-                    <a href="{% url 'home' %}"
-                       class="flex w-full items-center gap-3 rounded-xl p-2 text-black no-underline bg-transparent
-    hover:!no-underline focus:!no-underline active:!no-underline">
-                        <i class="fa-solid fa-house text-lg text-black"></i>
-                        <span class="text-black">Home</span>
+                <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'home' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
+                    <a href="{% url 'home' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'home' %}text-white{% else %}text-black{% endif %}">
+                        <i class="fa-solid fa-house text-lg {% if current == 'home' %}text-white{% else %}text-black{% endif %}"></i>
+                        <span class="{% if current == 'home' %}text-white{% else %}text-black{% endif %}">Home</span>
                     </a>
                 </li>
+
                 {% if not user.is_authenticated %}
                     <!-- Iniciar sesión -->
-                    <li class="w-full rounded-xl hover:bg-gray-200 transition-colors duration-300 ease-in-out motion-reduce:transition-none">
-                        <a href="{% url 'login' %}"
-                           class="flex w-full items-center gap-3 rounded-xl p-2 text-black no-underline bg-transparent
-    hover:!no-underline focus:!no-underline active:!no-underline">
-                            <i class="fa-solid fa-right-to-bracket text-lg text-black"></i>
-                            <span class="text-black">Iniciar sesión</span>
+                    <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'login' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
+                        <a href="{% url 'login' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'login' %}text-white{% else %}text-black{% endif %}">
+                            <i class="fa-solid fa-right-to-bracket text-lg {% if current == 'login' %}text-white{% else %}text-black{% endif %}"></i>
+                            <span class="{% if current == 'login' %}text-white{% else %}text-black{% endif %}">Iniciar sesión</span>
                         </a>
                     </li>
 
                     <!-- Registrarse -->
-                    <li class="w-full rounded-xl hover:bg-gray-200 transition-colors duration-300 ease-in-out motion-reduce:transition-none">
-                        <a href="{% url 'signup' %}"
-                           class="flex w-full items-center gap-3 rounded-xl p-2 text-black no-underline bg-transparent
-    hover:!no-underline focus:!no-underline active:!no-underline">
-                            <i class="fa-solid fa-user-plus text-lg text-black"></i>
-                            <span class="text-black">Registrarse</span>
+                    <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'signup' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
+                        <a href="{% url 'signup' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'signup' %}text-white{% else %}text-black{% endif %}">
+                            <i class="fa-solid fa-user-plus text-lg {% if current == 'signup' %}text-white{% else %}text-black{% endif %}"></i>
+                            <span class="{% if current == 'signup' %}text-white{% else %}text-black{% endif %}">Registrarse</span>
                         </a>
                     </li>
                 {% endif %}
 
                 {% if user.is_authenticated %}
                     <!-- Chats -->
-                    <li class="w-full rounded-xl hover:bg-gray-200 transition-colors duration-300 ease-in-out motion-reduce:transition-none">
-                        <a href="{% url 'chats' %}"
-                           class="flex w-full items-center gap-3 rounded-xl p-2 text-black no-underline bg-transparent
-    hover:!no-underline focus:!no-underline active:!no-underline">
-                            <i class="fa-solid fa-comments text-lg text-black"></i>
-                            <span class="text-black">Chats</span>
+                    <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'chats' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
+                        <a href="{% url 'chats' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'chats' %}text-white{% else %}text-black{% endif %}">
+                            <i class="fa-solid fa-comments text-lg {% if current == 'chats' %}text-white{% else %}text-black{% endif %}"></i>
+                            <span class="{% if current == 'chats' %}text-white{% else %}text-black{% endif %}">Chats</span>
                         </a>
                     </li>
 
                     <!-- Pedidos -->
-                    <li class="w-full rounded-xl hover:bg-gray-200 transition-colors duration-300 ease-in-out motion-reduce:transition-none">
-                        <a href="{% url 'my_orders' %}"
-                           class="flex w-full items-center gap-3 rounded-xl p-2 text-black no-underline bg-transparent
-    hover:!no-underline focus:!no-underline active:!no-underline">
-                            <i class="fa-solid fa-bag-shopping text-lg text-black"></i>
-                            <span class="text-black">Pedidos</span>
+                    <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'my_orders' %} bg-black {% else %} hover:bg_gray-200 hover:bg-gray-200 {% endif %}">
+                        <a href="{% url 'my_orders' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'my_orders' %}text-white{% else %}text-black{% endif %}">
+                            <i class="fa-solid fa-bag-shopping text-lg {% if current == 'my_orders' %}text-white{% else %}text-black{% endif %}"></i>
+                            <span class="{% if current == 'my_orders' %}text-white{% else %}text-black{% endif %}">Pedidos</span>
                         </a>
                     </li>
 
                     <!-- Perfil -->
-                    <li class="w-full rounded-xl hover:bg-gray-200 transition-colors duration-300 ease-in-out motion-reduce:transition-none">
-                        <a href="{% url 'profile' %}"
-                           class="flex w-full items-center gap-3 rounded-xl p-2 text-black no-underline bg-transparent
-    hover:!no-underline focus:!no-underline active:!no-underline">
-                            <i class="fa-solid fa-user text-lg text-black"></i>
-                            <span class="text-black">Perfil</span>
+                    <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'profile' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
+                        <a href="{% url 'profile' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'profile' %}text-white{% else %}text-black{% endif %}">
+                            <i class="fa-solid fa-user text-lg {% if current == 'profile' %}text-white{% else %}text-black{% endif %}"></i>
+                            <span class="{% if current == 'profile' %}text-white{% else %}text-black{% endif %}">Perfil</span>
                         </a>
                     </li>
 
                     <!-- Notificaciones -->
-                    <li class="w-full rounded-xl hover:bg-gray-200 transition-colors duration-300 ease-in-out motion-reduce:transition-none">
-                        <a href="{% url 'notifications' %}"
-                           class="flex w-full items-center gap-3 rounded-xl p-2 text-black no-underline bg-transparent
-    hover:!no-underline focus:!no-underline active:!no-underline">
-                            <i class="fa-solid fa-bell text-lg text-black"></i>
-                            <span class="text-black">Notificaciones</span>
+                    <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'notifications' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
+                        <a href="{% url 'notifications' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'notifications' %}text-white{% else %}text-black{% endif %}">
+                            <i class="fa-solid fa-bell text-lg {% if current == 'notifications' %}text-white{% else %}text-black{% endif %}"></i>
+                            <span class="{% if current == 'notifications' %}text-white{% else %}text-black{% endif %}">Notificaciones</span>
                         </a>
                     </li>
 
                     <!-- Dashboard -->
-                    <li class="w-full rounded-xl hover:bg-gray-200 transition-colors duration-300 ease-in-out motion-reduce:transition-none">
-                        <a href="{% url 'advanced_stats' %}"
-                           class="flex w-full items-center gap-3 rounded-xl p-2 text-black no-underline bg-transparent
-    hover:!no-underline focus:!no-underline active:!no-underline">
-                            <i class="fa-solid fa-chart-simple text-lg text-black"></i>
-                            <span class="text-black">Dashboard</span>
+                    <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'advanced_stats' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
+                        <a href="{% url 'advanced_stats' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'advanced_stats' %}text-white{% else %}text-black{% endif %}">
+                            <i class="fa-solid fa-chart-simple text-lg {% if current == 'advanced_stats' %}text-white{% else %}text-black{% endif %}"></i>
+                            <span class="{% if current == 'advanced_stats' %}text-white{% else %}text-black{% endif %}">Dashboard</span>
                         </a>
                     </li>
 
                     <!-- Favourites -->
-                    <li class="w-full rounded-xl hover:bg-gray-200 transition-colors duration-300 ease-in-out motion-reduce:transition-none">
-                        <a href="{% url 'favourites' %}"
-                           class="flex w-full items-center gap-3 rounded-xl p-2 text-black no-underline bg-transparent
-    hover:!no-underline focus:!no-underline active:!no-underline">
-                            <i class="fa-solid fa-heart text-lg text-black"></i>
-                            <span class="text-black">Favourites</span>
+                    <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'favourites' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
+                        <a href="{% url 'favourites' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'favourites' %}text-white{% else %}text-black{% endif %}">
+                            <i class="fa-solid fa-heart text-lg {% if current == 'favourites' %}text-white{% else %}text-black{% endif %}"></i>
+                            <span class="{% if current == 'favourites' %}text-white{% else %}text-black{% endif %}">Favourites</span>
                         </a>
                     </li>
-                    {% if user.is_authenticated and not user.is_superuser and user.role != 'PROVIDER' and user.role != 'FREELANCER' and user.role != 'COMPANY_ADMIN' %}
 
+                    {% if user.is_authenticated and not user.is_superuser and user.role != 'PROVIDER' and user.role != 'FREELANCER' and user.role != 'COMPANY_ADMIN' %}
                         <!-- Mis Servicios -->
-                        <li class="w-full rounded-xl hover:bg-gray-200 transition-colors duration-300 ease-in-out motion-reduce:transition-none">
-                            <a href="{% url 'my_services' %}"
-                               class="flex w-full items-center gap-3 rounded-xl p-2 text-black no-underline bg-transparent
-    hover:!no-underline focus:!no-underline active:!no-underline">
-                                <i class="fa-solid fa-briefcase text-lg text-black"></i>
-                                <span class="text-black">Mis Servicios</span>
+                        <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'my_services' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
+                            <a href="{% url 'my_services' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'my_services' %}text-white{% else %}text-black{% endif %}">
+                                <i class="fa-solid fa-briefcase text-lg {% if current == 'my_services' %}text-white{% else %}text-black{% endif %}"></i>
+                                <span class="{% if current == 'my_services' %}text-white{% else %}text-black{% endif %}">Mis Servicios</span>
                             </a>
                         </li>
                     {% endif %}
                 {% endif %}
             </ul>
-
+            {% endwith %}
 
             <!-- Menu (It's for Lablet and Desktop) -->
+            {% with current=request.resolver_match.url_name %}
             <ul class="hidden lg:inline space-y-0.5">
                 <!-- Home (siempre visible) -->
-                <li class="w-full rounded-xl hover:bg-gray-200 transition-colors duration-300 ease-in-out motion-reduce:transition-none">
-                    <a href="{% url 'home' %}"
-                       class="flex w-full items-center gap-3 rounded-xl p-2 text-black no-underline bg-transparent
-    hover:!no-underline focus:!no-underline active:!no-underline">
-                        <i class="fa-solid fa-house text-lg text-black"></i>
-                        <span class="text-black">Home</span>
+                <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'home' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
+                    <a href="{% url 'home' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'home' %}text-white{% else %}text-black{% endif %}">
+                        <i class="fa-solid fa-house text-lg {% if current == 'home' %}text-white{% else %}text-black{% endif %}"></i>
+                        <span class="{% if current == 'home' %}text-white{% else %}text-black{% endif %}">Home</span>
                     </a>
                 </li>
+
                 {% if not user.is_authenticated %}
                     <!-- Iniciar sesión -->
-                    <li class="w-full rounded-xl hover:bg-gray-200 transition-colors duration-300 ease-in-out motion-reduce:transition-none">
-                        <a href="{% url 'login' %}"
-                           class="flex w-full items-center gap-3 rounded-xl p-2 text-black no-underline bg-transparent
-    hover:!no-underline focus:!no-underline active:!no-underline">
-                            <i class="fa-solid fa-right-to-bracket text-lg text-black"></i>
-                            <span class="text-black">Iniciar sesión</span>
+                    <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'login' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
+                        <a href="{% url 'login' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'login' %}text-white{% else %}text-black{% endif %}">
+                            <i class="fa-solid fa-right-to-bracket text-lg {% if current == 'login' %}text-white{% else %}text-black{% endif %}"></i>
+                            <span class="{% if current == 'login' %}text-white{% else %}text-black{% endif %}">Iniciar sesión</span>
                         </a>
                     </li>
 
                     <!-- Registrarse -->
-                    <li class="w-full rounded-xl hover:bg-gray-200 transition-colors duration-300 ease-in-out motion-reduce:transition-none">
-                        <a href="{% url 'signup' %}"
-                           class="flex w-full items-center gap-3 rounded-xl p-2 text-black no-underline bg-transparent
-    hover:!no-underline focus:!no-underline active:!no-underline">
-                            <i class="fa-solid fa-user-plus text-lg text-black"></i>
-                            <span class="text-black">Registrarse</span>
+                    <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'signup' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
+                        <a href="{% url 'signup' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'signup' %}text-white{% else %}text-black{% endif %}">
+                            <i class="fa-solid fa-user-plus text-lg {% if current == 'signup' %}text-white{% else %}text-black{% endif %}"></i>
+                            <span class="{% if current == 'signup' %}text-white{% else %}text-black{% endif %}">Registrarse</span>
                         </a>
                     </li>
                 {% endif %}
+
                 {% if user.is_authenticated %}
                     <!-- Chats -->
-                    <li class="w-full rounded-xl hover:bg-gray-200 transition-colors duration-300 ease-in-out motion-reduce:transition-none">
-                        <a href="{% url 'chats' %}"
-                           class="flex w-full items-center gap-3 rounded-xl p-2 text-black no-underline bg-transparent
-    hover:!no-underline focus:!no-underline active:!no-underline">
-                            <i class="fa-solid fa-comments text-lg text-black"></i>
-                            <span class="text-black">Chats</span>
+                    <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'chats' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
+                        <a href="{% url 'chats' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'chats' %}text-white{% else %}text-black{% endif %}">
+                            <i class="fa-solid fa-comments text-lg {% if current == 'chats' %}text-white{% else %}text-black{% endif %}"></i>
+                            <span class="{% if current == 'chats' %}text-white{% else %}text-black{% endif %}">Chats</span>
                         </a>
                     </li>
 
                     <!-- Pedidos -->
-                    <li class="w-full rounded-xl hover:bg-gray-200 transition-colors duration-300 ease-in-out motion-reduce:transition-none">
-                        <a href="{% url 'my_orders' %}"
-                           class="flex w-full items-center gap-3 rounded-xl p-2 text-black no-underline bg-transparent
-    hover:!no-underline focus:!no-underline active:!no-underline">
-                            <i class="fa-solid fa-bag-shopping text-lg text-black"></i>
-                            <span class="text-black">Pedidos</span>
+                    <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'my_orders' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
+                        <a href="{% url 'my_orders' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'my_orders' %}text-white{% else %}text-black{% endif %}">
+                            <i class="fa-solid fa-bag-shopping text-lg {% if current == 'my_orders' %}text-white{% else %}text-black{% endif %}"></i>
+                            <span class="{% if current == 'my_orders' %}text_white{% else %}text-black{% endif %}">Pedidos</span>
                         </a>
                     </li>
 
                     <!-- Perfil -->
-                    <li class="w-full rounded-xl hover:bg-gray-200 transition-colors duration-300 ease-in-out motion-reduce:transition-none">
-                        <a href="{% url 'profile' %}"
-                           class="flex w-full items-center gap-3 rounded-xl p-2 text-black no-underline bg-transparent
-    hover:!no-underline focus:!no-underline active:!no-underline">
-                            <i class="fa-solid fa-user text-lg text-black"></i>
-                            <span class="text-black">Perfil</span>
+                    <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'profile' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
+                        <a href="{% url 'profile' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'profile' %}text-white{% else %}text-black{% endif %}">
+                            <i class="fa-solid fa-user text-lg {% if current == 'profile' %}text-white{% else %}text-black{% endif %}"></i>
+                            <span class="{% if current == 'profile' %}text_white{% else %}text-black{% endif %}">Perfil</span>
                         </a>
                     </li>
 
                     <!-- Notificaciones -->
-                    <li class="w-full rounded-xl hover:bg-gray-200 transition-colors duration-300 ease-in-out motion-reduce:transition-none">
-                        <a href="{% url 'notifications' %}"
-                           class="flex w-full items-center gap-3 rounded-xl p-2 text-black no-underline bg-transparent
-    hover:!no-underline focus:!no-underline active:!no-underline">
-                            <i class="fa-solid fa-bell text-lg text-black"></i>
-                            <span class="text-black">Notificaciones</span>
+                    <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'notifications' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
+                        <a href="{% url 'notifications' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'notifications' %}text-white{% else %}text-black{% endif %}">
+                            <i class="fa-solid fa-bell text-lg {% if current == 'notifications' %}text-white{% else %}text-black{% endif %}"></i>
+                            <span class="{% if current == 'notifications' %}text_white{% else %}text-black{% endif %}">Notificaciones</span>
                         </a>
                     </li>
 
                     <!-- Dashboard -->
-                    <li class="w-full rounded-xl hover:bg-gray-200 transition-colors duration-300 ease-in-out motion-reduce:transition-none">
-                        <a href="{% url 'advanced_stats' %}"
-                           class="flex w-full items-center gap-3 rounded-xl p-2 text-black no-underline bg-transparent
-    hover:!no-underline focus:!no-underline active:!no-underline">
-                            <i class="fa-solid fa-book text-lg text-black"></i>
-                            <span class="text-black">Dashboard</span>
+                    <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'advanced_stats' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
+                        <a href="{% url 'advanced_stats' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'advanced_stats' %}text-white{% else %}text-black{% endif %}">
+                            <i class="fa-solid fa-book text-lg {% if current == 'advanced_stats' %}text-white{% else %}text-black{% endif %}"></i>
+                            <span class="{% if current == 'advanced_stats' %}text_white{% else %}text-black{% endif %}">Dashboard</span>
                         </a>
                     </li>
 
                     <!-- Favoritos -->
-                    <li class="w-full rounded-xl hover:bg-gray-200 transition-colors duration-300 ease-in-out motion-reduce:transition-none">
-                        <a href="{% url 'favourites' %}"
-                           class="flex w-full items-center gap-3 rounded-xl p-2 text-black no-underline bg-transparent
-    hover:!no-underline focus:!no-underline active:!no-underline">
-                            <i class="fa-solid fa-heart text-lg text-black"></i>
-                            <span class="text-black">Favoritos</span>
+                    <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'favourites' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
+                        <a href="{% url 'favourites' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'favourites' %}text-white{% else %}text-black{% endif %}">
+                            <i class="fa-solid fa-heart text-lg {% if current == 'favourites' %}text-white{% else %}text-black{% endif %}"></i>
+                            <span class="{% if current == 'favourites' %}text_white{% else %}text-black{% endif %}">Favoritos</span>
                         </a>
                     </li>
-                    {% if user.is_authenticated and not user.is_superuser and user.role != 'PROVIDER' and user.role != 'FREELANCER' and user.role != 'COMPANY_ADMIN' %}
 
+                    {% if user.is_authenticated and not user.is_superuser and user.role != 'PROVIDER' and user.role != 'FREELANCER' and user.role != 'COMPANY_ADMIN' %}
                         <!-- Mis Servicios -->
-                        <li class="w-full rounded-xl hover:bg-gray-200 transition-colors duration-300 ease-in-out motion-reduce:transition-none">
-                            <a href="{% url 'my_services' %}"
-                               class="flex w-full items-center gap-3 rounded-xl p-2 text-black no-underline bg-transparent
-    hover:!no-underline focus:!no-underline active:!no-underline">
-                                <i class="fa-solid fa-briefcase text-lg text-black"></i>
-                                <span class="text-black">Mis Servicios</span>
+                        <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'my_services' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
+                            <a href="{% url 'my_services' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'my_services' %}text-white{% else %}text-black{% endif %}">
+                                <i class="fa-solid fa-briefcase text-lg {% if current == 'my_services' %}text-white{% else %}text-black{% endif %}"></i>
+                                <span class="{% if current == 'my_services' %}text_white{% else %}text-black{% endif %}">Mis Servicios</span>
                             </a>
                         </li>
                     {% endif %}
                 {% endif %}
             </ul>
+            {% endwith %}
         </div>
     </aside>
     <div class="flex-1 w-full max-w-none overflow-y-auto flex flex-col ">
