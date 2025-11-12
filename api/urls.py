@@ -1,11 +1,12 @@
 from django.urls import path
-from .views import review_views, contract_views, category_views, service_views, favorite_views, auth_views
+from .views import review_views, contract_views, category_views, service_views, favorite_views, auth_views, user_views
 from taskify_app import views
 
 urlpatterns = [
     path('register', auth_views.register),
     path('login', auth_views.login),
     path('profile', auth_views.profile),
+    path('profile_detail', user_views.profile_detail),
     path('service', service_views.services),
     path('service/<int:pk>', service_views.service_detail),
     path('review', review_views.reviews),

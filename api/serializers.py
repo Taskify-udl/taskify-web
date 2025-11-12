@@ -16,6 +16,42 @@ class UserSerializer(serializers.ModelSerializer):
         model = CustomUser
         fields = ['id', 'username', 'email', 'password', 'role']
 
+class UserProfileSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    avatar = serializers.ImageField(required=False, allow_null=True)
+    username = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = CustomUser
+        fields = [
+            "id",
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "phone",
+            "role",
+            "bio",
+            "bio2",
+            "location",
+            "website",
+            "avatar",
+            "password",
+        ]
+        read_only_fields = ["id", "is_superuser", "is_staff", "username"]
+
+    def update(self, instance, validated_data):
+        # Asegurar que username no se modifique aunque venga en los datos
+        validated_data.pop("username", None)
+        password = validated_data.pop("password", None)
+        role = validated_data.pop("role", None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        if password:
+            instance.set_password(password)
+        instance.save()
+        return instance
+
 
 class ServiceSerializer(serializers.ModelSerializer):
     provider = serializers.PrimaryKeyRelatedField(read_only=True)
