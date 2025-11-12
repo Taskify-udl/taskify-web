@@ -2,8 +2,8 @@
 {% load static %}
 {% block title %}Iniciar Sesión{% endblock %}
 {% block content %}
-    <section class="relative flex min-h-screen items-center justify-center bg-white px-4 py-16 sm:py-24">
-        <div class="min-h-screen flex items-center justify-center ">
+    <section class="relative flex h-[calc(100vh-3.5rem)] items-center justify-center bg-white px-4 py-16 sm:py-24">
+        <div class="h-[calc(100vh-3.5rem)] flex items-center justify-center ">
             <div class="relative w-full max-w-md mx-auto">
 
                 <div class="px-3 rounded-3xl bg-white px-18 py-20 mt-8 shadow-xl ring-1 ring-black/10 sm:px-16 sm:py-20">
@@ -29,7 +29,7 @@
                                     </label>
 
                                     <div class="flex">
-                                <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-e-0 border-gray-300 rounded-s-md ">
+                                <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-e-0 border-gray-300 rounded-s-lg ">
                                   <!-- Icono usuario -->
                                   <svg class="w-4 h-4 text-gray-500 " aria-hidden="true"
                                        xmlns="http://www.w3.org/2000/svg"
@@ -57,7 +57,7 @@
                                     </div>
 
                                     <div class="flex">
-                                <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-e-0 border-gray-300 rounded-s-md ">
+                                <span class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-e-0 border-gray-300 rounded-s-lg ">
                                   <!-- Icono candado -->
                                   <svg class="w-4 h-4 text-gray-500 "
                                        xmlns="http://www.w3.org/2000/svg" fill="currentColor"
@@ -77,9 +77,9 @@
                                 </div>
                                 <div class="flex justify-end">
 
-                                    <button type="button" class="text-black transition-colors hover:text-black/60">
+                                    <div type="button" class="text-sm text-black transition-colors hover:text-black/60">
                                         ¿Olvidaste tu contraseña?
-                                    </button>
+                                    </div>
                                 </div>
 
 
