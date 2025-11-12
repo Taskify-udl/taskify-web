@@ -4,36 +4,38 @@
 {% block title %}Mis Favoritos{% endblock %}
 
 {% block content %}
-<main class="min-h-screen">
-    <div class="bg-white rounded-lg p-4 lg:p-8 m-4 mx-auto">
-        <div class="w-full">
-            <span class="text-2xl lg:text-3xl font-medium mb-6 text-black">Mis Favoritos</span>
+    <main class="min-h-screen px-16 py-4">
+        <div class="bg-white rounded-lg  mx-auto">
+            <div class="w-full">
+                <span class="text-2xl font-semibold text-gray-900 mb-6 block">Mis Favoritos</span>
 
-            {% if favorite_services %}
-                <p class="text-sm lg:text-base text-slate-600 mb-8">
-                    {% if favorite_services.count == 1 %}
-                        {{ favorite_services.count }} servicio guardado
-                    {% else %}
-                        {{ favorite_services.count }} servicios guardados
-                    {% endif %}
-                </p>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {% for service in favorite_services %}
-                        <div class="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                            <div class="h-48 bg-gray-300 overflow-hidden">
-                                {% if service.images.all %}
-                                    {% with service.images.first as image %}
-                                        <img src="{{ image.image.url }}" alt="{{ service.name }}" class="w-full h-full object-cover">
-                                    {% endwith %}
-                                {% else %}
-                                    <div class="w-full h-full flex items-center justify-center bg-gray-400">
-                                        <span class="text-gray-600">Sin imagen</span>
-                                    </div>
-                                {% endif %}
-                            </div>
-                            <div class="p-4">
-                                <div class="flex items-center justify-between mb-2">
+                {% if favorite_services %}
+                    <p class="text-sm lg:text-base text-slate-600 mb-8">
+                        {% if favorite_services.count == 1 %}
+                            {{ favorite_services.count }} servicio guardado
+                        {% else %}
+                            {{ favorite_services.count }} servicios guardados
+                        {% endif %}
+                    </p>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {% for service in favorite_services %}
+                            <div class="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                                <div class="h-48 bg-gray-300 overflow-hidden">
+                                    {% if service.images.all %}
+                                        {% with service.images.first as image %}
+                                            <img src="{{ image.image.url }}" alt="{{ service.name }}"
+                                                 class="w-full h-full object-cover">
+                                        {% endwith %}
+                                    {% else %}
+                                        <div class="w-full h-full flex items-center justify-center bg-gray-400">
+                                            <span class="text-gray-600">Sin imagen</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="p-4">
+                                    <div class="flex items-center justify-between mb-2">
                                     <span class="text-xs font-semibold text-indigo-600 uppercase">
                                         {% if service.categories.all %}
                                             {{ service.categories.first.name }}
@@ -41,109 +43,111 @@
                                             Sin categoría
                                         {% endif %}
                                     </span>
-                                    <button 
-                                        class="favorite-btn transition-colors bg-transparent border-0 p-0 cursor-pointer outline-none focus:outline-none" 
-                                        data-service-id="{{ service.id }}"
-                                        title="Quitar de favoritos">
-                                        <i class="fa-solid text-red-500 fa-heart text-xl" aria-hidden="true"></i>
-                                    </button>
-                                </div>
-                                <span class="text-lg font-semibold text-gray-900 mb-2 line-clamp-1">{{ service.name }}</span>
-                                <div class="flex items-center justify-between mb-3">
-                                    <div class="text-sm text-gray-600">
-                                        {% if service.average_rating %}
-                                            ★ {{ service.average_rating|floatformat:1 }}
-                                        {% else %}
-                                            Sin calificaciones
-                                        {% endif %}
+                                        <button
+                                                class="favorite-btn transition-colors bg-transparent border-0 p-0 cursor-pointer outline-none focus:outline-none"
+                                                data-service-id="{{ service.id }}"
+                                                title="Quitar de favoritos">
+                                            <i class="fa-solid text-red-500 fa-heart text-xl" aria-hidden="true"></i>
+                                        </button>
+                                    </div>
+                                    <span class="text-lg font-semibold text-gray-900 mb-2 line-clamp-1">{{ service.name }}</span>
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="text-sm text-gray-600">
+                                            {% if service.average_rating %}
+                                                ★ {{ service.average_rating|floatformat:1 }}
+                                            {% else %}
+                                                Sin calificaciones
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xl font-bold text-gray-900">{{ service.price }}€</span>
+                                        <a href="{% url 'service_detail' service.id %}"
+                                           class="px-4 py-2 bg-indigo-600 text-white text-center rounded text-sm font-medium transition-colors duration-300 hover:bg-indigo-700 no-underline">
+                                            Ver servicio
+                                        </a>
                                     </div>
                                 </div>
-                                <div class="flex items-center justify-between">
-                                    <span class="text-xl font-bold text-gray-900">{{ service.price }}€</span>
-                                    <a href="{% url 'service_detail' service.id %}" class="px-4 py-2 bg-indigo-600 text-white text-center rounded text-sm font-medium transition-colors duration-300 hover:bg-indigo-700 no-underline">
-                                        Ver servicio
-                                    </a>
-                                </div>
                             </div>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="text-center py-16 px-8 rounded-lg flex flex-col items-center justify-center min-h-96">
-                    <div class="text-6xl mb-4 opacity-40">❤️</div>
-                    <p class="text-lg font-medium text-slate-600 mb-2">No tienes servicios favoritos todavía.</p>
-                    <p class="text-sm text-slate-400 mb-8">Marca servicios con el corazón para guardarlos aquí.</p>
-                    <form action="{% url 'home' %}" method="get" style="display: inline;">
-                        <button type="submit" class="flex flex-row gap-x-[5px] text-lg px-3 !py-1.5 items-center bg-[#1c1b2b] text-white !rounded-xl hover:shadow-[0_2px_8px_rgba(0,0,0,0.3)] transition-shadow">
-                            Explorar servicios
-                        </button>
-                    </form>
-                </div>
-            {% endif %}
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-16 px-8 rounded-lg flex flex-col items-center justify-center min-h-96">
+                        <div class="text-6xl mb-4 opacity-40"><i class="fa fa-heart-crack"></i></div>
+                        <p class="text-lg font-medium text-slate-600 mb-2">No tienes servicios favoritos todavía.</p>
+                        <p class="text-sm text-slate-400 mb-8">Marca servicios con el corazón para guardarlos aquí.</p>
+                        <form action="{% url 'home' %}" method="get" style="display: inline;">
+                            <button type="submit"
+                                    class="flex flex-row gap-x-[5px] text-lg px-3 !py-1.5 items-center bg-[#1c1b2b] text-white !rounded-xl hover:shadow-[0_2px_8px_rgba(0,0,0,0.3)] transition-shadow">
+                                Explorar servicios
+                            </button>
+                        </form>
+                    </div>
+                {% endif %}
+            </div>
         </div>
-    </div>
-</main>
+    </main>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const favoriteButtons = document.querySelectorAll('.favorite-btn');
-        
-        favoriteButtons.forEach(button => {
-            button.addEventListener('click', async (e) => {
-                e.preventDefault();
-                const serviceId = button.dataset.serviceId;
-                const card = button.closest('.bg-white');
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const favoriteButtons = document.querySelectorAll('.favorite-btn');
 
-                try {
-                    const response = await fetch(`/service/${serviceId}/toggle-favorite/`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': getCookie('csrftoken')
+            favoriteButtons.forEach(button => {
+                button.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    const serviceId = button.dataset.serviceId;
+                    const card = button.closest('.bg-white');
+
+                    try {
+                        const response = await fetch(`/service/${serviceId}/toggle-favorite/`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': getCookie('csrftoken')
+                            }
+                        });
+
+                        if (response.ok) {
+                            const data = await response.json();
+
+                            if (data.action === 'removed') {
+                                // Animar y eliminar la tarjeta
+                                card.style.transition = 'opacity 0.3s, transform 0.3s';
+                                card.style.opacity = '0';
+                                card.style.transform = 'scale(0.9)';
+
+                                setTimeout(() => {
+                                    card.remove();
+
+                                    // Si no quedan más servicios, recargar la página para mostrar el mensaje vacío
+                                    const remainingCards = document.querySelectorAll('.favorite-btn').length;
+                                    if (remainingCards === 0) {
+                                        window.location.reload();
+                                    }
+                                }, 300);
+                            }
                         }
-                    });
-
-                    if (response.ok) {
-                        const data = await response.json();
-                        
-                        if (data.action === 'removed') {
-                            // Animar y eliminar la tarjeta
-                            card.style.transition = 'opacity 0.3s, transform 0.3s';
-                            card.style.opacity = '0';
-                            card.style.transform = 'scale(0.9)';
-                            
-                            setTimeout(() => {
-                                card.remove();
-                                
-                                // Si no quedan más servicios, recargar la página para mostrar el mensaje vacío
-                                const remainingCards = document.querySelectorAll('.favorite-btn').length;
-                                if (remainingCards === 0) {
-                                    window.location.reload();
-                                }
-                            }, 300);
-                        }
+                    } catch (error) {
+                        console.error('Error al gestionar favorito:', error);
                     }
-                } catch (error) {
-                    console.error('Error al gestionar favorito:', error);
-                }
+                });
             });
-        });
 
-        // Función para obtener el CSRF token
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
+            // Función para obtener el CSRF token
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
                     }
                 }
+                return cookieValue;
             }
-            return cookieValue;
-        }
-    });
-</script>
+        });
+    </script>
 {% endblock %}
