@@ -1,33 +1,36 @@
+<!-- language: html -->
 {% extends 'base.html' %}
 {% load static %}
 
 {% block title %}Editar Perfil - Taskify{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gray-50 p-4 lg:p-8">
+<div class="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
     <div class="max-w-3xl mx-auto">
-        <div class="flex items-center gap-3 mb-8">
+        <div class="pb-6 sm:pb-8 flex items-center gap-4">
             <a href="{% url 'profile' %}" class="inline-flex items-center justify-center w-10 h-10 bg-white hover:bg-gray-100 rounded-lg transition-colors shadow-sm border border-gray-200" style="text-decoration: none !important;">
                 <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                 </svg>
             </a>
-            <h1 class="text-3xl font-bold text-gray-900">Editar Perfil</h1>
+            <span class="text-lg sm:text-xl font-semibold text-gray-900">Editar Perfil</span>
         </div>
 
-        
-        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-            <form method="post" enctype="multipart/form-data" class="p-8 lg:p-12">
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <form method="post" enctype="multipart/form-data" class="p-4 sm:p-6">
                 {% csrf_token %}
-                
-                <div class="mb-10 pb-10 border-b border-gray-200">
-                    <h2 class="text-2xl font-bold text-gray-900 mb-8">Foto de Perfil</h2>
-                    <div class="flex flex-col md:flex-row items-center md:items-center gap-8">
+
+                <!-- Avatar -->
+                <div class="mb-6 pb-6 border-b border-gray-200">
+                    <h2 class="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Foto de Perfil</h2>
+                    <div class="flex items-center gap-4 sm:gap-6">
                         <div class="flex-shrink-0">
-                            <img src="{{ profile.avatar_url }}" alt="Avatar actual" class="w-30 h-30 rounded-full object-cover ring-4 ring-gray-200 shadow-md mb-3">
+                            <div class="w-16 sm:w-20 md:w-24 lg:w-28 aspect-square rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+                                <img src="{{ profile.avatar_url }}" alt="Avatar actual" class="w-full h-full object-cover">
+                            </div>
                         </div>
-                        <div class="flex-grow">
-                            <label for="avatar" class="inline-block px-6 py-3 text-white rounded-lg font-semibold cursor-pointer transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5" style="background-color: #000000 !important;">
+                        <div class="flex-1 min-w-0">
+                            <label for="avatar" class="inline-block px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-800 font-medium cursor-pointer hover:!bg-gray-50 transition-colors">
                                 Elegir nueva imagen
                             </label>
                             <input type="file" id="avatar" name="avatar" accept="image/*" class="hidden">
@@ -35,66 +38,85 @@
                         </div>
                     </div>
                 </div>
-              
-                <div class="mb-10 pb-10 border-b border-gray-200 mx-3">
-                    <h2 class="text-2xl font-bold text-gray-900 mb-8">Información Básica</h2>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                        <div>
-                            <label for="first_name" class="block mb-3 font-semibold text-gray-700 text-sm">Nombre</label>
+
+                <!-- Información básica -->
+                <div class="mb-6 pb-6 border-b border-gray-200">
+                    <h2 class="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Información Básica</h2>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center py-3">
+                        <div class="text-sm text-gray-500 sm:col-span-4">Nombre</div>
+                        <div class="sm:col-span-8">
                             <input type="text" id="first_name" name="first_name" value="{{ user.first_name }}" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-gray-900 focus:ring-4 focus:ring-gray-100 transition-all">
                         </div>
+                    </div>
 
-                        <div>
-                            <label for="last_name" class="block mb-3 font-semibold text-gray-700 text-sm">Apellido</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center py-3">
+                        <div class="text-sm text-gray-500 sm:col-span-4">Apellido</div>
+                        <div class="sm:col-span-8">
                             <input type="text" id="last_name" name="last_name" value="{{ user.last_name }}" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-gray-900 focus:ring-4 focus:ring-gray-100 transition-all">
                         </div>
                     </div>
 
-                    <div>
-                        <label for="email" class="block mb-3 font-semibold text-gray-700 text-sm">Email</label>
-                        <input type="email" id="email" name="email" value="{{ user.email }}" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-gray-900 focus:ring-4 focus:ring-gray-100 transition-all">
+                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center py-3">
+                        <div class="text-sm text-gray-500 sm:col-span-4">Email</div>
+                        <div class="sm:col-span-8">
+                            <input type="email" id="email" name="email" value="{{ user.email }}" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-gray-900 focus:ring-4 focus:ring-gray-100 transition-all">
+                        </div>
                     </div>
 
-                    <div class="mt-6">
-                        <label for="profession" class="block mb-3 font-semibold text-gray-700 text-sm">Profesión</label>
-                        <input type="text" id="profession" name="profession" value="{{ profile.profession }}" placeholder="Tu profesión" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-gray-900 focus:ring-4 focus:ring-gray-100 transition-all">
+                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center py-3">
+                        <div class="text-sm text-gray-500 sm:col-span-4">Profesión</div>
+                        <div class="sm:col-span-8">
+                            <input type="text" id="profession" name="profession" value="{{ profile.profession }}" placeholder="Tu profesión" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-gray-900 focus:ring-4 focus:ring-gray-100 transition-all">
+                        </div>
                     </div>
                 </div>
-              
-                <div class="mb-8 mx-3">
-                    <h2 class="text-2xl font-bold text-gray-900 mb-8">Información Adicional</h2>
-                    
-                    <div class="mb-6">
-                        <label for="bio" class="block mb-3 font-semibold text-gray-700 text-sm">Biografía</label>
-                        <textarea id="bio" name="bio" rows="4" placeholder="Cuéntanos sobre ti..." class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-gray-900 focus:ring-4 focus:ring-gray-100 transition-all resize-y min-h-[120px]">{{ profile.bio }}</textarea>
+
+                <!-- Información adicional -->
+                <div class="mb-6">
+                    <h2 class="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Información Adicional</h2>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-start py-3">
+                        <div class="text-sm text-gray-500 sm:col-span-4">Biografía</div>
+                        <div class="sm:col-span-8">
+                            <textarea id="bio" name="bio" rows="4" placeholder="Cuéntanos sobre ti..." class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-gray-900 focus:ring-4 focus:ring-gray-100 transition-all resize-y min-h-[120px]">{{ profile.bio }}</textarea>
+                        </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label for="phone" class="block mb-3 font-semibold text-gray-700 text-sm">Teléfono</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center py-3">
+                        <div class="text-sm text-gray-500 sm:col-span-4">Teléfono</div>
+                        <div class="sm:col-span-8">
                             <input type="tel" id="phone" name="phone" value="{{ profile.phone }}" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-gray-900 focus:ring-4 focus:ring-gray-100 transition-all">
                         </div>
+                    </div>
 
-                        <div>
-                            <label for="location" class="block mb-3 font-semibold text-gray-700 text-sm">Ubicación</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center py-3">
+                        <div class="text-sm text-gray-500 sm:col-span-4">Ubicación</div>
+                        <div class="sm:col-span-8">
                             <input type="text" id="location" name="location" value="{{ profile.location }}" placeholder="Ciudad, País" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-gray-900 focus:ring-4 focus:ring-gray-100 transition-all">
                         </div>
                     </div>
 
-                    <div class="mt-6 mb-3">
-                        <label for="website" class="block mb-3 font-semibold text-gray-700 text-sm">Sitio Web</label>
-                        <input type="url" id="website" name="website" value="{{ profile.website }}" placeholder="https://..." class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-gray-900 focus:ring-4 focus:ring-gray-100 transition-all">
+                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center py-3">
+                        <div class="text-sm text-gray-500 sm:col-span-4">Sitio Web</div>
+                        <div class="sm:col-span-8">
+                            <input type="url" id="website" name="website" value="{{ profile.website }}" placeholder="https://..." class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-gray-900 focus:ring-4 focus:ring-gray-100 transition-all">
+                        </div>
                     </div>
                 </div>
-              
-                <div class="flex flex-col-reverse md:flex-row gap-3 pt-8  justify-end mt-2 mb-2 mx-4">
-                    <a href="{% url 'profile' %}" class="px-8 py-3 text-white rounded-lg font-semibold text-center hover:shadow-lg hover:-translate-y-0.5 transition-all" style="background-color: #dc2626 !important; text-decoration: none !important;">
-                        Cancelar
-                    </a>
-                    <button type="submit" class="px-8 py-3 text-white rounded-lg font-semibold hover:shadow-lg hover:-translate-y-0.5 transition-all" style="background-color: #000000 !important;">
-                        Guardar Cambios
-                    </button>
+
+                <!-- Botones 50% / 50% -->
+                <div class="pt-4 sm:pt-6">
+                    <div class="flex gap-3 w-full">
+                        <a href="{% url 'profile' %}"
+                           class="w-1/2 text-center px-4 py-2.5 border border-gray-300 rounded-lg bg-white font-medium text-gray-800 hover:!bg-gray-50 transition-colors !no-underline">
+                            Cancelar
+                        </a>
+                        <button type="submit"
+                           class="w-1/2 px-4 py-2.5 rounded-lg font-medium bg-black text-white hover:bg-gray-900 transition-colors">
+                            Guardar Cambios
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>
@@ -107,7 +129,8 @@
         if (file) {
             const reader = new FileReader();
             reader.onload = function (e) {
-                document.querySelector('img[alt="Avatar actual"]').src = e.target.result;
+                const img = document.querySelector('img[alt="Avatar actual"]');
+                if (img) img.src = e.target.result;
             };
             reader.readAsDataURL(file);
         }
