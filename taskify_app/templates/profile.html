@@ -95,15 +95,19 @@
                                class="hover:!no-underline !no-underline w-1/2 text-center px-4 !py-2.5 border border-gray-300 rounded-lg bg-white font-medium text-gray-800 hover:!bg-gray-50 transition-colors">
                                 Editar Perfil
                             </a>
-                            <a href="{% url 'logout' %}"
-                               class="w-1/2 px-4 !py-2.5 rounded-lg font-medium !bg-red-600 text-white hover:!bg-red-700 transition-colors inline-flex items-center justify-center gap-2 hover:!no-underline !no-underline">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
-                                    </path>
-                                </svg>
-                                Cerrar Sesión
-                            </a>
+                            <form method="post" action="{% url 'logout' %}" class="w-1/2">
+                                {% csrf_token %}
+                                <button type="submit"
+                                        class="w-full px-4 py-2.5 rounded-lg font-medium bg-red-600 text-white hover:bg-red-700 transition-colors inline-flex items-center justify-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                         aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
+                                        </path>
+                                    </svg>
+                                    Cerrar Sesión
+                                </button>
+                            </form>
                         </div>
                     </div>
 
