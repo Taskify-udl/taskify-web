@@ -237,6 +237,127 @@ def create_default_users(sender=None, **kwargs):
     return {"created": created_count, "updated": updated_count}
 
 
+# python
+def create_default_services(image_dir=None, sender=None, **kwargs):
+    """
+    Crea 3 servicios de ejemplo y les asigna imágenes desde:
+    taskify_app/seed_images/services/
+    Archivos esperados: fontaneria.jpg, albanileria.jpg, diseno.jpg
+    """
+    import os
+    from django.utils.text import slugify
+    from django.core.files import File
+    from django.contrib.auth import get_user_model
+
+    try:
+        from .models import Service, ServiceImage, Category
+    except Exception as e:
+        print("[taskify_app] No se pudieron importar modelos Service/ServiceImage/Category:", e)
+        return {"created_services": 0, "created_images": 0, "errors": 1}
+
+    User = get_user_model()
+
+    # Ruta por defecto si no se proporciona
+    if not image_dir:
+        image_dir = os.path.join(os.path.dirname(__file__), "seed_images", "services")
+
+    # Mapeo: (nombre_del_servicio, filename_imagen, descripcion, categoría_preferida, rol_asignado)
+    items = [
+        ("Fontanería", "fontaneria.jpg", "Reparación y mantenimiento de tuberías y grifería.", "Fontanería",
+         CustomUser.Roles.FREELANCER),
+        ("Albañilería", "albanileria.jpg", "Obras, reformas y pequeñas construcciones.", "Albañilería",
+         CustomUser.Roles.COMPANY_ADMIN),
+        ("Diseño gráfico", "diseno.jpg", "Diseño de logotipos, piezas gráficas y branding.", "Diseño gráfico",
+         CustomUser.Roles.FREELANCER),
+    ]
+
+    created_services = 0
+    created_images = 0
+    errors = 0
+
+    for name, filename, description, category_name, role_value in items:
+        try:
+            provider = User.objects.filter(role=role_value).first()
+            if not provider:
+                print(f"[taskify_app] No se encontró usuario con rol {role_value} para asignar el servicio {name}.")
+                errors += 1
+                continue
+
+            # Buscar categoría asociada si existe
+            category = None
+            try:
+                category = Category.objects.filter(name__iexact=category_name).first()
+            except Exception:
+                category = None
+
+            slug = slugify(name)
+            defaults = {"description": description, "price": 20.0}
+            # Intenta crear el servicio (ajusta campos si tu modelo requiere otros)
+            service, created = Service.objects.get_or_create(
+                name=name,
+                provider=provider,
+                defaults={**defaults, "slug": slug} if "slug" in [f.name for f in Service._meta.fields] else defaults,
+            )
+
+            if created:
+                created_services += 1
+            else:
+                # actualizar descripción/precio si es distinto
+                changed = False
+                if getattr(service, "description", None) != description:
+                    service.description = description
+                    changed = True
+                if getattr(service, "price", None) != 20.0:
+                    try:
+                        service.price = 20.0
+                        changed = True
+                    except Exception:
+                        pass
+                if changed:
+                    service.save()
+
+            # Agregar categoría si existe y modelo tiene relación many-to-many llamada 'categories'
+            try:
+                if category and hasattr(service, "categories"):
+                    if not service.categories.filter(pk=category.pk).exists():
+                        service.categories.add(category)
+            except Exception:
+                pass
+
+            # Adjuntar imagen si no tiene imágenes
+            try:
+                has_images = False
+                if hasattr(service, "images"):
+                    # si related_name es 'images'
+                    has_images = service.images.exists()
+                else:
+                    # intenta ServiceImage por FK
+                    has_images = ServiceImage.objects.filter(service=service).exists()
+
+                image_path = os.path.join(image_dir, filename)
+                if not has_images and os.path.exists(image_path):
+                    with open(image_path, "rb") as f:
+                        django_file = File(f, name=filename)
+                        # intenta crear ServiceImage según firma esperada
+                        si = ServiceImage.objects.create(service=service, image=django_file)
+                        si.save()
+                        created_images += 1
+                elif not os.path.exists(image_path):
+                    print(f"[taskify_app] Imagen no encontrada: {image_path}")
+                    errors += 1
+            except Exception as img_exc:
+                print(f"[taskify_app] Error añadiendo imagen al servicio {name}: {img_exc}")
+                errors += 1
+
+        except Exception as exc:
+            print(f"[taskify_app] Error creando servicio {name}: {exc}")
+            errors += 1
+
+    print(
+        f"[taskify_app] Servicios creados: {created_services}, imágenes añadidas: {created_images}, errores: {errors}")
+    return {"created_services": created_services, "created_images": created_images, "errors": errors}
+
+
 def create_default_categories(sender, **kwargs):
     from .models import Category
 
