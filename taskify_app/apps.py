@@ -21,5 +21,10 @@ class TaskifyAppConfig(AppConfig):
             sender=self,
             dispatch_uid="taskify_create_default_users",
         )
+        post_migrate.connect(
+            signals.create_default_services,
+            sender=self,
+            dispatch_uid="taskify_create_default_services",
+        )
 
 
