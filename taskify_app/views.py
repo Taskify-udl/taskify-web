@@ -75,18 +75,39 @@ def signup(request):
         email = request.POST.get('email')
         password = request.POST.get('password')
 
-        if CustomUser.objects.filter(email=email).exists():
-            messages.error(request, "Ya existe un usuario con ese correo.")
+        if CustomUser.objects.filter(username__iexact=username, is_active=True).exists():
+            messages.error(request, f"El nombre de usuario '{username}' ya está en uso. Por favor, elige otro.")
             return redirect('signup')
 
-        user = CustomUser.objects.create_user(username=username, email=email, password=password)
-        user.is_active = False
-        user.save()
+        if CustomUser.objects.filter(email__iexact=email, is_active=True).exists():
+            messages.error(request, f"El correo electrónico '{email}' ya está registrado. Por favor, inicia sesión.")
+            return redirect('signup')
+
+        user = CustomUser.objects.filter(email__iexact=email, is_active=False).first()
+
+        if user:
+            if CustomUser.objects.filter(username__iexact=username).exclude(email__iexact=email).exists():
+                messages.error(request, f"El nombre de usuario '{username}' ya está en uso. Por favor, elige otro.")
+                return redirect('signup')
+
+            user.username = username
+            user.set_password(password)
+            user.save()
+
+        else:
+            user = CustomUser.objects.filter(username__iexact=username, is_active=False).first()
+            if user:
+                user.email = email
+                user.set_password(password)
+                user.save()
+            else:
+                user = CustomUser.objects.create_user(username=username, email=email, password=password)
+                user.is_active = False
+                user.save()
 
         verification, _ = EmailVerification.objects.get_or_create(user=user)
         verification.generate_code()
 
-        # Enviar correo
         send_mail(
             subject="Verifica tu cuenta en Taskify",
             message=f"Tu código de verificación es: {verification.code}",
@@ -95,10 +116,33 @@ def signup(request):
         )
 
         request.session['pending_email'] = email
-
         return redirect('verify_email')
 
     return render(request, 'registration/signup.html')
+
+
+def validate_signup(request):
+    """
+    Una vista API para validar username y email en tiempo real
+    desde el formulario de registro.
+    """
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            username = data.get('username', '').strip()
+            email = data.get('email', '').strip()
+
+            username_taken = CustomUser.objects.filter(username__iexact=username, is_active=True).exists()
+            email_taken = CustomUser.objects.filter(email__iexact=email, is_active=True).exists()
+
+            return JsonResponse({
+                'username_taken': username_taken,
+                'email_taken': email_taken,
+            })
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
 
 
 @login_required
@@ -472,6 +516,8 @@ def get_new_messages(request, conversation_id):
 
     return JsonResponse(new_messages_data, safe=False)
 
+
+@login_required
 def my_services(request):
     if request.method == 'POST':
         name = request.POST.get('name')
