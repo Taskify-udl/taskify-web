@@ -4,9 +4,9 @@
 {% block title %}Notifications - Taskify{% endblock %}
 
 {% block content %}
-<div class="notifications-container">
+<div class="px-16 py-4">
     <div class="notifications-header">
-        <h1>Notifications</h1>
+        <span class="text-2xl font-semibold text-gray-900 mb-6 block">Notifications</span>
         {% if unread_count > 0 %}
             <span class="unread-badge">{{ unread_count }} unread</span>
         {% else %}
@@ -88,11 +88,6 @@
 </div>
 
 <style>
-.notifications-container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 2rem;
-}
 
 .notifications-header {
     display: flex;
