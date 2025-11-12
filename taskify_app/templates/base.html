@@ -148,16 +148,18 @@
                             <span class="text-black">Favourites</span>
                         </a>
                     </li>
+                    {% if user.is_authenticated and not user.is_superuser and user.role != 'PROVIDER' and user.role != 'FREELANCER' and user.role != 'COMPANY_ADMIN' %}
 
-                    <!-- Mis Servicios -->
-                    <li class="w-full rounded-xl hover:bg-gray-200 transition-colors duration-300 ease-in-out motion-reduce:transition-none">
-                        <a href="{% url 'my_services' %}"
-                           class="flex w-full items-center gap-3 rounded-xl p-2 text-black no-underline bg-transparent
+                        <!-- Mis Servicios -->
+                        <li class="w-full rounded-xl hover:bg-gray-200 transition-colors duration-300 ease-in-out motion-reduce:transition-none">
+                            <a href="{% url 'my_services' %}"
+                               class="flex w-full items-center gap-3 rounded-xl p-2 text-black no-underline bg-transparent
     hover:!no-underline focus:!no-underline active:!no-underline">
-                            <i class="fa-solid fa-briefcase text-lg text-black"></i>
-                            <span class="text-black">Mis Servicios</span>
-                        </a>
-                    </li>
+                                <i class="fa-solid fa-briefcase text-lg text-black"></i>
+                                <span class="text-black">Mis Servicios</span>
+                            </a>
+                        </li>
+                    {% endif %}
                 {% endif %}
             </ul>
 
@@ -254,16 +256,18 @@
                             <span class="text-black">Favoritos</span>
                         </a>
                     </li>
+                    {% if user.is_authenticated and not user.is_superuser and user.role != 'PROVIDER' and user.role != 'FREELANCER' and user.role != 'COMPANY_ADMIN' %}
 
-                    <!-- Mis Servicios -->
-                    <li class="w-full rounded-xl hover:bg-gray-200 transition-colors duration-300 ease-in-out motion-reduce:transition-none">
-                        <a href="{% url 'my_services' %}"
-                           class="flex w-full items-center gap-3 rounded-xl p-2 text-black no-underline bg-transparent
+                        <!-- Mis Servicios -->
+                        <li class="w-full rounded-xl hover:bg-gray-200 transition-colors duration-300 ease-in-out motion-reduce:transition-none">
+                            <a href="{% url 'my_services' %}"
+                               class="flex w-full items-center gap-3 rounded-xl p-2 text-black no-underline bg-transparent
     hover:!no-underline focus:!no-underline active:!no-underline">
-                            <i class="fa-solid fa-briefcase text-lg text-black"></i>
-                            <span class="text-black">Mis Servicios</span>
-                        </a>
-                    </li>
+                                <i class="fa-solid fa-briefcase text-lg text-black"></i>
+                                <span class="text-black">Mis Servicios</span>
+                            </a>
+                        </li>
+                    {% endif %}
                 {% endif %}
             </ul>
         </div>
