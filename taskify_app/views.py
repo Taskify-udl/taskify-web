@@ -148,12 +148,9 @@ def validate_signup(request):
 @login_required
 def user_logout(request):
     # Recomendado: cerrar sesión solo por POST para evitar CSRF por enlaces GET
-    if request.method == "POST":
-        logout(request)
-        messages.success(request, "Has cerrado sesión correctamente.")
-        return redirect("login")  # o "home", como prefieras
-    # Si alguien entra por GET, lo devolvemos a algún sitio seguro
-    return redirect("home")
+    logout(request)
+    messages.success(request, "Has cerrado sesión correctamente.")
+    return redirect("login")
 
 
 @login_required
