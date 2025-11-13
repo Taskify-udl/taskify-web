@@ -9,10 +9,8 @@
 <div class="w-[1024px] mx-auto py-4 space-y-6">
   <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
 
-    <!-- Columna Principal (Contenido) -->
     <div class="md:col-span-2">
 
-      <!-- 1. Carrusel de Imágenes -->
       <div class="h-[400px] w-full relative rounded-xl overflow-hidden border border-gray-200 group">
         <div class="swiper service-swiper h-full"
              style="--swiper-navigation-color: #ffffff;
@@ -36,7 +34,6 @@
         </div>
       </div>
 
-      <!-- 2. Título y Stats -->
       <div class="flex flex-col">
         <span class="text-3xl font-bold text-gray-900 mt-4">{{ service.name }}</span>
         <div class="flex items-center gap-2 mt-2 text-gray-700">
@@ -53,7 +50,6 @@
         </div>
       </div>
 
-      <!-- 3. Categorías -->
       <div class="flex flex-row flex-wrap gap-2 mt-2 mb-3">
         {% for category in service.categories.all %}
           <span class="text-sm px-3 py-1 border border-gray-300 bg-gray-50 rounded-full">
@@ -66,7 +62,6 @@
         {% endfor %}
       </div>
 
-      <!-- 4. Descripción -->
       <div class="flex flex-col border-t border-gray-200 mt-2">
         <span class="text-xl font-semibold text-gray-900 my-2">Descripción</span>
         <p class="text-gray-700">
@@ -74,7 +69,6 @@
         </p>
       </div>
 
-      <!-- 6. Reseñas y Valoraciones -->
       <div class="flex flex-col border-t border-gray-200">
         <span class="text-xl font-semibold text-gray-900 my-2">Reseñas y Valoraciones ({{ reviews_count }})</span>
         <div class="flex flex-col gap-2">
@@ -104,7 +98,7 @@
           </div>
           {% empty %}
             <div class="text-left py-6 text-gray-500">
-              <p>Este servicio aún no ha recibido ninguna review.</p>
+              <p>Este servicio aún no ha recibido ninguna reseña.</p>
             </div>
           {% endfor %}
         </div>
@@ -112,16 +106,14 @@
 
     </div>
 
-    <!-- Columna Lateral (Sidebar) -->
     <div class="md:col-span-1 flex flex-col gap-3">
 
-      <!-- 1. Caja de Precios y Botones -->
       <div class="border rounded-xl shadow-sm p-3">
         <div class="flex items-baseline gap-2">
           <span class="text-xl font-medium text-gray-700">Precio</span>
           <span class="text-2xl font-bold text-gray-900">€{{ service.price|floatformat:0 }}</span>
         </div>
-        
+
         {% if request.user == service.provider %}
         {% elif request.user.is_authenticated %}
             <div class="w-full !py-3 !px-5 flex items-center justify-center bg-[#1c1b2b] text-white font-semibold rounded-xl hover:bg-opacity-90 transition-all shadow-sm disabled:opacity-50 my-2 hover:cursor-pointer">
@@ -140,7 +132,6 @@
         {% endif %}
       </div>
 
-      <!-- 2. Caja de Proveedor (en escritorio) -->
       <div class="md:block border rounded-xl shadow-sm p-3 !pb-2">
         <a href="{% url 'public_profile' service.provider.username %}" class="block rounded-lg hover:bg-gray-50 transition-colors">
           <div class="flex flex-row items-center gap-2">
@@ -153,7 +144,6 @@
             </div>
           </div>
         </a>
-        <!-- Stats opcionales del proveedor -->
         <div class="border-t border-gray-100 mt-2 pt-2 text-sm text-gray-600">
           <div class="flex items-center gap-2 ml-1 ">
             <svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 47.94 47.94" style="enable-background:new 0 0 47.94 47.94;" xml:space="preserve" class="!h-[20px] !w-[20px]">

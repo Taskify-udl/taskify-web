@@ -7,7 +7,6 @@
 
     <div class="flex flex-col h-[80vh] bg-white rounded-t-xl overflow-hidden">
 
-      <!-- CABECERA -->
       <div class="bg-white border-b border-gray-200 p-3 shadow-md z-10 flex gap-3 items-center space-x-2">
         <a href="{% url 'chats' %}" class="p-1.5 rounded-full text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors duration-150" title="Volver a los chats">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
@@ -17,7 +16,6 @@
         <span class="text-xl font-semibold text-gray-800">{{ otro_usuario.get_full_name|default:otro_usuario.username }}</span>
       </div>
 
-      <!-- MENSAJES -->
       <div id="message-container" class="flex-1 overflow-y-auto p-4 md:p-6">
         <div id="message-list" class="space-y-5">
           {% for message in messages %}
@@ -51,9 +49,7 @@
     </div>
 
 
-    <!-- FORMULARIO DE ENVÍO -->
     <div class="bg-white p-3 rounded-b-xl shadow-inner">
-      <!-- Usamos CSS Grid para alinear input y botón -->
       <form id="chat-form" class="grid grid-cols-[1fr_auto] items-center gap-2" method="POST">
         {% csrf_token %}
 
@@ -65,9 +61,7 @@
           autocomplete="off"
         />
 
-        <!-- Botón de submit implementado con un DIV -->
         <div id="submit-button" class="appearance-none h-10 w-10 bg-[#1c1b2b] text-white rounded-full hover:shadow-[0_2px_8px_rgba(0,0,0,0.3)] focus:outline-none cursor-pointer">
-            <!-- Span interno para centrar el SVG (soluciona bug de border-radius) -->
             <span class="flex items-center justify-center h-full w-full">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.875L5.999 12zm0 0h7.5" />
@@ -134,7 +128,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
       const messageDate = new Date(message.timestamp);
       timeString = messageDate.toLocaleTimeString(navigator.language || 'es-ES', { hour: '2-digit', minute: '2-digit' });
     } catch(e) {
-      console.error('Invalid timestamp format:', message.timestamp);
+      console.error('Formato de marca de tiempo inválido:', message.timestamp);
     }
 
     return `
@@ -159,7 +153,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
       const response = await fetch(url);
       if (!response.ok) {
-        console.error('Error fetching new messages:', response.statusText);
+        console.error('Error al obtener nuevos mensajes:', response.statusText);
         return;
       }
 
@@ -179,7 +173,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
       }
 
     } catch (error) {
-      console.error('Error during fetch:', error);
+      console.error('Error durante la obtención:', error);
     }
   }
 
@@ -191,4 +185,3 @@ document.addEventListener('DOMContentLoaded', (event) => {
 </script>
 
 {% endblock %}
-

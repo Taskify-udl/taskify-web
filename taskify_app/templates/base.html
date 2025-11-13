@@ -1,6 +1,6 @@
 {% load tailwind_tags %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -32,7 +32,7 @@
                           d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
                           clip-rule="evenodd"></path>
                 </svg>
-                <span class="sr-only">Toggle sidebar</span>
+                <span class="sr-only">Alternar barra lateral</span>
             </button>
 
             <a href="/" class="flex items-center justify-between mr-4">
@@ -43,9 +43,6 @@
 
     </div>
 </nav>
-<!-- End of the Navbar -->
-
-<!-- Sidebar -->
 <div class="flex flex-row w-full min-h-0 flex-1">
 
     <aside
@@ -55,19 +52,16 @@
             aria-label="Sidenav">
 
         <div class="overflow-y-auto pt-2 px-3 h-full bg-white">
-            <!-- Menu (It's for mobile) -->
             {% with current=request.resolver_match.url_name %}
             <ul class="space-y-0.5 lg:hidden">
-                <!-- Home (siempre visible) -->
                 <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'home' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
                     <a href="{% url 'home' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'home' %}text-white{% else %}text-black{% endif %}">
                         <i class="fa-solid fa-house text-lg {% if current == 'home' %}text-white{% else %}text-black{% endif %}"></i>
-                        <span class="{% if current == 'home' %}text-white{% else %}text-black{% endif %}">Home</span>
+                        <span class="{% if current == 'home' %}text-white{% else %}text-black{% endif %}">Inicio</span>
                     </a>
                 </li>
 
                 {% if not user.is_authenticated %}
-                    <!-- Iniciar sesión -->
                     <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'login' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
                         <a href="{% url 'login' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'login' %}text-white{% else %}text-black{% endif %}">
                             <i class="fa-solid fa-right-to-bracket text-lg {% if current == 'login' %}text-white{% else %}text-black{% endif %}"></i>
@@ -75,7 +69,6 @@
                         </a>
                     </li>
 
-                    <!-- Registrarse -->
                     <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'signup' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
                         <a href="{% url 'signup' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'signup' %}text-white{% else %}text-black{% endif %}">
                             <i class="fa-solid fa-user-plus text-lg {% if current == 'signup' %}text-white{% else %}text-black{% endif %}"></i>
@@ -85,7 +78,6 @@
                 {% endif %}
 
                 {% if user.is_authenticated %}
-                    <!-- Chats -->
                     <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'chats' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
                         <a href="{% url 'chats' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'chats' %}text-white{% else %}text-black{% endif %}">
                             <i class="fa-solid fa-comments text-lg {% if current == 'chats' %}text-white{% else %}text-black{% endif %}"></i>
@@ -93,7 +85,6 @@
                         </a>
                     </li>
 
-                    <!-- Pedidos -->
                     <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'my_orders' %} bg-black {% else %} hover:bg_gray-200 hover:bg-gray-200 {% endif %}">
                         <a href="{% url 'my_orders' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'my_orders' %}text-white{% else %}text-black{% endif %}">
                             <i class="fa-solid fa-bag-shopping text-lg {% if current == 'my_orders' %}text-white{% else %}text-black{% endif %}"></i>
@@ -101,7 +92,6 @@
                         </a>
                     </li>
 
-                    <!-- Perfil -->
                     <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'profile' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
                         <a href="{% url 'profile' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'profile' %}text-white{% else %}text-black{% endif %}">
                             <i class="fa-solid fa-user text-lg {% if current == 'profile' %}text-white{% else %}text-black{% endif %}"></i>
@@ -109,7 +99,6 @@
                         </a>
                     </li>
 
-                    <!-- Notificaciones -->
                     <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'notifications' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
                         <a href="{% url 'notifications' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'notifications' %}text-white{% else %}text-black{% endif %}">
                             <i class="fa-solid fa-bell text-lg {% if current == 'notifications' %}text-white{% else %}text-black{% endif %}"></i>
@@ -117,7 +106,6 @@
                         </a>
                     </li>
 
-                    <!-- Dashboard -->
                     <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'advanced_stats' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
                         <a href="{% url 'advanced_stats' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'advanced_stats' %}text-white{% else %}text-black{% endif %}">
                             <i class="fa-solid fa-chart-simple text-lg {% if current == 'advanced_stats' %}text-white{% else %}text-black{% endif %}"></i>
@@ -125,16 +113,14 @@
                         </a>
                     </li>
 
-                    <!-- Favourites -->
                     <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'favourites' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
                         <a href="{% url 'favourites' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'favourites' %}text-white{% else %}text-black{% endif %}">
                             <i class="fa-solid fa-heart text-lg {% if current == 'favourites' %}text-white{% else %}text-black{% endif %}"></i>
-                            <span class="{% if current == 'favourites' %}text-white{% else %}text-black{% endif %}">Favourites</span>
+                            <span class="{% if current == 'favourites' %}text-white{% else %}text-black{% endif %}">Favoritos</span>
                         </a>
                     </li>
 
                     {% if user.is_authenticated  and user.role != 'CUSTOMER' and user.role != 'COMPANY_WORKER' %}
-                        <!-- Mis Servicios -->
                         <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'my_services' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
                             <a href="{% url 'my_services' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'my_services' %}text-white{% else %}text-black{% endif %}">
                                 <i class="fa-solid fa-briefcase text-lg {% if current == 'my_services' %}text-white{% else %}text-black{% endif %}"></i>
@@ -146,19 +132,16 @@
             </ul>
             {% endwith %}
 
-            <!-- Menu (It's for Lablet and Desktop) -->
             {% with current=request.resolver_match.url_name %}
             <ul class="hidden lg:inline space-y-0.5">
-                <!-- Home (siempre visible) -->
                 <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'home' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
                     <a href="{% url 'home' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'home' %}text-white{% else %}text-black{% endif %}">
                         <i class="fa-solid fa-house text-lg {% if current == 'home' %}text-white{% else %}text-black{% endif %}"></i>
-                        <span class="{% if current == 'home' %}text-white{% else %}text-black{% endif %}">Home</span>
+                        <span class="{% if current == 'home' %}text-white{% else %}text-black{% endif %}">Inicio</span>
                     </a>
                 </li>
 
                 {% if not user.is_authenticated %}
-                    <!-- Iniciar sesión -->
                     <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'login' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
                         <a href="{% url 'login' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'login' %}text-white{% else %}text-black{% endif %}">
                             <i class="fa-solid fa-right-to-bracket text-lg {% if current == 'login' %}text-white{% else %}text-black{% endif %}"></i>
@@ -166,7 +149,6 @@
                         </a>
                     </li>
 
-                    <!-- Registrarse -->
                     <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'signup' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
                         <a href="{% url 'signup' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'signup' %}text-white{% else %}text-black{% endif %}">
                             <i class="fa-solid fa-user-plus text-lg {% if current == 'signup' %}text-white{% else %}text-black{% endif %}"></i>
@@ -176,7 +158,6 @@
                 {% endif %}
 
                 {% if user.is_authenticated %}
-                    <!-- Chats -->
                     <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'chats' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
                         <a href="{% url 'chats' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'chats' %}text-white{% else %}text-black{% endif %}">
                             <i class="fa-solid fa-comments text-lg {% if current == 'chats' %}text-white{% else %}text-black{% endif %}"></i>
@@ -184,7 +165,6 @@
                         </a>
                     </li>
 
-                    <!-- Pedidos -->
                     <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'my_orders' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
                         <a href="{% url 'my_orders' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'my_orders' %}text-white{% else %}text-black{% endif %}">
                             <i class="fa-solid fa-bag-shopping text-lg {% if current == 'my_orders' %}text-white{% else %}text-black{% endif %}"></i>
@@ -192,7 +172,6 @@
                         </a>
                     </li>
 
-                    <!-- Perfil -->
                     <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'profile' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
                         <a href="{% url 'profile' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'profile' %}text-white{% else %}text-black{% endif %}">
                             <i class="fa-solid fa-user text-lg {% if current == 'profile' %}text-white{% else %}text-black{% endif %}"></i>
@@ -200,7 +179,6 @@
                         </a>
                     </li>
 
-                    <!-- Notificaciones -->
                     <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'notifications' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
                         <a href="{% url 'notifications' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'notifications' %}text-white{% else %}text-black{% endif %}">
                             <i class="fa-solid fa-bell text-lg {% if current == 'notifications' %}text-white{% else %}text-black{% endif %}"></i>
@@ -208,7 +186,6 @@
                         </a>
                     </li>
 
-                    <!-- Dashboard -->
                     <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'advanced_stats' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
                         <a href="{% url 'advanced_stats' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'advanced_stats' %}text-white{% else %}text-black{% endif %}">
                             <i class="fa-solid fa-book text-lg {% if current == 'advanced_stats' %}text-white{% else %}text-black{% endif %}"></i>
@@ -216,7 +193,6 @@
                         </a>
                     </li>
 
-                    <!-- Favoritos -->
                     <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'favourites' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
                         <a href="{% url 'favourites' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'favourites' %}text-white{% else %}text-black{% endif %}">
                             <i class="fa-solid fa-heart text-lg {% if current == 'favourites' %}text-white{% else %}text-black{% endif %}"></i>
@@ -225,7 +201,6 @@
                     </li>
 
                     {% if user.is_authenticated  and user.role != 'CUSTOMER' and user.role != 'COMPANY_WORKER' %}
-                        <!-- Mis Servicios -->
                         <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'my_services' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
                             <a href="{% url 'my_services' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'my_services' %}text-white{% else %}text-black{% endif %}">
                                 <i class="fa-solid fa-briefcase text-lg {% if current == 'my_services' %}text-white{% else %}text-black{% endif %}"></i>
@@ -250,18 +225,13 @@
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
         integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
         crossorigin="anonymous"></script>
-<!-- Site Script File -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<!-- Flowbite Js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.1/flowbite.min.js"></script>
-<!-- Apex Chart JS -->
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<!-- Flowbite Js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.1/flowbite.min.js"></script>
-<!-- Apex Chart JS -->
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
 

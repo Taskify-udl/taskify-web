@@ -1,30 +1,27 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Notifications - Taskify{% endblock %}
+{% block title %}Notificaciones - Taskify{% endblock %}
 
 {% block content %}
     <div class="px-4 md:px-16 py-4">
-        <!-- Header -->
         <div class="flex items-center justify-between  border-b border-gray-200">
-            <span class="text-2xl font-semibold text-gray-900 mb-6 block">Notifications</span>
+            <span class="text-2xl font-semibold text-gray-900 mb-6 block">Notificaciones</span>
 
         </div>
 
-        <!-- Actions -->
         <div class="flex justify-end mb-6 gap-4">
             {% if unread_count > 0 %}
                 <form method="post" class="inline">
                     {% csrf_token %}
                     <button type="submit" name="mark_all_read"
                             class="px-4 py-2 bg-gray-100 text-gray-800 rounded-md text-sm font-semibold hover:bg-gray-200">
-                        Mark all as read
+                        Marcar todas como leídas
                     </button>
                 </form>
             {% endif %}
         </div>
 
-        <!-- List -->
         <div class="flex flex-col gap-4">
             {% if notifications %}
                 {% for notification in notifications %}
@@ -54,17 +51,17 @@
 
                             {% if notification.contract %}
                                 <div class="notification-meta mt-1">
-                                    <small class="text-indigo-600 font-semibold text-sm">Contract: {{ notification.contract.service.name }}</small>
+                                    <small class="text-indigo-600 font-semibold text-sm">Contrato: {{ notification.contract.service.name }}</small>
                                 </div>
                             {% endif %}
                             {% if notification.review %}
                                 <div class="notification-meta mt-1">
-                                    <small class="text-indigo-600 font-semibold text-sm">Review on: {{ notification.review.service.name }}</small>
+                                    <small class="text-indigo-600 font-semibold text-sm">Reseña en: {{ notification.review.service.name }}</small>
                                 </div>
                             {% endif %}
                             {% if notification.service %}
                                 <div class="notification-meta mt-1">
-                                    <small class="text-indigo-600 font-semibold text-sm">Service: {{ notification.service.name }}</small>
+                                    <small class="text-indigo-600 font-semibold text-sm">Servicio: {{ notification.service.name }}</small>
                                 </div>
                             {% endif %}
                         </div>
@@ -73,7 +70,7 @@
                             {% if not notification.is_read %}
                                 <button class="mark-read-btn inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700"
                                         onclick="markAsRead('{{ notification.id }}')">
-                                    Mark as read
+                                    Marcar como leída
                                 </button>
                             {% endif %}
                         </div>
@@ -83,19 +80,19 @@
                 {% if notifications.has_other_pages %}
                     <div class="flex justify-center items-center gap-4 mt-6 pt-4 border-t border-gray-200">
                         {% if notifications.has_previous %}
-                            <a href="?page={{ notifications.previous_page_number }}" class="text-indigo-600 hover:bg-indigo-600 hover:text-white px-3 py-1 rounded text-sm font-semibold">« Previous</a>
+                            <a href="?page={{ notifications.previous_page_number }}" class="text-indigo-600 hover:bg-indigo-600 hover:text-white px-3 py-1 rounded text-sm font-semibold">« Anterior</a>
                         {% endif %}
-                        <span class="page-info text-sm text-gray-500">Page {{ notifications.number }} of {{ notifications.paginator.num_pages }}</span>
+                        <span class="page-info text-sm text-gray-500">Página {{ notifications.number }} de {{ notifications.paginator.num_pages }}</span>
                         {% if notifications.has_next %}
-                            <a href="?page={{ notifications.next_page_number }}" class="text-indigo-600 hover:bg-indigo-600 hover:text-white px-3 py-1 rounded text-sm font-semibold">Next »</a>
+                            <a href="?page={{ notifications.next_page_number }}" class="text-indigo-600 hover:bg-indigo-600 hover:text-white px-3 py-1 rounded text-sm font-semibold">Siguiente »</a>
                         {% endif %}
                     </div>
                 {% endif %}
             {% else %}
                 <div class="no-notifications text-center p-8 bg-white rounded-lg shadow">
                     <div class="no-notifications-icon text-4xl text-gray-400 mb-4"><i class="text-3xl fa fa-bell"></i></div>
-                    <h3 class="text-lg text-gray-900 mb-1">You have no notifications</h3>
-                    <p class="text-sm text-gray-500">When you have activity on your account, it will appear here.</p>
+                    <h3 class="text-lg text-gray-900 mb-1">No tienes notificaciones</h3>
+                    <p class="text-sm text-gray-500">Cuando tengas actividad en tu cuenta, aparecerá aquí.</p>
                 </div>
             {% endif %}
         </div>
@@ -119,12 +116,12 @@
                         const btn = notificationItem.querySelector('.mark-read-btn');
                         if (btn) btn.style.display = 'none';
 
-                        // Update unread count badge
+                        // Actualizar la insignia de no leídas
                         const unreadBadge = document.querySelector('.unread-badge');
                         if (unreadBadge) {
                             const currentCount = parseInt(unreadBadge.textContent) || 0;
                             if (currentCount > 1) {
-                                unreadBadge.textContent = `${currentCount - 1} unread`;
+                                unreadBadge.textContent = `${currentCount - 1} no leídas`;
                             } else {
                                 unreadBadge.style.display = 'none';
                                 const allRead = document.querySelector('.all-read');
@@ -134,7 +131,7 @@
                     }
                 })
                 .catch(error => {
-                    console.error('Error marking notification as read:', error);
+                    console.error('Error al marcar la notificación como leída:', error);
                 });
         }
     </script>
