@@ -13,8 +13,8 @@
                     </div>
 
                     <div>
-                        <div data-tab-panel="login" class="space-y-8">
-                            <form method="post" action="{% url 'login' %}" class="space-y-6" id="login-form">
+                        <div data-tab-panel="login" class="space-y-3">
+                            <form method="post" action="{% url 'login' %}" class="space-y-3" id="login-form">
                                 {% csrf_token %}
                                 {% if error_message %}
                                     <div class="rounded-2xl border border-black/20 bg-black/5 p-3 text-sm text-black">
@@ -23,7 +23,7 @@
                                 {% endif %}
 
                                 <!-- Usuario / Correo -->
-                                <div class="space-y-2">
+                                <div>
                                     <label for="login-username" class="block text-sm font-medium text-black">
                                         Usuario
                                     </label>
@@ -50,10 +50,9 @@
                                 </div>
 
                                 <!-- Contraseña -->
-                                <div class="space-y-2 pt-3">
+                                <div class="pt-1">
                                     <div class="flex items-center justify-between text-sm">
                                         <label for="login-password" class="font-medium text-black">Contraseña</label>
-
                                     </div>
 
                                     <div class="flex">

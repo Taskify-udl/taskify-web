@@ -4,14 +4,11 @@
 {% block title %}Mi Perfil - Taskify{% endblock %}
 
 {% block content %}
-    <div class="px-16 py-4">
-                <span class="text-2xl font-semibold text-gray-900 mb-6 block">Mi Perfil</span>
-        <div class="max-w-3xl mx-auto">
-            <div class="pb-6 sm:pb-8">
-
-            </div>
+    <div class="w-[1024px] mx-auto py-4">
+        <span class="text-2xl font-semibold text-gray-900 mb-6 block">Mi perfil</span>
+        <div>
             <div class="bg-white rounded-xl shadow-md overflow-hidden">
-                <div class="p-4 sm:p-6">
+                <div class="p-4">
                     <div class="flex items-center gap-4 sm:gap-6">
                         <div class="flex-shrink-0">
                             <div class="w-16 sm:w-20 md:w-24 lg:w-28 aspect-square rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
@@ -41,7 +38,7 @@
                     </div>
                 </div>
 
-                <div class="p-4 sm:p-6 space-y-0">
+                <div class="pl-4 pb-4 pr-4">
 
                     <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center py-3 border-b border-gray-200">
                         <div class="text-sm text-gray-500 sm:col-span-4">Correo electrónico</div>
@@ -91,13 +88,14 @@
                     <div class="pt-4 sm:pt-6">
                         <div class="flex gap-3 w-full">
                             <a href="{% url 'edit_profile' %}"
-                               class="hover:!no-underline !no-underline w-1/2 text-center px-4 !py-2.5 border border-gray-300 rounded-lg bg-white font-medium text-gray-800 hover:!bg-gray-50 transition-colors">
+                               class="hover:!no-underline !no-underline w-1/2 text-center px-4 !py-2.5 border border-gray-300 rounded-xl
+                                bg-white font-medium text-gray-800 hover:!bg-gray-50 transition-colors">
                                 Editar Perfil
                             </a>
                             <form method="post" action="{% url 'logout' %}" class="w-1/2">
                                 {% csrf_token %}
                                 <button type="submit"
-                                        class="w-full px-4 py-2.5 rounded-lg font-medium bg-red-600 text-white hover:bg-red-700 transition-colors inline-flex items-center justify-center gap-2">
+                                        class="w-full px-4 py-2.5 !rounded-xl font-medium bg-red-600 text-white hover:bg-red-700 transition-colors inline-flex items-center justify-center gap-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                          aria-hidden="true">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

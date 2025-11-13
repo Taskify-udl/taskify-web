@@ -4,32 +4,26 @@
 {% block title %}Estadísticas Avanzadas - Taskify{% endblock %}
 
 {% block content %}
-    <div class="px-16 py-4 ">
-        <span class="text-2xl font-semibold text-gray-900 mb-6 block">Estadísticas Avanzadas</span>
+    <div class="w-[1024px] mx-auto py-4">
+
+        <span class="text-2xl mb-4 font-semibold text-gray-900 block">Estadísticas Avanzadas</span>
 
         <div class="stats-overview ">
-            <div class="stat-card px-4 py-2 ">
+            <div class="stat-card">
                 <div class="stat-icon"><i class="fa fa-bar-chart" aria-hidden="true"></i></div>
                 <div class="stat-content">
                     <h3>{{ services_count }}</h3>
                     <p>Servicios Publicados</p>
                 </div>
             </div>
-            <div class="stat-card px-4 py-2">
-                <div class="stat-icon"><i class="fa fa-heart" aria-hidden="true"></i></div>
-                <div class="stat-content">
-                    <h3>{{ contracts_count }}</h3>
-                    <p>Servicios Guardados</p>
-                </div>
-            </div>
-            <div class="stat-card px-4 py-2">
+            <div class="stat-card">
                 <div class="stat-icon"><i class="fa fa-file-text" aria-hidden="true"></i></div>
                 <div class="stat-content">
                     <h3>{{ contracts_count }}</h3>
                     <p>Contratos Completados</p>
                 </div>
             </div>
-            <div class="stat-card px-4 py-2">
+            <div class="stat-card">
                 <div class="stat-icon"><i class="fa fa-star" aria-hidden="true"></i></div>
                 <div class="stat-content">
                     <h3>{{ reviews_count }}</h3>
@@ -38,7 +32,7 @@
             </div>
         </div>
 
-        <div class="row  my-3">
+        <div class="row my-[1.5rem]">
             <div class="col-12 col-lg-6">
                 <div class="chart-section h-100">
                     <h2 class="h5 mb-3">Tendencia Mensual</h2>
@@ -61,7 +55,7 @@
 
         <div class="stats-details">
             <div class="detail-section">
-                <h2>Servicios Mejor Valorados</h2>
+                <h2 class="h5 mb-3">Servicios Mejor Valorados</h2>
                 {% if top_services %}
                     <div class="top-services-list">
                         {% for service in top_services %}
@@ -84,7 +78,7 @@
             </div>
 
             <div class="detail-section">
-                <h2>Actividad Reciente</h2>
+                <h2 class="h5 mb-3">Actividad Reciente</h2>
                 <div class="activity-tabs">
                     <button class="tab-btn active" onclick="showTab('contracts', this)">Contratos</button>
                     <button class="tab-btn" onclick="showTab('reviews', this)">Reseñas</button>
@@ -262,17 +256,17 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 1.5rem;
-            margin-bottom: 3rem;
+            margin-bottom: 1.5rem;
         }
 
         .stat-card {
             background: var(--white);
-
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
             display: flex;
             align-items: center;
             gap: 1.5rem;
+            padding: 0.5rem 1rem 0.5rem 1rem;
         }
 
         .stat-icon {
@@ -492,11 +486,6 @@
             .stats-details {
                 grid-template-columns: 1fr;
             }
-
-            .stat-card {
-                padding: 1.5rem;
-            }
-
         }
     </style>
 {% endblock %}

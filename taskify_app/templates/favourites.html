@@ -4,150 +4,219 @@
 {% block title %}Mis Favoritos{% endblock %}
 
 {% block content %}
-    <main class="min-h-screen px-16 py-4">
-        <div class="bg-white rounded-lg  mx-auto">
-            <div class="w-full">
-                <span class="text-2xl font-semibold text-gray-900 mb-6 block">Mis Favoritos</span>
+    <main>
+        <div class="w-[1024px] mx-auto py-4" id="favorites-container">
+            <span class="text-2xl font-semibold text-gray-900 mb-6 block">Mis Favoritos</span>
 
+            {% if favorite_services %}
+                <p class="text-sm lg:text-base text-slate-600 mb-8" id="favorites-count">
+                    {% if favorite_services.count == 1 %}
+                        {{ favorite_services.count }} servicio guardado
+                    {% else %}
+                        {{ favorite_services.count }} servicios guardados
+                    {% endif %}
+                </p>
 
-                {% if favorite_services %}
-                    <p class="text-sm lg:text-base text-slate-600 mb-8">
-                        {% if favorite_services.count == 1 %}
-                            {{ favorite_services.count }} servicio guardado
-                        {% else %}
-                            {{ favorite_services.count }} servicios guardados
-                        {% endif %}
-                    </p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="services-grid">
+                    {% for service in favorite_services %}
+                        <div class="rounded-xl border border-gray-200 group shadow-sm bg-white overflow-hidden service-card" data-service-id="{{ service.id }}">
+                            <div class="h-[220px] relative rounded-t-lg overflow-hidden cursor-pointer service-link" data-url="{% url 'service_detail' service.id %}">
+                                <div
+                                    class="flex align-items favorite-btn absolute top-2 right-2 z-10 p-2 bg-white/80 rounded-full cursor-pointer backdrop-blur-sm
+                                           transition-colors duration-200 hover:bg-white"
+                                    data-service-id="{{ service.id }}"
+                                    title="Quitar de favoritos">
+                                    <i class="fa-solid text-red-500 hover:text-red-600 fa-heart text-xl"
+                                       aria-hidden="true"></i>
+                                </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {% for service in favorite_services %}
-                            <div class="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                                <div class="h-48 bg-gray-300 overflow-hidden">
-                                    {% if service.images.all %}
-                                        {% with service.images.first as image %}
-                                            <img src="{{ image.image.url }}" alt="{{ service.name }}"
-                                                 class="w-full h-full object-cover">
-                                        {% endwith %}
-                                    {% else %}
-                                        <div class="w-full h-full flex items-center justify-center bg-gray-400">
-                                            <span class="text-gray-600">Sin imagen</span>
-                                        </div>
+                                <div class="swiper service-swiper-{{ service.id }} h-full">
+                                    <div class="swiper-wrapper">
+                                        {% if service.images.all %}
+                                            {% with service.images.first as image %}
+                                                <img src="{{ image.image.url }}" alt="{{ service.name }}"
+                                                     class="w-full h-full object-cover">
+                                            {% endwith %}
+                                        {% else %}
+                                            <div class="w-full h-full flex items-center justify-center bg-gray-400">
+                                                <span class="text-gray-600">Sin imagen</span>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    {% if service.images.count > 1 %}
+                                        <div class="swiper-button-prev opacity-0 group-hover:opacity-100 transition-opacity duration-300 !left-2 !text-white" style="filter: drop-shadow(0 0 3px rgba(0,0,0,0.7)); --swiper-navigation-size: 24px;"></div>
+                                        <div class="swiper-button-next opacity-0 group-hover:opacity-100 transition-opacity duration-300 !right-2 !text-white" style="filter: drop-shadow(0 0 3px rgba(0,0,0,0.7)); --swiper-navigation-size: 24px;"></div>
                                     {% endif %}
                                 </div>
-                                <div class="p-4">
-                                    <div class="flex items-center justify-between mb-2">
-                                    <span class="text-xs font-semibold text-indigo-600 uppercase">
-                                        {% if service.categories.all %}
-                                            {{ service.categories.first.name }}
-                                        {% else %}
-                                            Sin categoría
-                                        {% endif %}
-                                    </span>
-                                        <button
-                                                class="favorite-btn transition-colors bg-transparent border-0 p-0 cursor-pointer outline-none focus:outline-none"
-                                                data-service-id="{{ service.id }}"
-                                                title="Quitar de favoritos">
-                                            <i class="fa-solid text-red-500 fa-heart text-xl" aria-hidden="true"></i>
-                                        </button>
-                                    </div>
-                                    <span class="text-lg font-semibold text-gray-900 mb-2 line-clamp-1">{{ service.name }}</span>
-                                    <div class="flex items-center justify-between mb-3">
-                                        <div class="text-sm text-gray-600">
-                                            {% if service.average_rating %}
-                                                ★ {{ service.average_rating|floatformat:1 }}
-                                            {% else %}
-                                                Sin calificaciones
+                            </div>
+                            <div class="p-3">
+                                <span class="block text-lg font-semibold text-gray-900 mb-1 line-clamp-1 group-hover:text-blue-600 transition-colors cursor-pointer service-link"
+                                      data-url="{% url 'service_detail' service.id %}">
+                                    {{ service.name }}
+                                </span>
+
+                                <span class="text-xs px-2 py-1 mr-1 mb-1 border border-gray-300 bg-gray-50 rounded-full">
+                                    {% if service.categories.all %}
+                                        {{ service.categories.first.name }}
+                                    {% else %}
+                                        Sin categoría
+                                    {% endif %}
+                                </span>
+                                <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            {% if service.provider.user_profile.avatar %}
+                                                <img class="w-6 h-6 rounded-full object-cover"
+                                                     src="{{ service.provider.user_profile.avatar.url }}"
+                                                     alt="{{ service.provider.username }}">
                                             {% endif %}
+                                            <span class="text-sm font-medium text-gray-700 truncate">{{ service.provider.username }}</span>
+                                        </div>
+                                        <div class="flex items-center gap-1 text-sm text-gray-600">
+                                            <svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 47.94 47.94" style="enable-background:new 0 0 47.94 47.94;" xml:space="preserve" class="!h-[15px] !w-[15px]">
+                                                <path style="fill:#ED8A19;" d="M26.285,2.486l5.407,10.956c0.376,0.762,1.103,1.29,1.944,1.412l12.091,1.757
+                                                  c2.118,0.308,2.963,2.91,1.431,4.403l-8.749,8.528c-0.608,0.593-0.886,1.448-0.742,2.285l2.065,12.042
+                                                  c0.362,2.109-1.852,3.717-3.746,2.722l-10.814-5.685c-0.752-0.395-1.651-0.395-2.403,0l-10.814,5.685
+                                                  c-1.894,0.996-4.108-0.613-3.746-2.722l2.065-12.042c0.144-0.837-0.134-1.692-0.742-2.285l-8.749-8.528
+                                                  c-1.532-1.494-0.687-4.096,1.431-4.403l12.091-1.757c0.841-0.122,1.568-0.65,1.944-1.412l5.407-10.956
+                                                  C22.602,0.567,25.338,0.567,26.285,2.486z"></path>
+                                            </svg>
+                                            <span class="font-semibold text-gray-800">{{ service.average_rating|default:0|floatformat:1 }}</span>
+                                            <span>({{ service.reviews.count|default:0 }})</span>
                                         </div>
                                     </div>
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-xl font-bold text-gray-900">{{ service.price }}€</span>
-                                        <a href="{% url 'service_detail' service.id %}"
-                                           class="px-4 py-2 bg-indigo-600 text-white text-center rounded text-sm font-medium transition-colors duration-300 hover:bg-indigo-700 no-underline">
-                                            Ver servicio
-                                        </a>
+                                    <div class="flex-shrink-0">
+                                        <span class="text-xl font-bold text-gray-800">€{{ service.price|floatformat:0 }}</span>
                                     </div>
                                 </div>
                             </div>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <div class="text-center py-16 px-8 rounded-lg flex flex-col items-center justify-center min-h-96">
-                        <div class="text-6xl mb-4 opacity-40"><i class="fa fa-heart-crack"></i></div>
-                        <p class="text-lg font-medium text-slate-600 mb-2">No tienes servicios favoritos todavía.</p>
-                        <p class="text-sm text-slate-400 mb-8">Marca servicios con el corazón para guardarlos aquí.</p>
-                        <form action="{% url 'home' %}" method="get" style="display: inline;">
-                            <button type="submit"
-                                    class="flex flex-row gap-x-[5px] text-lg px-3 !py-1.5 items-center bg-[#1c1b2b] text-white !rounded-xl hover:shadow-[0_2px_8px_rgba(0,0,0,0.3)] transition-shadow">
-                                Explorar servicios
-                            </button>
-                        </form>
-                    </div>
-                {% endif %}
-            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-16 px-8 rounded-lg flex flex-col items-center justify-center min-h-96" id="empty-state">
+                    <div class="text-6xl mb-4 opacity-40"><i class="fa fa-heart-crack"></i></div>
+                    <p class="text-lg font-medium text-slate-600 mb-2">No tienes servicios favoritos todavía.</p>
+                    <p class="text-sm text-slate-400 mb-8">Marca servicios con el corazón para guardarlos aquí.</p>
+                    <form action="{% url 'home' %}" method="get" style="display: inline;">
+                        <button type="submit"
+                                class="flex flex-row gap-x-[5px] text-lg px-3 !py-1.5 items-center bg-[#1c1b2b] text-white !rounded-xl hover:shadow-[0_2px_8px_rgba(0,0,0,0.3)] transition-shadow">
+                            Explorar servicios
+                        </button>
+                    </form>
+                </div>
+            {% endif %}
         </div>
     </main>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const favoriteButtons = document.querySelectorAll('.favorite-btn');
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
 
-            favoriteButtons.forEach(button => {
-                button.addEventListener('click', async (e) => {
-                    e.preventDefault();
-                    const serviceId = button.dataset.serviceId;
-                    const card = button.closest('.bg-white');
-
-                    try {
-                        const response = await fetch(`/service/${serviceId}/toggle-favorite/`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRFToken': getCookie('csrftoken')
-                            }
-                        });
-
-                        if (response.ok) {
-                            const data = await response.json();
-
-                            if (data.action === 'removed') {
-                                // Animar y eliminar la tarjeta
-                                card.style.transition = 'opacity 0.3s, transform 0.3s';
-                                card.style.opacity = '0';
-                                card.style.transform = 'scale(0.9)';
-
-                                setTimeout(() => {
-                                    card.remove();
-
-                                    // Si no quedan más servicios, recargar la página para mostrar el mensaje vacío
-                                    const remainingCards = document.querySelectorAll('.favorite-btn').length;
-                                    if (remainingCards === 0) {
-                                        window.location.reload();
-                                    }
-                                }, 300);
-                            }
-                        }
-                    } catch (error) {
-                        console.error('Error al gestionar favorito:', error);
-                    }
-                });
-            });
-
-            // Función para obtener el CSRF token
-            function getCookie(name) {
-                let cookieValue = null;
-                if (document.cookie && document.cookie !== '') {
-                    const cookies = document.cookie.split(';');
-                    for (let i = 0; i < cookies.length; i++) {
-                        const cookie = cookies[i].trim();
-                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                            break;
-                        }
+        // --- Función para obtener el CSRF token ---
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
                     }
                 }
-                return cookieValue;
             }
+            return cookieValue;
+        }
+
+        // --- Manejar clicks en los enlaces de servicio ---
+        document.querySelectorAll('.service-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                const url = this.dataset.url;
+                if (url) {
+                    window.location.href = url;
+                }
+            });
         });
-    </script>
+
+        // --- Lógica de Favoritos ---
+        const favoriteButtons = document.querySelectorAll('.favorite-btn');
+
+        favoriteButtons.forEach(buttonDiv => {
+            buttonDiv.addEventListener('click', async function(e) {
+                e.preventDefault();
+                e.stopPropagation(); // CRÍTICO: Evita propagación al service-link
+
+                const serviceId = this.dataset.serviceId;
+                const serviceCard = this.closest('.service-card');
+
+                console.log(`Eliminando favorito: ${serviceId}`);
+
+                try {
+                    const response = await fetch(`/service/${serviceId}/toggle-favorite/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        }
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('Respuesta del servidor:', data);
+
+                        if (data.action === 'removed') {
+                            // Animación de salida suave
+                            serviceCard.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                            serviceCard.style.opacity = '0';
+                            serviceCard.style.transform = 'scale(0.95)';
+
+                            setTimeout(() => {
+                                serviceCard.remove();
+
+                                // Verificar si quedan servicios
+                                const remainingServices = document.querySelectorAll('.service-card');
+                                const count = remainingServices.length;
+
+                                if (count === 0) {
+                                    // Mostrar mensaje de vacío
+                                    const container = document.getElementById('favorites-container');
+                                    container.innerHTML = `
+                                        <span class="text-2xl font-semibold text-gray-900 mb-6 block">Mis Favoritos</span>
+                                        <div class="text-center py-16 px-8 rounded-lg flex flex-col items-center justify-center min-h-96">
+                                            <div class="text-6xl mb-4 opacity-40"><i class="fa fa-heart-crack"></i></div>
+                                            <p class="text-lg font-medium text-slate-600 mb-2">No tienes servicios favoritos todavía.</p>
+                                            <p class="text-sm text-slate-400 mb-8">Marca servicios con el corazón para guardarlos aquí.</p>
+                                            <form action="{% url 'home' %}" method="get" style="display: inline;">
+                                                <button type="submit"
+                                                        class="flex flex-row gap-x-[5px] text-lg px-3 !py-1.5 items-center bg-[#1c1b2b] text-white !rounded-xl hover:shadow-[0_2px_8px_rgba(0,0,0,0.3)] transition-shadow">
+                                                    Explorar servicios
+                                                </button>
+                                            </form>
+                                        </div>
+                                    `;
+                                } else {
+                                    // Actualizar contador
+                                    const countElement = document.getElementById('favorites-count');
+                                    if (countElement) {
+                                        countElement.textContent = count === 1
+                                            ? `${count} servicio guardado`
+                                            : `${count} servicios guardados`;
+                                    }
+                                }
+                            }, 300);
+                        }
+                    } else {
+                        console.error('Error en la respuesta del servidor:', response.status);
+                        alert('Error al quitar el favorito. Por favor, intenta de nuevo.');
+                    }
+                } catch (error) {
+                    console.error('Error al gestionar favorito:', error);
+                    alert('Error de conexión. Por favor, intenta de nuevo.');
+                }
+            });
+        });
+
+    });
+</script>
 {% endblock %}
