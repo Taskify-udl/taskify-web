@@ -1,11 +1,12 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load json_i18n %}
 
-{% block title %}Mi Perfil - Taskify{% endblock %}
+{% block title %}{% t "profile.view_page_title" %}{% endblock %}
 
 {% block content %}
     <div class="w-[1024px] mx-auto py-4">
-        <span class="text-2xl font-semibold text-gray-900 mb-6 block">Mi perfil</span>
+        <span class="text-2xl font-semibold text-gray-900 mb-6 block">{% t "profile.header_title" %}</span>
         <div>
             <div class="bg-white rounded-xl shadow-md overflow-hidden">
                 <div class="p-4">
@@ -28,7 +29,7 @@
                                 {{ user.get_full_name|default:user.username }}
                             </h2>
                             <p class="text-sm sm:text-base text-gray-600 mt-1">
-                                Proveedor
+                                {% t "profile.provider_label" %}
                                 {% if user.profile.profession %}
                                     <span class="mx-2">·</span>
                                     <span class="text-gray-900">{{ user.profile.profession }}</span>
@@ -41,41 +42,41 @@
                 <div class="pl-4 pb-4 pr-4">
 
                     <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center py-3 border-b border-gray-200">
-                        <div class="text-sm text-gray-500 sm:col-span-4">Correo electrónico</div>
+                        <div class="text-sm text-gray-500 sm:col-span-4">{% t "profile.email_label" %}</div>
                         <div class="text-gray-900 sm:col-span-8 break-words">{{ user.email }}</div>
                     </div>
 
                     {% if user.profile.profession %}
                         <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center py-3 border-b border-gray-200">
-                            <div class="text-sm text-gray-500 sm:col-span-4">Profesión</div>
+                            <div class="text-sm text-gray-500 sm:col-span-4">{% t "profile.profession_label" %}</div>
                             <div class="text-gray-900 sm:col-span-8">{{ user.profile.profession }}</div>
                         </div>
                     {% endif %}
 
                     {% if user.profile.bio %}
                         <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-start py-3 border-b border-gray-200">
-                            <div class="text-sm text-gray-500 sm:col-span-4">Descripción</div>
+                            <div class="text-sm text-gray-500 sm:col-span-4">{% t "profile.description_label" %}</div>
                             <div class="text-gray-900 sm:col-span-8">{{ user.profile.bio }}</div>
                         </div>
                     {% endif %}
 
                     {% if user.profile.location %}
                         <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center py-3 border-b border-gray-200">
-                            <div class="text-sm text-gray-500 sm:col-span-4">Ubicación</div>
+                            <div class="text-sm text-gray-500 sm:col-span-4">{% t "profile.location_label" %}</div>
                             <div class="text-gray-900 sm:col-span-8">{{ user.profile.location }}</div>
                         </div>
                     {% endif %}
 
                     {% if user.profile.phone %}
                         <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center py-3 border-b border-gray-200">
-                            <div class="text-sm text-gray-500 sm:col-span-4">Teléfono</div>
+                            <div class="text-sm text-gray-500 sm:col-span-4">{% t "profile.phone_label" %}</div>
                             <div class="text-gray-900 sm:col-span-8">{{ user.profile.phone }}</div>
                         </div>
                     {% endif %}
 
                     {% if user.profile.website %}
                         <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center py-3 border-b border-gray-200">
-                            <div class="text-sm text-gray-500 sm:col-span-4">Sitio Web</div>
+                            <div class="text-sm text-gray-500 sm:col-span-4">{% t "profile.website_label" %}</div>
                             <div class="sm:col-span-8">
                                 <a href="{{ user.profile.website }}" target="_blank"
                                    class="text-blue-600 hover:underline break-words">
@@ -90,19 +91,14 @@
                             <a href="{% url 'edit_profile' %}"
                                class="hover:!no-underline !no-underline w-1/2 text-center px-4 !py-2.5 border border-gray-300 rounded-xl
                                 bg-white font-medium text-gray-800 hover:!bg-gray-50 transition-colors">
-                                Editar Perfil
+                                {% t "profile.edit_profile" %}
                             </a>
                             <form method="post" action="{% url 'logout' %}" class="w-1/2">
                                 {% csrf_token %}
                                 <button type="submit"
                                         class="w-full px-4 py-2.5 !rounded-xl font-medium bg-red-600 text-white hover:bg-red-700 transition-colors inline-flex items-center justify-center gap-2">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                         aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
-                                        </path>
-                                    </svg>
-                                    Cerrar Sesión
+                                    <!-- ...svg... -->
+                                    {% t "profile.logout" %}
                                 </button>
                             </form>
                         </div>

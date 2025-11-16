@@ -1,19 +1,20 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load json_i18n %}
 
-{% block title %}Mis Favoritos{% endblock %}
+{% block title %}{% t 'favourites.page_title' %}{% endblock %}
 
 {% block content %}
     <main>
         <div class="w-[1024px] mx-auto py-4" id="favorites-container">
-            <span class="text-2xl font-semibold text-gray-900 mb-6 block">Mis Favoritos</span>
+            <span class="text-2xl font-semibold text-gray-900 mb-6 block">{% t 'favourites.page_title' %}</span>
 
             {% if favorite_services %}
                 <p class="text-sm lg:text-base text-slate-600 mb-8" id="favorites-count">
                     {% if favorite_services.count == 1 %}
-                        {{ favorite_services.count }} servicio guardado
+                        {{ favorite_services.count }} {% t 'favourites.service_saved' %}
                     {% else %}
-                        {{ favorite_services.count }} servicios guardados
+                        {{ favorite_services.count }} {% t 'favourites.services_saved' %}
                     {% endif %}
                 </p>
 
@@ -25,7 +26,7 @@
                                     class="flex align-items favorite-btn absolute top-2 right-2 z-10 p-2 bg-white/80 rounded-full cursor-pointer backdrop-blur-sm
                                            transition-colors duration-200 hover:bg-white"
                                     data-service-id="{{ service.id }}"
-                                    title="Quitar de favoritos">
+                                    title="{% t 'favourites.remove_title' %}">
                                     <i class="fa-solid text-red-500 hover:text-red-600 fa-heart text-xl"
                                        aria-hidden="true"></i>
                                 </div>
@@ -39,7 +40,7 @@
                                             {% endwith %}
                                         {% else %}
                                             <div class="w-full h-full flex items-center justify-center bg-gray-400">
-                                                <span class="text-gray-600">Sin imagen</span>
+                                                <span class="text-gray-600">{% t 'favourites.no_image' %}</span>
                                             </div>
                                         {% endif %}
                                     </div>
@@ -60,7 +61,7 @@
                                     {% if service.categories.all %}
                                         {{ service.categories.first.name }}
                                     {% else %}
-                                        Sin categoría
+                                        {% t 'favourites.category_none' %}
                                     {% endif %}
                                 </span>
                                 <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
@@ -96,13 +97,13 @@
                 </div>
             {% else %}
                 <div class="text-center py-16 px-8 rounded-lg flex flex-col items-center justify-center min-h-96" id="empty-state">
-                    <div class="text-6xl mb-4 opacity-40"><i class="fa fa-heart-crack"></i></div>
-                    <p class="text-lg font-medium text-slate-600 mb-2">No tienes servicios favoritos todavía.</p>
-                    <p class="text-sm text-slate-400 mb-8">Marca servicios con el corazón para guardarlos aquí.</p>
+                    <div class="text-6xl mb-4 opacity-40"><i class="fa fa-heart-crack" aria-hidden="true"></i></div>
+                    <p class="text-lg font-medium text-slate-600 mb-2">{% t 'favourites.no_favorites_title' %}</p>
+                    <p class="text-sm text-slate-400 mb-8">{% t 'favourites.no_favorites_desc' %}</p>
                     <form action="{% url 'home' %}" method="get" style="display: inline;">
                         <button type="submit"
                                 class="flex flex-row gap-x-[5px] text-lg px-3 !py-1.5 items-center bg-[#1c1b2b] text-white !rounded-xl hover:shadow-[0_2px_8px_rgba(0,0,0,0.3)] transition-shadow">
-                            Explorar servicios
+                            {% t 'favourites.explore_services' %}
                         </button>
                     </form>
                 </div>
@@ -112,6 +113,14 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+
+        const t_service_saved = '{% t "favourites.service_saved" %}';
+        const t_services_saved = '{% t "favourites.services_saved" %}';
+        const t_page_title = '{% t "favourites.page_title" %}';
+        const t_no_fav_title = '{% t "favourites.no_favorites_title" %}';
+        const t_no_fav_desc = '{% t "favourites.no_favorites_desc" %}';
+        const t_explore = '{% t "favourites.explore_services" %}';
+        const t_empty_icon_alt = '{% t "favourites.empty_heart_icon_alt" %}';
 
         // --- Función para obtener el CSRF token ---
         function getCookie(name) {
@@ -182,15 +191,15 @@
                                     // Mostrar mensaje de vacío
                                     const container = document.getElementById('favorites-container');
                                     container.innerHTML = `
-                                        <span class="text-2xl font-semibold text-gray-900 mb-6 block">Mis Favoritos</span>
+                                        <span class="text-2xl font-semibold text-gray-900 mb-6 block">${t_page_title}</span>
                                         <div class="text-center py-16 px-8 rounded-lg flex flex-col items-center justify-center min-h-96">
-                                            <div class="text-6xl mb-4 opacity-40"><i class="fa fa-heart-crack"></i></div>
-                                            <p class="text-lg font-medium text-slate-600 mb-2">No tienes servicios favoritos todavía.</p>
-                                            <p class="text-sm text-slate-400 mb-8">Marca servicios con el corazón para guardarlos aquí.</p>
+                                            <div class="text-6xl mb-4 opacity-40"><i class="fa fa-heart-crack" aria-hidden="true"></i></div>
+                                            <p class="text-lg font-medium text-slate-600 mb-2">${t_no_fav_title}</p>
+                                            <p class="text-sm text-slate-400 mb-8">${t_no_fav_desc}</p>
                                             <form action="{% url 'home' %}" method="get" style="display: inline;">
                                                 <button type="submit"
                                                         class="flex flex-row gap-x-[5px] text-lg px-3 !py-1.5 items-center bg-[#1c1b2b] text-white !rounded-xl hover:shadow-[0_2px_8px_rgba(0,0,0,0.3)] transition-shadow">
-                                                    Explorar servicios
+                                                    ${t_explore}
                                                 </button>
                                             </form>
                                         </div>
@@ -200,8 +209,8 @@
                                     const countElement = document.getElementById('favorites-count');
                                     if (countElement) {
                                         countElement.textContent = count === 1
-                                            ? `${count} servicio guardado`
-                                            : `${count} servicios guardados`;
+                                            ? `${count} ${t_service_saved}`
+                                            : `${count} ${t_services_saved}`;
                                     }
                                 }
                             }, 300);

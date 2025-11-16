@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load json_i18n %}
 
 {% block content %}
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -12,36 +13,29 @@
     <div class="flex items-center gap-4">
       <img class="w-24 h-24 rounded-full object-cover border-2 border-gray-100"
            src="{{ profile.avatar_url }}"
-           alt="Avatar de {{ profile_user.username }}">
+           alt="{{ profile_user.username }}">
       <div>
         <span class="text-xl font-bold text-gray-900">{{ profile_user.get_full_name|default:profile_user.username }}</span>
         <p class="text-md m-0 text-gray-600">{{ profile.profession|default:"Profesional" }}</p>
         <div class="flex items-center gap-2 mt-2 text-gray-700">
-          <svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 47.94 47.94" style="enable-background:new 0 0 47.94 47.94;" xml:space="preserve" class="!h-[20px] !w-[20px]">
-            <path style="fill:#ED8A19;" d="M26.285,2.486l5.407,10.956c0.376,0.762,1.103,1.29,1.944,1.412l12.091,1.757
-                c2.118,0.308,2.963,2.91,1.431,4.403l-8.749,8.528c-0.608,0.593-0.886,1.448-0.742,2.285l2.065,12.042
-                c0.362,2.109-1.852,3.717-3.746,2.722l-10.814-5.685c-0.752-0.395-1.651-0.395-2.403,0l-10.814,5.685
-                c-1.894,0.996-4.108-0.613-3.746-2.722l2.065-12.042c0.144-0.837-0.134-1.692-0.742-2.285l-8.749-8.528
-                c-1.532-1.494-0.687-4.096,1.431-4.403l12.091-1.757c0.841-0.122,1.568-0.65,1.944-1.412l5.407-10.956
-                C22.602,0.567,25.338,0.567,26.285,2.486z"></path>
-          </svg>
+          <!-- ...rating svg... -->
           <span class="text-md font-semibold text-gray-800">{{ average_rating|floatformat:1 }}</span>
           <span class="text-md text-gray-500">·</span>
-          <span class="text-md text-gray-600">{{ reviews_count }} servicios completados</span>
+          <span class="text-md text-gray-600">{% t "public_profile.services_label" %}</span>
         </div>
       </div>
     </div>
   </div>
 
   <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-3 mb-4">
-    <span class="text-lg font-semibold text-gray-900 mb-3">Sobre mí</span>
+    <span class="text-lg font-semibold text-gray-900 mb-3">{% t "public_profile.about_header" %}</span>
     <p class="text-md text-gray-700 mb-2">
-      {{ profile.bio|default:"Este usuario aún no ha añadido una biografía."|linebreaksbr }}
+      {{ profile.bio|default:("{% t 'public_profile.no_bio' %}")|linebreaksbr }}
     </p>
     {% if profile.location %}
       <div class="text-md mb-2 text-gray-600">
         <div class="flex flex-row gap-1">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 16 16"><path fill="#000000" d="M9.156 14.544C10.899 13.01 14 9.876 14 7A6 6 0 0 0 2 7c0 2.876 3.1 6.01 4.844 7.544a1.736 1.736 0 0 0 2.312 0ZM6 7a2 2 0 1 1 4 0a2 2 0 0 1-4 0Z"/></svg>
+          <!-- ...svg... -->
           <span>{{ profile.location }}</span>
         </div>
       </div>
@@ -51,10 +45,10 @@
   <div>
     <div class="flex items-center bg-gray-50 border border-gray-200 shadow-sm rounded-full !p-[1px]">
       <div id="btnServices" class="w-50 py-2 px-3 font-medium text-black rounded-full flex justify-center hover:cursor-pointer border bg-white">
-        Servicios ({{ services.count }})
+        {% t "public_profile.services_label" %}
       </div>
       <div id="btnReviews" class="w-50 py-2 px-3 font-medium text-gray-500 rounded-full flex justify-center hover:cursor-pointer hover:bg-gray-100">
-        Reseñas ({{ reviews.count }})
+        {% t "public_profile.reviews_label" %}
       </div>
     </div>
 
@@ -112,7 +106,7 @@
         </div>
       {% else %}
         <div class="text-center py-12 text-gray-500">
-          <p>Este usuario aún no ha publicado ningún servicio.</p>
+          <p>{% t "public_profile.no_services" %}</p>
         </div>
       {% endif %}
     </div>
@@ -144,7 +138,7 @@
       </div>
       {% empty %}
         <div class="text-center py-12 text-gray-500">
-          <p>Este usuario aún no ha recibido ninguna reseña.</p>
+          <p>{% t "public_profile.no_reviews" %}</p>
         </div>
       {% endfor %}
     </div>

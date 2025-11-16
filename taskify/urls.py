@@ -7,6 +7,7 @@ from django.conf.urls.static import static
 from taskify_app import views
 
 urlpatterns = [
+    path("set-language/", views.set_language, name="set_language"),
     path("admin/", admin.site.urls),
     path("api/", include("api.urls")),
     path("api/validate-signup/", views.validate_signup, name='validate_signup'),

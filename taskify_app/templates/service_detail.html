@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load json_i18n %}
 
 {% block content %}
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -46,7 +47,7 @@
                 C22.602,0.567,25.338,0.567,26.285,2.486z"></path>
           </svg>
           <span class="font-semibold text-gray-800">{{ average_rating|floatformat:1 }}</span>
-          <span class="text-gray-600">({{ reviews_count }} reseñas)</span>
+          <span class="text-gray-600">({{ reviews_count }} {% t "service.reviews_count" %})</span>
         </div>
       </div>
 
@@ -63,14 +64,14 @@
       </div>
 
       <div class="flex flex-col border-t border-gray-200 mt-2">
-        <span class="text-xl font-semibold text-gray-900 my-2">Descripción</span>
+        <span class="text-xl font-semibold text-gray-900 my-2">{% t "service.description" %}</span>
         <p class="text-gray-700">
-          {{ service.description|default:"No hay descripción disponible."|linebreaksbr }}
+          {{ service.description|default:("{% t 'service.no_image' %}")|linebreaksbr }}
         </p>
       </div>
 
       <div class="flex flex-col border-t border-gray-200">
-        <span class="text-xl font-semibold text-gray-900 my-2">Reseñas y Valoraciones ({{ reviews_count }})</span>
+        <span class="text-xl font-semibold text-gray-900 my-2">{% t "service.reviews_title" %}</span>
         <div class="flex flex-col gap-2">
           {% for review in reviews %}
           <div class="border shadow-sm p-3 rounded-xl">
@@ -93,12 +94,12 @@
               <span class="text-sm text-gray-500">{{ review.created_at|date:"Y-m-d" }}</span>
             </div>
             <p class="m-0 text-gray-700">
-              {{ review.comment|default:"(Sin comentario)" }}
+              {{ review.comment|default:("{% t 'service.no_comment' %}") }}
             </p>
           </div>
           {% empty %}
             <div class="text-left py-6 text-gray-500">
-              <p>Este servicio aún no ha recibido ninguna reseña.</p>
+              <p>{% t "service.no_reviews" %}</p>
             </div>
           {% endfor %}
         </div>
@@ -110,24 +111,24 @@
 
       <div class="border rounded-xl shadow-sm p-3">
         <div class="flex items-baseline gap-2">
-          <span class="text-xl font-medium text-gray-700">Precio</span>
+          <span class="text-xl font-medium text-gray-700">{% t "service.price" %}</span>
           <span class="text-2xl font-bold text-gray-900">€{{ service.price|floatformat:0 }}</span>
         </div>
 
         {% if request.user == service.provider %}
         {% elif request.user.is_authenticated %}
             <div class="w-full !py-3 !px-5 flex items-center justify-center bg-[#1c1b2b] text-white font-semibold rounded-xl hover:bg-opacity-90 transition-all shadow-sm disabled:opacity-50 my-2 hover:cursor-pointer">
-              Contratar
+              {% t "service.hire" %}
             </div>
             <a href="{% url 'start_chat' service.id %}" class="block w-full text-center !py-2.5 !px-5 bg-white text-gray-800 font-semibold border border-gray-300 rounded-xl hover:bg-gray-50 transition-all shadow-sm">
-              Contactar
+              {% t "service.contact" %}
             </a>
         {% else %}
             <div class="w-full !py-3 !px-5 flex items-center justify-center bg-[#1c1b2b] text-white font-semibold rounded-xl hover:bg-opacity-90 transition-all shadow-sm disabled:opacity-50 my-2 hover:cursor-pointer">
-              Contratar
+              {% t "service.hire" %}
             </div>
             <a href="{% url 'login' %}?next={{ request.path }}" class="block w-full text-center !py-2.5 !px-5 bg-white text-gray-800 font-semibold border border-gray-300 rounded-xl hover:bg-gray-50 transition-all shadow-sm">
-              Contactar
+              {% t "service.contact" %}
             </a>
         {% endif %}
       </div>

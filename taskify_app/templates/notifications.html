@@ -1,11 +1,12 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load json_i18n %}
 
-{% block title %}Notificaciones - Taskify{% endblock %}
+{% block title %}{% t "notifications.page_title" %}{% endblock %}
 
 {% block content %}
     <div class="w-[1024px] mx-auto py-4">
-        <span class="text-2xl font-semibold text-gray-900 mb-6 block">Notificaciones</span>
+        <span class="text-2xl font-semibold text-gray-900 mb-6 block">{% t "notifications.header" %}</span>
 
         <div class="flex justify-end mb-6 gap-4">
             {% if unread_count > 0 %}
@@ -13,7 +14,7 @@
                     {% csrf_token %}
                     <button type="submit" name="mark_all_read"
                             class="px-4 py-2 bg-gray-100 text-gray-800 rounded-md text-sm font-semibold hover:bg-gray-200">
-                        Marcar todas como leídas
+                        {% t "notifications.mark_all_read" %}
                     </button>
                 </form>
             {% endif %}
@@ -48,17 +49,17 @@
 
                             {% if notification.contract %}
                                 <div class="notification-meta mt-1">
-                                    <small class="text-indigo-600 font-semibold text-sm">Contrato: {{ notification.contract.service.name }}</small>
+                                    <small class="text-indigo-600 font-semibold text-sm">{% t "notifications.contract_label" %} {{ notification.contract.service.name }}</small>
                                 </div>
                             {% endif %}
                             {% if notification.review %}
                                 <div class="notification-meta mt-1">
-                                    <small class="text-indigo-600 font-semibold text-sm">Reseña en: {{ notification.review.service.name }}</small>
+                                    <small class="text-indigo-600 font-semibold text-sm">{% t "notifications.review_label" %} {{ notification.review.service.name }}</small>
                                 </div>
                             {% endif %}
                             {% if notification.service %}
                                 <div class="notification-meta mt-1">
-                                    <small class="text-indigo-600 font-semibold text-sm">Servicio: {{ notification.service.name }}</small>
+                                    <small class="text-indigo-600 font-semibold text-sm">{% t "notifications.service_label" %} {{ notification.service.name }}</small>
                                 </div>
                             {% endif %}
                         </div>
@@ -67,7 +68,7 @@
                             {% if not notification.is_read %}
                                 <button class="mark-read-btn inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700"
                                         onclick="markAsRead('{{ notification.id }}')">
-                                    Marcar como leída
+                                    {% t "notifications.mark_read_button" %}
                                 </button>
                             {% endif %}
                         </div>
@@ -77,19 +78,19 @@
                 {% if notifications.has_other_pages %}
                     <div class="flex justify-center items-center gap-4 mt-6 pt-4 border-t border-gray-200">
                         {% if notifications.has_previous %}
-                            <a href="?page={{ notifications.previous_page_number }}" class="text-indigo-600 hover:bg-indigo-600 hover:text-white px-3 py-1 rounded text-sm font-semibold">« Anterior</a>
+                            <a href="?page={{ notifications.previous_page_number }}" class="text-indigo-600 hover:bg-indigo-600 hover:text-white px-3 py-1 rounded text-sm font-semibold">{% t "notifications.pagination_prev" %}</a>
                         {% endif %}
-                        <span class="page-info text-sm text-gray-500">Página {{ notifications.number }} de {{ notifications.paginator.num_pages }}</span>
+                        <span class="page-info text-sm text-gray-500">{% t "notifications.page_info" %}</span>
                         {% if notifications.has_next %}
-                            <a href="?page={{ notifications.next_page_number }}" class="text-indigo-600 hover:bg-indigo-600 hover:text-white px-3 py-1 rounded text-sm font-semibold">Siguiente »</a>
+                            <a href="?page={{ notifications.next_page_number }}" class="text-indigo-600 hover:bg-indigo-600 hover:text-white px-3 py-1 rounded text-sm font-semibold">{% t "notifications.pagination_next" %}</a>
                         {% endif %}
                     </div>
                 {% endif %}
             {% else %}
                 <div class="no-notifications text-center py-16 px-8 flex flex-col items-center justify-center min-h-96">
                     <div class="no-notifications-icon text-4xl text-gray-400 mb-4"><i class="text-6xl fa fa-bell"></i></div>
-                    <p class="text-lg font-medium text-slate-600 mb-2">No tienes notificaciones.</p>
-                    <p class="text-sm text-slate-400 mb-8">Cuando tengas actividad en tu cuenta, aparecerá aquí.</p>
+                    <p class="text-lg font-medium text-slate-600 mb-2">{% t "notifications.no_notifications_title" %}</p>
+                    <p class="text-sm text-slate-400 mb-8">{% t "notifications.no_notifications_desc" %}</p>
                 </div>
             {% endif %}
         </div>

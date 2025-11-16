@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}Verificar Email{% endblock %}
+{% load json_i18n %}
+{% block title %}{% t "verify_email.page_title" %}{% endblock %}
 
 {% block content %}
 <!--
@@ -18,8 +19,8 @@
             -->
             <div class="px-3 rounded-3xl bg-white px-18 py-20 mt-8 shadow-xl ring-1 ring-black/10 sm:px-16 sm:py-20">
                 <div class="mb-10 text-center pt-4">
-                    <h2 class="text-xl font-semibold text-black">Verifica tu correo</h2>
-                    <p id="step-description" class="mb-2 mt-1 text-sm text-black/60">Hemos enviado un código a:</p>
+                    <h2 class="text-xl font-semibold text-black">{% t "verify_email.header" %}</h2>
+                    <p id="step-description" class="mb-2 mt-1 text-sm text-black/60">{% t "verify_email.sent_to" %}</p>
                     <p class="font-medium text-black">{{ email }}</p>
                 </div>
 
@@ -33,7 +34,7 @@
                     <div class="space-y-6">
 
                         <div class="space-y-2">
-                            <label for="verification_code" class="ml-1 block text-sm font-medium text-black text-center">Código de Verificación</label>
+                            <label for="verification_code" class="ml-1 block text-sm font-medium text-black text-center">{% t "verify_email.verification_code_label" %}</label>
                             <input
                                 type="text"
                                 name="verification_code"
@@ -44,7 +45,7 @@
                                 class="px-2 py-1 !rounded-xl bg-gray-50 border text-gray-900 focus:ring-blue-500 focus:border-blue-500 block w-full text-sm border-gray-300 p-2.5
                                        text-center text-2xl font-medium tracking-[0.3em]
                                        {% if error_message %}border-red-500 text-red-900{% endif %}"
-                                placeholder="000000"
+                                placeholder="{% t 'verify_email.placeholder_code' %}"
                             />
                         </div>
                         {% if error_message %}
@@ -63,7 +64,7 @@
                             role="button"
                             tabindex="0"
                         >
-                            Verificar
+                            {% t "verify_email.verify_button" %}
                         </div>
                     </div>
 
@@ -73,17 +74,17 @@
                     -->
                     <div class="mt-10 border-black/10 pt-4 pb-2 text-center text-sm text-black/60">
                         <p>
-                            ¿No has recibido el código?
+                            {% t "verify_email.didnt_receive" %}
                             <span
                                 id="resendBtn"
                                 class="font-medium text-black hover:text-black/60 cursor-pointer select-none"
                                 role="button"
                                 tabindex="0"
                             >
-                                Reenviar código
+                                {% t "verify_email.resend_button" %}
                             </span>
                             <span id="resendLoader" class="hidden font-medium text-black/60">
-                                Enviando...
+                                {% t "verify_email.resending" %}
                             </span>
                         </p>
                     </div>
@@ -97,6 +98,11 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+  const TR_RESENDING = "{% t 'verify_email.resending' %}";
+  const TR_CODE_RESENT = "{% t 'verify_email.code_resent' %}";
+  const TR_CODE_SENT = "{% t 'verify_email.code_sent' %}";
+  const TR_ERR_PREFIX = "{% t 'verify_email.err_prefix' %}";
+  const TR_ERR_CONNECTION = "{% t 'verify_email.err_connection' %}";
 
   // --- Lógica para los DIVs como botones (copiada de signup.html) ---
   function setupDivAsButton(divElement, callback) {
@@ -150,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     resendBtn.classList.add('hidden');
     resendLoader.classList.remove('hidden');
-    resendLoader.textContent = 'Enviando...';
+    resendLoader.textContent = TR_RESENDING;
 
     fetch("{% url 'resend_verification_code' %}", {
       method: 'POST',
@@ -162,22 +168,22 @@ document.addEventListener('DOMContentLoaded', () => {
     .then(r => r.json())
     .then(d => {
       if (d.success) {
-        showNotification('Código reenviado. Por favor, revisa tu correo.');
-        resendLoader.textContent = 'Código enviado';
+        showNotification(TR_CODE_RESENT);
+        resendLoader.textContent = TR_CODE_SENT;
         setTimeout(() => {
           resendLoader.classList.add('hidden');
           resendBtn.classList.remove('hidden');
           isResending = false;
         }, 30000); // 30 segundos de espera
       } else {
-        showNotification('Error: ' + d.error, true);
+        showNotification(TR_ERR_PREFIX + (d.error || ''), true);
         resendLoader.classList.add('hidden');
         resendBtn.classList.remove('hidden');
         isResending = false;
       }
     })
     .catch(() => {
-      showNotification('Error de conexión.', true);
+      showNotification(TR_ERR_CONNECTION, true);
       resendLoader.classList.add('hidden');
       resendBtn.classList.remove('hidden');
       isResending = false;

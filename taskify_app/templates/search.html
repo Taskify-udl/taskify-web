@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}Resultados de Búsqueda{% endblock %}
+{% load json_i18n %}
+{% block title %}{% t "search.page_title" %}{% endblock %}
 
 {% block content %}
 <!-- Links de Swiper (para el carrusel de las tarjetas) -->
@@ -16,7 +17,7 @@
                 type="text"
                 name="q"
                 value="{{ query|default:'' }}"
-                placeholder="Buscar servicios..."
+                placeholder="{% t 'search.search_placeholder' %}"
                 class="w-full pl-3 pr-5 py-2 text-base text-gray-900 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
             >
 
@@ -25,7 +26,7 @@
                  role="button"
                  tabindex="0"
                  class="absolute right-2 top-1/2 -translate-y-1/2 !p-1.5 text-black rounded-xl cursor-pointer hover:bg-gray-200 focus:ring-2 focus:ring-blue-500 transition-colors"
-                 title="Buscar">
+                 title="{% t 'search.search_placeholder' %}">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                      stroke="currentColor" class="w-5 h-5">
                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -40,12 +41,12 @@
     <div class="mb-4 px-2">
         {% if query %}
             <span class="block text-lg font-semibold" role="heading" aria-level="1">
-                Resultados para "<span class="text-blue-600">{{ query }}</span>"
+                {% t "search.results_for" %} "<span class="text-blue-600">{{ query }}</span>"
             </span>
         {% else %}
-            <span class="block text-xl font-semibold" role="heading" aria-level="1">Explorar todos los servicios</span>
+            <span class="block text-xl font-semibold" role="heading" aria-level="1">{% t "search.explore_all" %}</span>
         {% endif %}
-        <p class="text-gray-600 mt-1 text-sm">{{ results.count }} servicio(s) encontrado(s).</p>
+        <p class="text-gray-600 mt-1 text-sm">{% t "search.results_count" %}</p>
     </div>
 
     <!-- Resultados -->
@@ -66,7 +67,7 @@
                                 class="flex align-items favorite-btn absolute top-2 right-2 z-10 p-2 bg-white/80 rounded-full cursor-pointer backdrop-blur-sm
                                        transition-colors duration-200 hover:bg-white"
                                 data-service-id="{{ service.id }}"
-                                title="Añadir a favoritos"
+                                title="{% t 'search.add_favorite' %}"
                                 style="outline: none !important; box-shadow: none !important;">
                                 <i class="fa-regular text-gray-700 hover:text-red-500 fa-heart text-xl"
                                    aria-hidden="true"></i>
@@ -80,7 +81,7 @@
                                              style="background-image: url('{{ img.image.url }}');"></div>
                                     {% empty %}
                                         <div class="swiper-slide h-full bg-cover bg-center flex items-center justify-center bg-gray-100">
-                                            <span class="text-gray-500">Sin imagen</span>
+                                            <span class="text-gray-500">{% t 'search.no_image' %}</span>
                                         </div>
                                     {% endfor %}
                                 </div>
@@ -142,8 +143,8 @@
                     <path stroke-linecap="round" stroke-linejoin="round"
                           d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
                 </svg>
-                <p class="text-lg font-medium text-slate-600 mb-2">No se encontraron resultados</p>
-                <p class="text-sm text-slate-400 mb-8">Intenta con un término de búsqueda diferente.</p>
+                <p class="text-lg font-medium text-slate-600 mb-2">{% t "search.no_results_title" %}</p>
+                <p class="text-sm text-slate-400 mb-8">{% t "search.no_results_desc" %}</p>
             </div>
         {% endif %}
     </main>
@@ -152,6 +153,8 @@
 <!-- Scripts -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const TR_ADD_FAV = "{% t 'search.add_favorite' %}";
+    const TR_REMOVE_FAV = "{% t 'search.remove_favorite' %}";
     // 1. Activar Swipers
     document.querySelectorAll('.swiper').forEach((el) => {
         new Swiper(el, {

@@ -1,7 +1,8 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load json_i18n %}
 
-{% block title %}Editar Perfil - Taskify{% endblock %}
+{% block title %}{% t 'profile.page_title' %}{% endblock %}
 
 {% block content %}
 <div class="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
@@ -14,77 +15,77 @@
                 <div class="mb-6 pb-6 border-b border-gray-200">
                     <div class="mb-4">
 
-                    <span class="text-lg sm:text-xl font-semibold text-gray-900 !mb-8">Foto de Perfil</span>
+                    <span class="text-lg sm:text-xl font-semibold text-gray-900 !mb-8">{% t 'profile.avatar_title' %}</span>
                     </div>
                     <div class="flex items-center gap-4 sm:gap-6">
                         <div class="flex-shrink-0">
                             <div class="w-16 sm:w-20 md:w-24 lg:w-28 aspect-square rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
-                                <img src="{{ profile.avatar_url }}" alt="Avatar actual" class="w-full h-full object-cover">
+                                <img src="{{ profile.avatar_url }}" alt="{% t 'profile.current_avatar_alt' %}" class="w-full h-full object-cover">
                             </div>
                         </div>
                         <div class="flex-1 min-w-0">
                             <label for="avatar" class="inline-block px-4 py-2 border border-gray-300 rounded-xl bg-white text-gray-800 font-medium cursor-pointer hover:!bg-gray-50 transition-colors">
-                                Elegir nueva imagen
+                                {% t 'profile.choose_image' %}
                             </label>
                             <input type="file" id="avatar" name="avatar" accept="image/*" class="hidden">
-                            <p class="mt-3 text-sm text-gray-500">Formatos permitidos: JPG, PNG, GIF. Tamaño máximo: 5MB</p>
+                            <p class="mt-3 text-sm text-gray-500">{% t 'profile.allowed_formats' %}</p>
                         </div>
                     </div>
                 </div>
 
                 <div class="mb-6 pb-6 border-b border-gray-200">
-                    <span class="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Información Básica</span>
+                    <span class="text-lg sm:text-xl font-semibold text-gray-900 mb-4">{% t 'profile.basic_info' %}</span>
 
                     <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center pt-3 pb-2">
-                        <div class="text-sm text-gray-500 sm:col-span-4">Nombre</div>
+                        <div class="text-sm text-gray-500 sm:col-span-4">{% t 'profile.name' %}</div>
                         <div class="sm:col-span-8">
                             <input type="text" id="first_name" name="first_name" value="{{ user.first_name }}" class="w-full px-2 py-1 !border-b-2 border-gray-200  focus:outline-none focus:border-gray-900 focus:ring-0 focus:ring-gray-100 transition-all">
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center py-2">
-                        <div class="text-sm text-gray-500 sm:col-span-4">Correo electrónico</div>
+                        <div class="text-sm text-gray-500 sm:col-span-4">{% t 'profile.email' %}</div>
                         <div class="sm:col-span-8">
                             <input type="email" id="email" name="email" value="{{ user.email }}" required class="w-full px-2 py-1 !border-b-2 border-gray-200  focus:outline-none focus:border-gray-900 focus:ring-0 focus:ring-gray-100 transition-all">
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center py-2">
-                        <div class="text-sm text-gray-500 sm:col-span-4">Profesión</div>
+                        <div class="text-sm text-gray-500 sm:col-span-4">{% t 'profile.profession' %}</div>
                         <div class="sm:col-span-8">
-                            <input type="text" id="profession" name="profession" value="{{ profile.profession }}" placeholder="Tu profesión" class="w-full px-2 py-1 !border-b-2 border-gray-200  focus:outline-none focus:border-gray-900 focus:ring-0 focus:ring-gray-100 transition-all">
+                            <input type="text" id="profession" name="profession" value="{{ profile.profession }}" placeholder="{% t 'profile.profession_placeholder' %}" class="w-full px-2 py-1 !border-b-2 border-gray-200  focus:outline-none focus:border-gray-900 focus:ring-0 focus:ring-gray-100 transition-all">
                         </div>
                     </div>
                 </div>
 
                 <div class="mb-6">
-                    <span class="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Información Adicional</span>
+                    <span class="text-lg sm:text-xl font-semibold text-gray-900 mb-4">{% t 'profile.additional_info' %}</span>
 
                     <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-start pt-3 pb-2">
-                        <div class="text-sm text-gray-500 sm:col-span-4">Biografía</div>
+                        <div class="text-sm text-gray-500 sm:col-span-4">{% t 'profile.bio' %}</div>
                         <div class="sm:col-span-8">
-                            <textarea id="bio" name="bio" rows="4" placeholder="Cuéntanos sobre ti..." class="w-full px-2 py-1 !border-b-2 border-gray-200  focus:outline-none focus:border-gray-900 focus:ring-0 focus:ring-gray-100 transition-all resize-y min-h-[120px]">{{ profile.bio }}</textarea>
+                            <textarea id="bio" name="bio" rows="4" placeholder="{% t 'profile.bio_placeholder' %}" class="w-full px-2 py-1 !border-b-2 border-gray-200  focus:outline-none focus:border-gray-900 focus:ring-0 focus:ring-gray-100 transition-all resize-y min-h-[120px]">{{ profile.bio }}</textarea>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center py-2">
-                        <div class="text-sm text-gray-500 sm:col-span-4">Teléfono</div>
+                        <div class="text-sm text-gray-500 sm:col-span-4">{% t 'profile.phone' %}</div>
                         <div class="sm:col-span-8">
                             <input type="tel" id="phone" name="phone" value="{{ profile.phone }}" class="w-full px-2 py-1 !border-b-2 border-gray-200  focus:outline-none focus:border-gray-900 focus:ring-0 focus:ring-gray-100 transition-all">
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center py-2">
-                        <div class="text-sm text-gray-500 sm:col-span-4">Ubicación</div>
+                        <div class="text-sm text-gray-500 sm:col-span-4">{% t 'profile.location' %}</div>
                         <div class="sm:col-span-8">
-                            <input type="text" id="location" name="location" value="{{ profile.location }}" placeholder="Ciudad, País" class="w-full px-2 py-1 !border-b-2 border-gray-200  focus:outline-none focus:border-gray-900 focus:ring-0 focus:ring-gray-100 transition-all">
+                            <input type="text" id="location" name="location" value="{{ profile.location }}" placeholder="{% t 'profile.location_placeholder' %}" class="w-full px-2 py-1 !border-b-2 border-gray-200  focus:outline-none focus:border-gray-900 focus:ring-0 focus:ring-gray-100 transition-all">
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center py-2">
-                        <div class="text-sm text-gray-500 sm:col-span-4">Sitio Web</div>
+                        <div class="text-sm text-gray-500 sm:col-span-4">{% t 'profile.website' %}</div>
                         <div class="sm:col-span-8">
-                            <input type="url" id="website" name="website" value="{{ profile.website }}" placeholder="https://..." class="w-full px-2 py-1 !border-b-2 border-gray-200  focus:outline-none focus:border-gray-900 focus:ring-0 focus:ring-gray-100 transition-all">
+                            <input type="url" id="website" name="website" value="{{ profile.website }}" placeholder="{% t 'profile.website_placeholder' %}" class="w-full px-2 py-1 !border-b-2 border-gray-200  focus:outline-none focus:border-gray-900 focus:ring-0 focus:ring-gray-100 transition-all">
                         </div>
                     </div>
                 </div>
@@ -93,11 +94,11 @@
                     <div class="flex gap-3 w-full">
                         <a href="{% url 'profile' %}"
                            class="w-1/2 text-center px-4 py-2.5 border border-gray-300 rounded-xl bg-white font-medium text-gray-800 hover:!bg-gray-50 transition-colors !no-underline">
-                            Cancelar
+                            {% t 'profile.cancel' %}
                         </a>
                         <button type="submit"
                            class="w-1/2 px-4 py-2.5 !rounded-xl font-medium bg-black text-white hover:bg-gray-900 transition-colors">
-                            Guardar Cambios
+                            {% t 'profile.save_changes' %}
                         </button>
                     </div>
                 </div>
@@ -112,7 +113,7 @@
         if (file) {
             const reader = new FileReader();
             reader.onload = function (e) {
-                const img = document.querySelector('img[alt="Avatar actual"]');
+                const img = document.querySelector('img[alt="{% t 'profile.current_avatar_alt' %}"]');
                 if (img) img.src = e.target.result;
             };
             reader.readAsDataURL(file);

@@ -1,33 +1,34 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load json_i18n %}
 
-{% block title %}Estadísticas Avanzadas - Taskify{% endblock %}
+{% block title %}{% t "stats.page_title" %}{% endblock %}
 
 {% block content %}
     <div class="w-[1024px] mx-auto py-4">
 
-        <span class="text-2xl mb-4 font-semibold text-gray-900 block">Estadísticas Avanzadas</span>
+        <span class="text-2xl mb-4 font-semibold text-gray-900 block">{% t "stats.header" %}</span>
 
         <div class="stats-overview ">
             <div class="stat-card">
                 <div class="stat-icon"><i class="fa fa-bar-chart" aria-hidden="true"></i></div>
                 <div class="stat-content">
                     <h3>{{ services_count }}</h3>
-                    <p>Servicios Publicados</p>
+                    <p>{% t "stats.services_published" %}</p>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon"><i class="fa fa-file-text" aria-hidden="true"></i></div>
                 <div class="stat-content">
                     <h3>{{ contracts_count }}</h3>
-                    <p>Contratos Completados</p>
+                    <p>{% t "stats.contracts_completed" %}</p>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon"><i class="fa fa-star" aria-hidden="true"></i></div>
                 <div class="stat-content">
                     <h3>{{ reviews_count }}</h3>
-                    <p>Reseñas Recibidas</p>
+                    <p>{% t "stats.reviews_received" %}</p>
                 </div>
             </div>
         </div>
@@ -35,7 +36,7 @@
         <div class="row my-[1.5rem]">
             <div class="col-12 col-lg-6">
                 <div class="chart-section h-100">
-                    <h2 class="h5 mb-3">Tendencia Mensual</h2>
+                    <h2 class="h5 mb-3">{% t "stats.monthly_trend" %}</h2>
                     <div class="ratio ratio-16x9">
                         <canvas id="monthlyChart"></canvas>
                     </div>
@@ -44,7 +45,7 @@
 
             <div class="col-12 col-lg-6">
                 <div class="chart-section h-100">
-                    <h2 class="h5 mb-3">Distribución de Valoraciones</h2>
+                    <h2 class="h5 mb-3">{% t "stats.rating_distribution" %}</h2>
                     <div class="ratio ratio-16x9">
                         <canvas id="ratingChart"></canvas>
                     </div>
@@ -55,7 +56,7 @@
 
         <div class="stats-details">
             <div class="detail-section">
-                <h2 class="h5 mb-3">Servicios Mejor Valorados</h2>
+                <h2 class="h5 mb-3">{% t "stats.top_rated_services" %}</h2>
                 {% if top_services %}
                     <div class="top-services-list">
                         {% for service in top_services %}
@@ -73,15 +74,15 @@
                         {% endfor %}
                     </div>
                 {% else %}
-                    <p>Aún no tienes ninguna reseña.</p>
+                    <p>{% t "stats.no_reviews_yet" %}</p>
                 {% endif %}
             </div>
 
             <div class="detail-section">
-                <h2 class="h5 mb-3">Actividad Reciente</h2>
+                <h2 class="h5 mb-3">{% t "stats.recent_activity" %}</h2>
                 <div class="activity-tabs">
-                    <button class="tab-btn active" onclick="showTab('contracts', this)">Contratos</button>
-                    <button class="tab-btn" onclick="showTab('reviews', this)">Reseñas</button>
+                    <button class="tab-btn active" onclick="showTab('contracts', this)">{% t "stats.tab_contracts" %}</button>
+                    <button class="tab-btn" onclick="showTab('reviews', this)">{% t "stats.tab_reviews" %}</button>
                 </div>
 
                 <div id="contracts-tab" class="activity-content active">
@@ -91,8 +92,8 @@
                                 <div class="activity-item">
                                     <div class="activity-icon"><i class="fa fa-file-text" aria-hidden="true"></i></div>
                                     <div class="activity-details">
-                                        <h4>Contrato con {{ contract.service.name }}</h4>
-                                        <p>Estado: <span
+                                        <h4>{% t "stats.contract_with" %} {{ contract.service.name }}</h4>
+                                        <p>{% t "stats.status" %} <span
                                                 class="status-{{ contract.status }}">{{ contract.status|title }}</span>
                                         </p>
                                         <small>{{ contract.created_at|date:"d/m/Y H:i" }}</small>
@@ -101,7 +102,7 @@
                             {% endfor %}
                         </div>
                     {% else %}
-                        <p>No hay contratos recientes.</p>
+                        <p>{% t "stats.no_recent_contracts" %}</p>
                     {% endif %}
                 </div>
 
@@ -112,7 +113,7 @@
                                 <div class="activity-item">
                                     <div class="activity-icon"><i class="fa fa-star" aria-hidden="true"></i></div>
                                     <div class="activity-details">
-                                        <h4>Reseña en {{ review.service.name }}</h4>
+                                        <h4>{% t "stats.review_in" %} {{ review.service.name }}</h4>
                                         <div class="review-rating">
                                             {% for i in "12345"|make_list %}
                                                 {% if forloop.counter <= review.rating %}
@@ -129,7 +130,7 @@
                             {% endfor %}
                         </div>
                     {% else %}
-                        <p>No hay reseñas recientes.</p>
+                        <p>{% t "stats.no_recent_reviews" %}</p>
                     {% endif %}
                 </div>
             </div>
@@ -162,7 +163,7 @@
                     labels: months,
                     datasets: [
                         {
-                            label: 'Servicios',
+                            label: '{% t "stats.chart_label_services" %}',
                             data: servicesCount,
                             borderColor: '#6366f1',
                             backgroundColor: 'rgba(99,102,241,0.1)',
@@ -170,7 +171,7 @@
                             tension: 0.35
                         },
                         {
-                            label: 'Contratos',
+                            label: '{% t "stats.chart_label_contracts" %}',
                             data: contractsCount,
                             borderColor: '#0ea5e9',
                             backgroundColor: 'rgba(14,165,233,0.1)',
@@ -178,7 +179,7 @@
                             tension: 0.35
                         },
                         {
-                            label: 'Reseñas',
+                            label: '{% t "stats.chart_label_reviews" %}',
                             data: reviewsCount,
                             borderColor: '#f59e0b',
                             backgroundColor: 'rgba(245,158,11,0.1)',
@@ -213,7 +214,7 @@
                 data: {
                     labels: ratingLabels,
                     datasets: [{
-                        label: 'Número de Valoraciones',
+                        label: '{% t "stats.chart_label_rating_counts" %}',
                         data: ratingCounts,
                         borderColor: '#22c55e',
                         backgroundColor: 'rgba(34,197,94,0.1)',
