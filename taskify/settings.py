@@ -82,7 +82,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # I18N
-LANGUAGE_CODE = 'es-es'
+LANGUAGE_CODE = 'es'
 TIME_ZONE = 'Europe/Madrid'
 USE_I18N = True
 USE_TZ = True

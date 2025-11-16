@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load json_i18n %}
 
 {% block content %}
     <link href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" rel="stylesheet"/>
@@ -8,9 +9,9 @@
         <div class="text-white py-12 px-4 pb-20" style="background: linear-gradient(135deg, #030214 0%, #155af4 100%);">
             <div class="max-w-2xl mx-auto">
                 <div class="text-center mb-8">
-                    <h1 class="mb-3 text-3xl font-bold text-white">Encuentra el Servicio Perfecto</h1>
+                    <h1 class="mb-3 text-3xl font-bold text-white">{% t "home.hero_title" %}</h1>
                     <p class="text-base text-white/90">
-                        Conectamos clientes con los mejores profesionales en tu área
+                        {% t "home.hero_sub" %}
                     </p>
                 </div>
 
@@ -20,7 +21,7 @@
                             type="text"
                             name="q"
                             value="{{ query|default:'' }}"
-                            placeholder="Buscar servicios..."
+                            placeholder="{% t 'home.search_placeholder' %}"
                             class="w-full pl-3 pr-5 py-2 text-base text-gray-900 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
                         >
 
@@ -28,7 +29,7 @@
                              role="button"
                              tabindex="0"
                              class="absolute right-2 top-1/2 -translate-y-1/2 !p-1.5 text-black rounded-xl cursor-pointer hover:bg-gray-200 focus:ring-2 focus:ring-blue-500 transition-colors"
-                             title="Buscar">
+                             title="{% t 'home.search_button_title' %}">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                                  stroke="currentColor" class="w-5 h-5">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -42,7 +43,7 @@
 
         <div class="max-w-7xl mx-auto px-4 py-12">
             <section class="mb-12">
-                <h2 class="mb-6 text-2xl font-semibold text-gray-900">Categorías Populares</h2>
+                <h2 class="mb-6 text-2xl font-semibold text-gray-900">{% t "home.categories_header" %}</h2>
                 <div class="pb-4">
                     <div class="overflow-x-auto whitespace-nowrap py-2 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent">
                         {% if categories %}
@@ -54,7 +55,7 @@
                                 </a>
                             {% endfor %}
                         {% else %}
-                            <p class="inline-block align-middle text-gray-500 ml-2">Sin categorías disponibles</p>
+                            <p class="inline-block align-middle text-gray-500 ml-2">{% t "home.no_categories" %}</p>
 
                         {% endif %}
                     </div>
@@ -62,7 +63,7 @@
             </section>
 
             <section>
-                <h2 class="mb-6 text-2xl font-semibold text-gray-900">Servicios Destacados</h2>
+                <h2 class="mb-6 text-2xl font-semibold text-gray-900">{% t "home.featured_header" %}</h2>
                 {% if featured_services %}
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                         {% for service in featured_services %}
@@ -78,7 +79,7 @@
                                         class="flex align-items favorite-btn absolute top-2 right-2 z-10 p-2 bg-white/80 rounded-full cursor-pointer backdrop-blur-sm
                                                transition-colors duration-200 hover:bg-white"
                                         data-service-id="{{ service.id }}"
-                                        title="Añadir a favoritos"
+                                        title="{% t 'home.add_favorite' %}"
                                         style="outline: none !important; box-shadow: none !important;">
                                         <i class="fa-regular text-gray-700 hover:text-red-500 fa-heart text-xl"
                                            aria-hidden="true"></i>
@@ -92,7 +93,7 @@
                                                      style="background-image: url('{{ img.image.url }}');"></div>
                                             {% empty %}
                                                 <div class="swiper-slide h-full bg-cover bg-center flex items-center justify-center bg-gray-100">
-                                                    <span class="text-gray-500">Sin imagen</span>
+                                                    <span class="text-gray-500">{% t "home.no_image" %}</span>
                                                 </div>
                                             {% endfor %}
                                         </div>
@@ -114,7 +115,7 @@
                                         {% if service.categories.all %}
                                             {{ service.categories.first.name }}
                                         {% else %}
-                                            Sin categoría
+                                            {% t "home.no_category" %}
                                         {% endif %}
                                     </span>
 
@@ -147,11 +148,11 @@
                                     </div>
                                 </div>
                             </article>
-                            {% endfor %}
+                        {% endfor %}
                     </div>
                 {% else %}
                     <div class="bg-white rounded-lg p-8 text-center text-gray-500">
-                        <p>No hay servicios disponibles en este momento.</p>
+                        <p>{% t "home.no_services" %}</p>
                     </div>
                 {% endif %}
             </section>
@@ -160,6 +161,8 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            const TR_ADD_FAV = "{% t 'home.add_favorite' %}";
+            const TR_REMOVE_FAV = "{% t 'home.remove_favorite' %}";
             const userFavorites = JSON.parse('{{ user_favorites_json|default:"{}"|escapejs }}');
 
             // --- Lógica de filtro de categorías (Existente) ---
@@ -219,9 +222,9 @@
 
                 // Establecer estado inicial
                 if (serviceId in userFavorites) {
-                    icon.classList.remove('fa-regular', 'text-gray-400', 'text-gray-700'); // Añadido text-gray-700
+                    icon.classList.remove('fa-regular', 'text-gray-400', 'text-gray-700');
                     icon.classList.add('fa-solid', 'text-red-500');
-                    buttonDiv.setAttribute('title', 'Quitar de favoritos');
+                    buttonDiv.setAttribute('title', TR_REMOVE_FAV);
                 }
 
                 // Manejar click usando el helper
@@ -244,12 +247,12 @@
                             if (data.action === 'added') {
                                 icon.classList.remove('fa-regular', 'text-gray-400', 'text-gray-700');
                                 icon.classList.add('fa-solid', 'text-red-500');
-                                buttonDiv.setAttribute('title', 'Quitar de favoritos');
+                                buttonDiv.setAttribute('title', TR_REMOVE_FAV);
                                 userFavorites[serviceId] = data.favorite_id;
                             } else if (data.action === 'removed') {
                                 icon.classList.remove('fa-solid', 'text-red-500');
                                 icon.classList.add('fa-regular', 'text-gray-700'); // Clase base del icono nuevo
-                                buttonDiv.setAttribute('title', 'Añadir a favoritos');
+                                buttonDiv.setAttribute('title', TR_ADD_FAV);
                                 delete userFavorites[serviceId];
                             }
                         }

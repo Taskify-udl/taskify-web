@@ -14,15 +14,19 @@ from django.urls import reverse
 import json
 
 from django.utils.dateparse import parse_datetime
+from django.views.decorators.http import require_POST
+
 from .forms import RegisterForm
 from django.templatetags.static import static
-from .models import Service, ServiceImage, Contract, Review, UserProfile, Notification, CustomUser, EmailVerification, Category, Conversation, Message, Favorite
+from .models import Service, ServiceImage, Contract, Review, UserProfile, Notification, CustomUser, EmailVerification, \
+    Category, Conversation, Message, Favorite
+
 
 @ensure_csrf_cookie
 def home(request):
     categories = Category.objects.all()
     featured_services = Service.objects.all()[:6]
-    
+
     user_favorites = {}
     if request.user.is_authenticated:
         favorites = Favorite.objects.filter(user=request.user).values('id', 'service_id')
@@ -34,6 +38,20 @@ def home(request):
         'user_favorites_json': json.dumps(user_favorites),
     }
     return render(request, 'home.html', context)
+
+
+@require_POST
+def set_language(request):
+    lang = request.POST.get("language", "es")
+    # Limitamos a los idiomas que realmente tenemos
+    if lang not in ("es", "en", "ca"):
+        lang = "es"
+
+    request.session["lang"] = lang
+
+    # Volver a la página anterior o a la home
+    next_url = request.POST.get("next") or "/"
+    return redirect(next_url)
 
 
 def search(request):
@@ -94,6 +112,7 @@ def favourites(request):
         'favorite_services': favorite_services,
     }
     return render(request, 'favourites.html', context)
+
 
 def user_login(request):
     if request.method == "POST":
@@ -344,6 +363,7 @@ def my_orders(request):
     }
     return render(request, 'my_orders.html', context)
 
+
 @login_required
 def profile(request):
     user = request.user
@@ -381,7 +401,7 @@ def profile(request):
     context = {
         'user': user,
         'profile': profile,
-        'avatar_url': avatar_url,       # <-- pásalo al template
+        'avatar_url': avatar_url,  # <-- pásalo al template
         'user_services': user_services,
         'user_contracts': user_contracts,
         'user_reviews': user_reviews[:3],
@@ -781,7 +801,8 @@ def my_services(request):
         return redirect('my_services')
 
     # GET request
-    user_services = Service.objects.filter(provider=request.user).prefetch_related('images', 'categories').order_by('-created_at')
+    user_services = Service.objects.filter(provider=request.user).prefetch_related('images', 'categories').order_by(
+        '-created_at')
     all_categories = Category.objects.all()
 
     context = {
@@ -810,13 +831,13 @@ def toggle_favorite(request, service_id):
     """
     if request.method != 'POST':
         return JsonResponse({'error': 'Método no permitido'}, status=405)
-    
+
     service = get_object_or_404(Service, id=service_id)
-    
+
     try:
         # Intentar obtener el favorito existente
         favorite = Favorite.objects.filter(user=request.user, service=service).first()
-        
+
         if favorite:
             # Si existe, eliminarlo
             favorite_id = favorite.id
@@ -837,7 +858,6 @@ def toggle_favorite(request, service_id):
             })
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
-
 
 
 def public_profile(request, username):
@@ -917,6 +937,7 @@ def service_detail(request, service_id):
         'provider_reviews_count': provider_reviews_count,
     }
     return render(request, 'service_detail.html', context)
+
 
 @login_required
 def start_chat(request, service_id):

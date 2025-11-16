@@ -1,16 +1,17 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load json_i18n %}
 
 {% block content %}
 
     <div class="w-[1024px] mx-auto">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-6 mb-4">
             <div>
-                <span class="text-2xl font-semibold text-gray-900 mb-6 block">Mis Pedidos</span>
+                <span class="text-2xl font-semibold text-gray-900 mb-6 block">{% t "orders.page_title" %}</span>
                 {% if is_provider %}
-                    <p class="text-sm text-gray-500">Gestiona las solicitudes de contratación que has recibido de tus clientes.</p>
+                    <p class="text-sm text-gray-500">{% t "orders.header_provider" %}</p>
                 {% else %}
-                    <p class="text-sm text-gray-500">Consulta el estado de los servicios que has solicitado a profesionales.</p>
+                    <p class="text-sm text-gray-500">{% t "orders.header_client" %}</p>
                 {% endif %}
             </div>
         </div>
@@ -18,19 +19,19 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div class="flex items-center gap-2 bg-white border border-gray-200 rounded-2xl px-4 py-3 shadow-sm">
                 <div class="flex flex-col">
-                    <span class="text-xs uppercase tracking-wide text-gray-500">Pendientes</span>
+                    <span class="text-xs uppercase tracking-wide text-gray-500">{% t "orders.counts_pending" %}</span>
                     <span class="text-2xl font-semibold text-gray-900">{{ pending_orders_count|default:0 }}</span>
                 </div>
             </div>
             <div class="flex items-center gap-2 bg-white border border-gray-200 rounded-2xl px-4 py-3 shadow-sm">
                 <div class="flex flex-col">
-                    <span class="text-xs uppercase tracking-wide text-gray-500">Aceptados</span>
+                    <span class="text-xs uppercase tracking-wide text-gray-500">{% t "orders.counts_accepted" %}</span>
                     <span class="text-2xl font-semibold text-gray-900">{{ accepted_orders_count|default:0 }}</span>
                 </div>
             </div>
             <div class="flex items-center gap-2 bg-white border border-gray-200 rounded-2xl px-4 py-3 shadow-sm">
                 <div class="flex flex-col">
-                    <span class="text-xs uppercase tracking-wide text-gray-500">Rechazados</span>
+                    <span class="text-xs uppercase tracking-wide text-gray-500">{% t "orders.counts_rejected" %}</span>
                     <span class="text-2xl font-semibold text-gray-900">{{ rejected_orders_count|default:0 }}</span>
                 </div>
             </div>
@@ -42,18 +43,18 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16Z" />
                     </svg>
-                    <input type="text" placeholder="Buscar pedidos" class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:border-[#1c1b2b] focus:ring-2 focus:ring-[#1c1b2b]/30 transition outline-none" />
+                    <input type="text" placeholder="{% t 'orders.search_placeholder' %}" class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:border-[#1c1b2b] focus:ring-2 focus:ring-[#1c1b2b]/30 transition outline-none" />
                 </div>
                 <select class="px-3 py-2 border border-gray-200 rounded-xl text-sm text-gray-600 focus:border-[#1c1b2b] focus:ring-2 focus:ring-[#1c1b2b]/30 outline-none">
-                    <option value="">Estado</option>
-                    <option value="pending">Pendiente</option>
-                    <option value="accepted">Aceptado</option>
-                    <option value="rejected">Rechazado</option>
+                    <option value="">{% t "orders.filter_status" %}</option>
+                    <option value="pending">{% t "orders.status_pending" %}</option>
+                    <option value="accepted">{% t "orders.status_accepted" %}</option>
+                    <option value="rejected">{% t "orders.status_rejected" %}</option>
                 </select>
             </div>
             <div class="flex gap-2">
-                <div class="px-3 py-2 border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-100 transition">Últimos 30 días</div>
-                <div class="px-3 py-2 border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-100 transition">Personalizar</div>
+                <div class="px-3 py-2 border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-100 transition">{% t "orders.last_30_days" %}</div>
+                <div class="px-3 py-2 border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-100 transition">{% t "orders.customize" %}</div>
             </div>
         </div>
 
@@ -79,65 +80,57 @@
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-600">
                             <div class="flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-gray-400">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.008v.008H3.75V6.75Zm0 5.25h.008v.008H3.75V12Zm0 5.25h.008v.008H3.75v-.008Z" />
-                                </svg>
-                                <span class="font-medium text-gray-900">Inicio del servicio:</span>
+                                <!-- ...existing icon... -->
+                                <span class="font-medium text-gray-900">{% t "orders.service_start" %}</span>
                                 <span>{{ order.start_date|date:'d \d\e F, Y' }}</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-gray-400">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8.25v-2.1a2.1 2.1 0 1 0-4.2 0v2.1m4.2 0h-4.2m4.2 0a2.1 2.1 0 1 1-4.2 0m4.2 0h4.95m-9.15 0H6.75m0 0v11.25a2.25 2.25 0 0 0 2.25 2.25h6a2.25 2.25 0 0 0 2.25-2.25V8.25m-10.5 0V5.625a2.625 2.625 0 0 1 5.25 0V8.25" />
-                                </svg>
-                                <span class="font-medium text-gray-900">Contrato:</span>
+                                <!-- ...existing icon... -->
+                                <span class="font-medium text-gray-900">{% t "orders.contract" %}</span>
                                 <span class="line-clamp-2 text-xs uppercase tracking-wide">{{ order.code }}</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-gray-400">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0A9 9 0 1 1 3 12a9 9 0 0 1 18 0Z" />
-                                </svg>
-                                <span class="font-medium text-gray-900">Creado:</span>
+                                <!-- ...existing icon... -->
+                                <span class="font-medium text-gray-900">{% t "orders.created" %}</span>
                                 <span>{{ order.created_at|date:'d/m/Y H:i' }}</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-gray-400">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75v10.5m0 0 3-3m-3 3-3-3" />
-                                </svg>
-                                <span class="font-medium text-gray-900">Precio acordado:</span>
+                                <!-- ...existing icon... -->
+                                <span class="font-medium text-gray-900">{% t "orders.price_agreed" %}</span>
                                 {% if order.has_price %}
                                     <span>€{{ order.price|floatformat:2 }}</span>
                                 {% else %}
-                                    <span>Pendiente de confirmar</span>
+                                    <span>{% t "orders.pending_to_confirm" %}</span>
                                 {% endif %}
                             </div>
                         </div>
 
                         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-4 border-t border-gray-100">
                             <div class="flex items-center gap-2">
-                                <span class="text-sm text-gray-500">Total estimado</span>
+                                <span class="text-sm text-gray-500">{% t "orders.estimated_total" %}</span>
                                 {% if order.has_price %}
                                     <span class="text-lg font-semibold text-gray-900">€{{ order.price|floatformat:2 }}</span>
                                 {% else %}
-                                    <span class="text-lg font-semibold text-gray-900">Pendiente</span>
+                                    <span class="text-lg font-semibold text-gray-900">{% t "orders.pending" %}</span>
                                 {% endif %}
                             </div>
                             <div class="flex gap-2">
-                                <a href="{{ order.detail_url }}" class="px-4 py-2 text-sm font-medium border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-100 transition">Ver servicio</a>
+                                <a href="{{ order.detail_url }}" class="px-4 py-2 text-sm font-medium border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-100 transition">{% t "orders.view_service" %}</a>
                                 {% if is_provider and order.can_manage %}
                                     <form method="post" class="inline-flex">
                                         {% csrf_token %}
                                         <input type="hidden" name="contract_id" value="{{ order.id }}">
                                         <input type="hidden" name="action" value="accept">
-                                        <div class="px-4 py-2 text-sm font-medium bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition">Aceptar</div>
+                                        <div class="px-4 py-2 text-sm font-medium bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition">{% t "orders.accept" %}</div>
                                     </form>
                                     <form method="post" class="inline-flex">
                                         {% csrf_token %}
                                         <input type="hidden" name="contract_id" value="{{ order.id }}">
                                         <input type="hidden" name="action" value="reject">
-                                        <div class="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-xl hover:bg-red-700 transition">Rechazar</div>
+                                        <div class="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-xl hover:bg-red-700 transition">{% t "orders.reject" %}</div>
                                     </form>
                                 {% elif not is_provider %}
-                                    <div class="px-4 py-2 text-sm font-medium bg-[#1c1b2b] text-white rounded-xl hover:shadow-[0_2px_8px_rgba(0,0,0,0.3)] transition-shadow">Contactar</div>
+                                    <div class="px-4 py-2 text-sm font-medium bg-[#1c1b2b] text-white rounded-xl hover:shadow-[0_2px_8px_rgba(0,0,0,0.3)] transition-shadow">{% t "orders.contact" %}</div>
                                 {% endif %}
                             </div>
                         </div>
@@ -146,10 +139,10 @@
             </div>
         {% else %}
             <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-10 text-center mb-12">
-                <span class="text-lg font-semibold text-gray-900">Aún no tienes pedidos</span>
-                <p class="text-sm text-gray-500 mt-1">Cuando contrates un servicio aparecerá aquí para que puedas seguir su progreso.</p>
+                <span class="text-lg font-semibold text-gray-900">{% t "orders.no_orders_title" %}</span>
+                <p class="text-sm text-gray-500 mt-1">{% t "orders.no_orders_desc" %}</p>
                 <div class="mt-6 inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium bg-[#1c1b2b] text-white rounded-xl hover:shadow-[0_2px_8px_rgba(0,0,0,0.3)] transition-shadow cursor-pointer" onclick="window.location.href='{% url 'home' %}'">
-                    Explorar servicios
+                    {% t "orders.explore_services" %}
                 </div>
             </div>
         {% endif %}

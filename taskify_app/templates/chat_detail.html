@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load json_i18n %}
 {% block content %}
 <div class="w-[1024px] mx-auto py-4">
 
@@ -8,7 +9,7 @@
     <div class="flex flex-col h-[75vh] bg-white rounded-t-xl overflow-hidden">
 
       <div class="bg-white border-b border-gray-200 p-3 shadow-md z-10 flex gap-3 items-center space-x-2">
-        <a href="{% url 'chats' %}" class="p-1.5 rounded-full text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors duration-150" title="Volver a los chats">
+        <a href="{% url 'chats' %}" class="p-1.5 rounded-full text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors duration-150" title="{% t 'chats.back_to_chats' %}">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
           </svg>
@@ -53,7 +54,7 @@
         <input
           type="text"
           name="content" id="message-input"
-          placeholder="Escribe un mensaje..."
+          placeholder="{% t 'chats.placeholder_message' %}"
           class="py-2 px-4 bg-gray-100 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent text-sm"
           autocomplete="off"
         />
@@ -91,7 +92,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
     chatForm.addEventListener('submit', function(e) {
       if (messageInput.value.trim().length === 0) {
         e.preventDefault();
-        console.warn("Envío bloqueado: El mensaje está vacío.");
+        console.warn("{% t 'chats.warn_empty_message' %}");
       }
     });
 
@@ -123,7 +124,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
       const messageDate = new Date(message.timestamp);
       timeString = messageDate.toLocaleTimeString(navigator.language || 'es-ES', { hour: '2-digit', minute: '2-digit' });
     } catch(e) {
-      console.error('Formato de marca de tiempo inválido:', message.timestamp);
+      console.error("{% t 'chats.err_invalid_timestamp' %}", message.timestamp);
     }
 
     return `
@@ -148,7 +149,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
       const response = await fetch(url);
       if (!response.ok) {
-        console.error('Error al obtener nuevos mensajes:', response.statusText);
+        console.error("{% t 'chats.err_fetch_new' %}", response.statusText);
         return;
       }
 
@@ -168,7 +169,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
       }
 
     } catch (error) {
-      console.error('Error durante la obtención:', error);
+      console.error("{% t 'chats.err_fetch' %}", error);
     }
   }
 
