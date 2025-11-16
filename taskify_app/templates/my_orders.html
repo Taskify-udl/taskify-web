@@ -2,12 +2,11 @@
 {% load static %}
 
 {% block content %}
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <div class="w-[1024px] mx-auto px-4">
+    <div class="w-[1024px] mx-auto">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-6 mb-4">
             <div>
-                <span class="text-2xl font-semibold text-gray-900">Mis Pedidos</span>
+                <span class="text-2xl font-semibold text-gray-900 mb-6 block">Mis Pedidos</span>
                 {% if is_provider %}
                     <p class="text-sm text-gray-500">Gestiona las solicitudes de contratación que has recibido de tus clientes.</p>
                 {% else %}
