@@ -10,6 +10,7 @@ from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth import logout
+from django.urls import reverse
 import json
 
 from django.utils.dateparse import parse_datetime
@@ -157,7 +158,151 @@ def user_logout(request):
 
 @login_required
 def my_orders(request):
-    return render(request, 'my_orders.html')
+    user = request.user
+
+    if request.method == 'POST' and user.is_provider:
+        contract_id = request.POST.get('contract_id')
+        action = request.POST.get('action')
+        next_status = {
+            'accept': 'accepted',
+            'reject': 'rejected',
+        }.get(action)
+
+        if contract_id and next_status:
+            contract = get_object_or_404(
+                Contract, pk=contract_id, service__provider=user
+            )
+            if contract.status != next_status:
+                contract.status = next_status
+                contract.save(update_fields=['status'])
+                if next_status == 'accepted':
+                    messages.success(
+                        request,
+                        'Has aceptado la solicitud. El cliente será notificado.',
+                    )
+                else:
+                    messages.info(
+                        request,
+                        'Has rechazado la solicitud. El cliente será notificado.',
+                    )
+        return redirect('my_orders')
+
+    if user.is_provider:
+        contracts_qs = (
+            Contract.objects.filter(service__provider=user)
+            .select_related('service', 'user')
+            .order_by('-created_at')
+        )
+    else:
+        contracts_qs = (
+            Contract.objects.filter(user=user)
+            .select_related('service', 'service__provider')
+            .order_by('-created_at')
+        )
+
+    status_styles = {
+        'pending': {
+            'badge_classes': 'bg-amber-100 text-amber-700',
+            'dot_classes': 'bg-amber-500',
+            'label': 'Pendiente de aceptar',
+            'group': 'pending',
+        },
+        'accepted': {
+            'badge_classes': 'bg-blue-100 text-blue-700',
+            'dot_classes': 'bg-blue-500',
+            'label': 'Aceptado',
+            'group': 'accepted',
+        },
+        'rejected': {
+            'badge_classes': 'bg-red-100 text-red-700',
+            'dot_classes': 'bg-red-500',
+            'label': 'Rechazado',
+            'group': 'rejected',
+        },
+        'active': {
+            'badge_classes': 'bg-blue-100 text-blue-700',
+            'dot_classes': 'bg-blue-500',
+            'label': 'Aceptado',
+            'group': 'accepted',
+        },
+        'finished': {
+            'badge_classes': 'bg-green-100 text-green-700',
+            'dot_classes': 'bg-green-500',
+            'label': 'Completado',
+            'group': 'accepted',
+        },
+        'cancelled': {
+            'badge_classes': 'bg-red-100 text-red-700',
+            'dot_classes': 'bg-red-500',
+            'label': 'Cancelado',
+            'group': 'rejected',
+        },
+        'paused': {
+            'badge_classes': 'bg-gray-100 text-gray-700',
+            'dot_classes': 'bg-gray-400',
+            'label': 'En pausa',
+            'group': 'pending',
+        },
+    }
+
+    status_totals = {'pending': 0, 'accepted': 0, 'rejected': 0}
+    for bucket in contracts_qs.values('status').annotate(total=Count('id')):
+        status_key = bucket['status']
+        group = status_styles.get(status_key, {}).get('group')
+        if group in status_totals:
+            status_totals[group] += bucket['total']
+
+    orders = []
+    for contract in contracts_qs:
+        status_config = status_styles.get(
+            contract.status,
+            {
+                'badge_classes': 'bg-gray-100 text-gray-600',
+                'dot_classes': 'bg-gray-400',
+                'label': contract.status.title(),
+            },
+        )
+
+        price_value = contract.price if contract.price is not None else contract.service.price
+
+        if user.is_provider:
+            counterpart = contract.user
+            counterpart_label = 'Cliente'
+            counterpart_name = counterpart.get_full_name() or counterpart.username
+        else:
+            counterpart = contract.service.provider
+            counterpart_label = 'Profesional'
+            counterpart_name = counterpart.get_full_name() or counterpart.username
+
+        orders.append(
+            {
+                'id': contract.id,
+                'service_name': contract.service.name,
+                'counterpart_label': counterpart_label,
+                'counterpart_name': counterpart_name,
+                'status': contract.status,
+                'status_label': status_config['label'],
+                'badge_classes': status_config['badge_classes'],
+                'dot_classes': status_config['dot_classes'],
+                'start_date': contract.start_date,
+                'created_at': contract.created_at,
+                'price': price_value,
+                'has_price': price_value is not None,
+                'detail_url': reverse('service_detail', args=[contract.service.id]),
+                'service_description': contract.service.description,
+                'code': contract.code,
+                'can_manage': user.is_provider and contract.status == 'pending',
+            }
+        )
+
+    context = {
+        'orders': orders,
+        'is_provider': user.is_provider,
+        'pending_orders_count': status_totals['pending'],
+        'accepted_orders_count': status_totals['accepted'],
+        'rejected_orders_count': status_totals['rejected'],
+    }
+    return render(request, 'my_orders.html', context)
 
 @login_required
 def profile(request):
