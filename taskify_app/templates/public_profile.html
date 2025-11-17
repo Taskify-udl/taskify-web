@@ -21,7 +21,8 @@
           <!-- ...rating svg... -->
           <span class="text-md font-semibold text-gray-800">{{ average_rating|floatformat:1 }}</span>
           <span class="text-md text-gray-500">·</span>
-          <span class="text-md text-gray-600">{% t "public_profile.services_label" %}</span>
+          <!-- Mostrar la traducción y el conteo fuera de la traducción -->
+          <span class="text-md text-gray-600">{% t "public_profile.services_label" %} ({{ services|length }})</span>
         </div>
       </div>
     </div>
@@ -45,10 +46,10 @@
   <div>
     <div class="flex items-center bg-gray-50 border border-gray-200 shadow-sm rounded-full !p-[1px]">
       <div id="btnServices" class="w-50 py-2 px-3 font-medium text-black rounded-full flex justify-center hover:cursor-pointer border bg-white">
-        {% t "public_profile.services_label" %}
+        {% t "public_profile.services_label" %} ({{ services|length }})
       </div>
       <div id="btnReviews" class="w-50 py-2 px-3 font-medium text-gray-500 rounded-full flex justify-center hover:cursor-pointer hover:bg-gray-100">
-        {% t "public_profile.reviews_label" %}
+        {% t "public_profile.reviews_label" %} ({{ reviews|length }})
       </div>
     </div>
 
