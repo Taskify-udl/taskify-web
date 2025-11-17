@@ -385,7 +385,6 @@ def create_default_users(sender=None, **kwargs):
     return {"created": created_count, "updated": updated_count}
 
 
-
 # python
 def create_default_services(image_dir=None, sender=None, **kwargs):
     """
@@ -512,8 +511,10 @@ def create_sample_conversations_and_messages(sender=None, **kwargs):
     Crea conversaciones y mensajes de ejemplo entre todos los usuarios activos (no superusers).
     - Una conversación por cada par de usuarios (A-B).
     - Si la conversación ya existe, la reutiliza.
-    - Si la conversación no tiene mensajes, se crean varios mensajes simulando un chat.
+    - Si la conversación no tiene mensajes, se crean varios mensajes simulando un chat,
+      con longitud y contenido variados.
     """
+    import random
     from django.contrib.auth import get_user_model
     from django.db.models import Count
 
@@ -525,7 +526,6 @@ def create_sample_conversations_and_messages(sender=None, **kwargs):
 
     User = get_user_model()
 
-    # Cogemos solo usuarios activos y no superusers (para no meter al admin en todo)
     users = list(User.objects.filter(is_active=True, is_superuser=False))
     if len(users) < 2:
         print("[taskify_app] No hay suficientes usuarios para crear conversaciones.")
@@ -535,17 +535,74 @@ def create_sample_conversations_and_messages(sender=None, **kwargs):
     created_messages = 0
     errors = 0
 
-    # Mensajes “plantilla” para simular chats
-    base_dialog = [
-        "{sender}: Hola {receiver}, ¿qué tal? Quería comentarte un tema sobre un servicio.",
-        "{receiver}: ¡Hola {sender}! Claro, dime, ¿en qué puedo ayudarte?",
-        "{sender}: Estoy interesado en contratar uno de tus servicios. ¿Tienes disponibilidad esta semana?",
-        "{receiver}: Sí, podría hacer un hueco el jueves por la tarde o el viernes por la mañana.",
-        "{sender}: Perfecto, el jueves por la tarde me va genial. Muchas gracias.",
-        "{receiver}: Genial, entonces lo agendamos. ¡Nos vemos pronto!",
+    # Distintos patrones de diálogos para variar los mensajes
+    DIALOG_PATTERNS = [
+        [
+            "Hola {receiver}, he estado mirando tus servicios y me interesa pedir presupuesto.",
+            "¡Hola {sender}! Genial, ¿qué necesitas exactamente?",
+            "Sería para un trabajo pequeño esta semana, algo sencillo.",
+            "Sin problema, puedo pasarte un presupuesto aproximado ahora mismo.",
+            "Perfecto, así veo si encaja con lo que estoy buscando.",
+            "Te lo envío por aquí en unos minutos. 😊",
+        ],
+        [
+            "Buenas {receiver}, vengo por la reforma del baño que comentamos.",
+            "Hola {sender}, sí, lo tengo apuntado. ¿Has decidido fechas?",
+            "Preferiría a partir del mes que viene, cuando tenga unos días libres.",
+            "Creo que puedo hacerte hueco a partir del día 10, ¿te encajaría?",
+            "Sí, ese rango de fechas me iría bien.",
+        ],
+        [
+            "Hey {receiver}, ¿cómo va todo? Vi tu perfil y me llamó la atención lo que haces.",
+            "¡Ey {sender}! Todo bien, gracias. Me alegro de que te haya gustado.",
+            "Estoy pensando en externalizar algunas tareas, quizá podríamos colaborar.",
+            "Me encantaría, dime qué necesitas y vemos cómo encajarlo.",
+        ],
+        [
+            "Hola {receiver}, quería comentarte que quedé muy contento con el último trabajo.",
+            "¡Muchas gracias {sender}! Me alegra muchísimo leer eso.",
+            "Seguramente te vuelva a contactar para otro proyecto a finales de mes.",
+            "Perfecto, cuando lo tengas claro me escribes y lo organizamos.",
+            "Genial, gracias por la atención.",
+            "A ti por confiar en mi trabajo. 🙌",
+        ],
+        [
+            "Buenas {receiver}, tengo una incidencia con el servicio que contraté.",
+            "Vaya, lo siento {sender}. ¿Qué ha pasado exactamente?",
+            "Parece que algo no quedó bien instalado y me está dando problemas.",
+            "Entiendo, puedo pasarme a revisarlo sin coste adicional.",
+            "Te lo agradezco, así nos quedamos tranquilos.",
+            "Te propongo ir mañana por la tarde, ¿te va bien?",
+            "Sí, perfecto. Muchas gracias por la rapidez.",
+        ],
+        [
+            "Hola {receiver}, ¿sigues ofreciendo clases particulares?",
+            "Hola {sender}, sí, sigo dando clases. ¿De qué materia te interesa?",
+            "Sobre todo matemáticas y un poco de física.",
+            "Perfecto, son mis especialidades. Podemos hacer 1 o 2 sesiones semanales.",
+        ],
+        [
+            "Buenas {receiver}, me gustaría pedirte un logo para mi nueva marca.",
+            "¡Hola {sender}! Qué buena noticia. ¿Tienes alguna idea o referencia?",
+            "Tengo algunas imágenes de referencia, pero me gustaría que me propusieras algo creativo.",
+            "Genial, mándame las referencias y preparo un par de propuestas.",
+            "Hecho, te las paso ahora mismo.",
+        ],
+        [
+            "Hola {receiver}, vi que ofreces servicios de mantenimiento.",
+            "Así es {sender}, ¿qué tipo de mantenimiento necesitas?",
+            "Es para una pequeña oficina, algo periódico.",
+            "Entonces podemos montar un plan mensual, te paso detalles por aquí.",
+        ],
+        [
+            "Ey {receiver}, ¿tienes hueco esta semana para un trabajo rápido?",
+            "Depende del día, {sender}. ¿Qué tenías en mente?",
+            "Algo de revisión y pequeños arreglos.",
+            "Creo que el miércoles por la tarde podría ser, si te sirve.",
+            "Me va perfecto, lo agendamos.",
+        ],
     ]
 
-    # Recorremos todas las parejas de usuarios (i < j)
     for i in range(len(users)):
         for j in range(i + 1, len(users)):
             u1 = users[i]
@@ -574,9 +631,17 @@ def create_sample_conversations_and_messages(sender=None, **kwargs):
                 if conv.messages.exists():
                     continue
 
-                # Creamos mensajes alternando sender/receiver
-                # Índices pares: u1 habla; impares: u2 responde (o al revés)
-                for idx, template in enumerate(base_dialog):
+                # Elegimos un patrón de diálogo aleatorio
+                pattern = random.choice(DIALOG_PATTERNS)
+
+                # Elegimos una longitud aleatoria (al menos 3 mensajes)
+                max_len = len(pattern)
+                num_msgs = random.randint(3, max_len)
+
+                for idx in range(num_msgs):
+                    template = pattern[idx]
+
+                    # Alternamos quién habla
                     if idx % 2 == 0:
                         sender = u1
                         receiver = u2
@@ -584,8 +649,10 @@ def create_sample_conversations_and_messages(sender=None, **kwargs):
                         sender = u2
                         receiver = u1
 
-                    text = template.format(sender=sender.first_name or sender.username,
-                                           receiver=receiver.first_name or receiver.username)
+                    sender_name = sender.first_name or sender.username
+                    receiver_name = receiver.first_name or receiver.username
+
+                    text = template.format(sender=sender_name, receiver=receiver_name)
 
                     Message.objects.create(
                         conversation=conv,
@@ -607,7 +674,6 @@ def create_sample_conversations_and_messages(sender=None, **kwargs):
         "created_messages": created_messages,
         "errors": errors,
     }
-
 
 
 def create_default_categories(sender, **kwargs):
