@@ -188,46 +188,194 @@ CATEGORIES = [
     ("Automatización e IA", "fa-solid fa-robot"),
 ]
 
+# Debajo de CATEGORIES, por ejemplo:
+
+PROFILE_SEED_DATA = {
+    CustomUser.Roles.CUSTOMER: {
+        "first_name": "Laura",
+        "last_name": "García",
+        "phone": "612345678",
+        "location": "Barcelona, España",
+        "website": "https://lauragarcia.example.com",
+        "bio": "Usuario particular que contrata servicios de reformas y mantenimiento del hogar.",
+        "profession": "Cliente particular",
+        "avatar_file": "customer.jpg",
+    },
+    CustomUser.Roles.PROVIDER: {
+        "first_name": "Carlos",
+        "last_name": "López",
+        "phone": "622334455",
+        "location": "Madrid, España",
+        "website": "https://carlos-servicios.example.com",
+        "bio": "Proveedor profesional con años de experiencia coordinando equipos y proyectos.",
+        "profession": "Proveedor profesional",
+        "avatar_file": "provider.jpg",
+    },
+    CustomUser.Roles.FREELANCER: {
+        "first_name": "Marta",
+        "last_name": "Sánchez",
+        "phone": "633445566",
+        "location": "Valencia, España",
+        "website": "https://marta-freelance.example.com",
+        "bio": "Freelancer especializada en diseño gráfico y branding para pequeñas empresas.",
+        "profession": "Diseñadora gráfica",
+        "avatar_file": "freelancer.webp",
+    },
+    CustomUser.Roles.COMPANY_ADMIN: {
+        "first_name": "Javier",
+        "last_name": "Ruiz",
+        "phone": "644556677",
+        "location": "Sevilla, España",
+        "website": "https://empresa-obras.example.com",
+        "bio": "Administrador de empresa de construcción y reformas, responsable de la gestión de contratos.",
+        "profession": "Administrador de empresa",
+        "avatar_file": "company_admin.webp",
+    },
+    CustomUser.Roles.COMPANY_WORKER: {
+        "first_name": "Ana",
+        "last_name": "Fernández",
+        "phone": "655667788",
+        "location": "Bilbao, España",
+        "website": "https://ana-tecnica.example.com",
+        "bio": "Trabajadora de empresa especializada en instalaciones y mantenimiento técnico.",
+        "profession": "Técnica de instalaciones",
+        "avatar_file": "company_worker.jpg",
+    },
+}
+
+
+def _assign_seed_avatar(user, profile, image_dir):
+    """
+    Asigna el avatar desde seed_images/users si existe el archivo.
+    Elimina el avatar anterior si existe.
+    """
+    import os
+    from django.core.files import File
+
+    avatar_filename = profile.get("avatar_file")
+    if not avatar_filename:
+        print(f"[taskify_app] Usuario {user.username}: no hay avatar_file definido en PROFILE_SEED_DATA.")
+        return
+
+    avatar_path = os.path.join(image_dir, avatar_filename)
+    print(f"[taskify_app] Usuario {user.username}: buscando avatar en: {avatar_path}")
+
+    if not os.path.exists(avatar_path):
+        print(f"[taskify_app] AVISO: archivo de avatar NO encontrado: {avatar_path}")
+        return
+
+    # Elimina el avatar anterior si existe
+    if user.avatar and user.avatar.name:
+        try:
+            user.avatar.delete(save=False)
+            print(f"[taskify_app] Avatar anterior eliminado para {user.username}.")
+        except Exception as e:
+            print(f"[taskify_app] ERROR eliminando avatar anterior de {user.username}: {e}")
+
+    try:
+        with open(avatar_path, "rb") as f:
+            user.avatar.save(avatar_filename, File(f), save=True)
+        print(f"[taskify_app] Usuario {user.username}: avatar asignado correctamente.")
+    except Exception as e:
+        print(f"[taskify_app] ERROR asignando avatar a {user.username}: {e}")
+
 
 def create_default_users(sender=None, **kwargs):
     """
-    Crea un usuario por cada rol en CustomUser.Roles.
-    - username: user_<role_lower>
+    Crea un usuario por cada rol en CustomUser.Roles con datos de ejemplo.
+    - username: <role_lower>
     - email: <role_lower>@example.com
     - password (solo para usuarios creados): '1234'
     - role: el rol correspondiente
+    - Rellena phone, bio, location, website y avatar si hay datos en PROFILE_SEED_DATA.
     """
+    import os
     from django.contrib.auth import get_user_model
 
     User = get_user_model()
     created_count = 0
     updated_count = 0
 
+    base_dir = os.path.dirname(__file__)
+    image_dir = os.path.join(base_dir, "seed_images", "users")
+    print(f"[taskify_app] Carpeta de avatares seed: {image_dir}")
+    if not os.path.isdir(image_dir):
+        print(f"[taskify_app] AVISO: la carpeta de avatares no existe: {image_dir}")
+
     for role_value, _ in CustomUser.Roles.choices:
         username = f"{role_value.lower()}"
         email = f"{role_value.lower()}@example.com"
-        first_name = role_value.capitalize().replace("_", " ")
+
+        default_first_name = role_value.capitalize().replace("_", " ")
+        profile = PROFILE_SEED_DATA.get(role_value, {})
+        first_name = profile.get("first_name", default_first_name)
+        last_name = profile.get("last_name", "")
 
         user = User.objects.filter(username=username).first()
         if not user:
+            # Crear usuario nuevo
             user = User(
                 username=username,
                 email=email,
                 first_name=first_name,
+                last_name=last_name,
                 role=role_value,
                 is_active=True,
             )
+            # Rellenar todos los campos posibles
+            user.phone = profile.get("phone", "")
+            user.location = profile.get("location", "")
+            user.website = profile.get("website", "")
+            user.bio = profile.get("bio", "")
+            user.profession = profile.get("profession", "")
             user.set_password("1234")
             user.save()
             created_count += 1
+            print(f"[taskify_app] Usuario creado: {username} ({role_value})")
+            # Asignar avatar (siempre, elimina el anterior si hay)
+            _assign_seed_avatar(user, profile, image_dir)
         else:
+            # Usuario ya existía → actualizar datos de perfil
             changed = False
+
             if getattr(user, "role", None) != role_value:
                 user.role = role_value
                 changed = True
+
+            if user.first_name != first_name:
+                user.first_name = first_name
+                changed = True
+
+            if user.last_name != last_name:
+                user.last_name = last_name
+                changed = True
+
+            if user.phone != profile.get("phone", ""):
+                user.phone = profile.get("phone", "")
+                changed = True
+
+            if user.location != profile.get("location", ""):
+                user.location = profile.get("location", "")
+                changed = True
+
+            if user.website != profile.get("website", ""):
+                user.website = profile.get("website", "")
+                changed = True
+
+            if user.bio != profile.get("bio", ""):
+                user.bio = profile.get("bio", "")
+                changed = True
+
+            if hasattr(user, "profession") and user.profession != profile.get("profession", ""):
+                user.profession = profile.get("profession", "")
+                changed = True
+
             if changed:
                 user.save()
                 updated_count += 1
+                print(f"[taskify_app] Usuario actualizado: {username} ({role_value})")
+            # Asignar avatar (siempre, elimina el anterior si hay)
+            _assign_seed_avatar(user, profile, image_dir)
 
     if created_count or updated_count:
         print(
@@ -235,6 +383,7 @@ def create_default_users(sender=None, **kwargs):
             f"creados: {created_count}, actualizados: {updated_count}"
         )
     return {"created": created_count, "updated": updated_count}
+
 
 
 # python
