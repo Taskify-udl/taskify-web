@@ -388,9 +388,9 @@ def create_default_users(sender=None, **kwargs):
 # python
 def create_default_services(image_dir=None, sender=None, **kwargs):
     """
-    Crea 3 servicios de ejemplo y les asigna imágenes desde:
+    Crea servicios de ejemplo y les asigna imágenes desde:
     taskify_app/seed_images/services/
-    Archivos esperados: fontaneria.jpg, albanileria.jpg, diseno.jpg
+    Las imágenes deben existir con los nombres indicados en 'items'.
     """
     import os
     from django.utils.text import slugify
@@ -409,21 +409,172 @@ def create_default_services(image_dir=None, sender=None, **kwargs):
     if not image_dir:
         image_dir = os.path.join(os.path.dirname(__file__), "seed_images", "services")
 
-    # Mapeo: (nombre_del_servicio, filename_imagen, descripcion, categoría_preferida, rol_asignado)
+    # Mapeo: (nombre_del_servicio, filename_imagen, descripcion, categoría_preferida, rol_asignado, precio)
     items = [
-        ("Fontanería", "fontaneria.jpg", "Reparación y mantenimiento de tuberías y grifería.", "Fontanería",
-         CustomUser.Roles.FREELANCER),
-        ("Albañilería", "albanileria.jpg", "Obras, reformas y pequeñas construcciones.", "Albañilería",
-         CustomUser.Roles.COMPANY_ADMIN),
-        ("Diseño gráfico", "diseno.jpg", "Diseño de logotipos, piezas gráficas y branding.", "Diseño gráfico",
-         CustomUser.Roles.FREELANCER),
+        # 🧱 Hogar / construcción
+        ("Reparación de grifos y fugas",
+         "reparacion_grifos.webp",
+         "Arreglo de grifos, fugas de agua y pequeños problemas de fontanería en el hogar.",
+         "Fontanería",
+         CustomUser.Roles.FREELANCER,
+         45.0),
+
+        ("Instalación de sanitarios y mamparas",
+         "instalacion_sanitarios.webp",
+         "Instalación de inodoros, lavabos, platos de ducha y mamparas.",
+         "Fontanería",
+         CustomUser.Roles.PROVIDER,
+         120.0),
+
+        ("Reforma básica de baño",
+         "reforma_bano.jpg",
+         "Pequeñas reformas de baño: alicatado, suelo y sanitarios.",
+         "Albañilería",
+         CustomUser.Roles.COMPANY_ADMIN,
+         850.0),
+
+        ("Pintura completa de piso",
+         "pintura_piso.webp",
+         "Pintura de paredes y techos de vivienda, incluye preparación de superficies.",
+         "Pintura",
+         CustomUser.Roles.COMPANY_ADMIN,
+         350.0),
+
+        ("Pequeños arreglos de albañilería",
+         "arreglos_albanileria.jpg",
+         "Reparación de grietas, colocación de pladur y pequeñas obras.",
+         "Albañilería",
+         CustomUser.Roles.COMPANY_WORKER,
+         60.0),
+
+        ("Mantenimiento general del hogar",
+         "mantenimiento_hogar.png",
+         "Servicio de manitas para arreglos eléctricos, de fontanería y carpintería sencillos.",
+         "Mantenimiento general",
+         CustomUser.Roles.PROVIDER,
+         40.0),
+
+        ("Jardinería y mantenimiento de jardín",
+         "jardineria_mantenimiento.webp",
+         "Corte de césped, poda de arbustos y mantenimiento básico de jardines.",
+         "Jardinería",
+         CustomUser.Roles.COMPANY_WORKER,
+         55.0),
+
+        ("Limpieza de hogar por horas",
+         "limpieza_hogar.jpg",
+         "Servicio de limpieza a domicilio puntual o recurrente.",
+         "Limpieza",
+         CustomUser.Roles.PROVIDER,
+         15.0),
+
+        ("Limpieza de oficinas",
+         "limpieza_oficinas.jpg",
+         "Limpieza y mantenimiento de espacios de trabajo y despachos.",
+         "Limpieza industrial",
+         CustomUser.Roles.COMPANY_ADMIN,
+         80.0),
+
+        ("Mudanzas locales",
+         "mudanzas_locales.jpg",
+         "Servicio de mudanza dentro de la misma ciudad, incluye carga y descarga.",
+         "Mudanzas",
+         CustomUser.Roles.COMPANY_ADMIN,
+         180.0),
+
+        # 💻 Digital / creativo
+        ("Diseño de logotipo profesional",
+         "diseno_logotipo.jpg",
+         "Creación de logotipo vectorial con varias propuestas y revisiones.",
+         "Diseño gráfico",
+         CustomUser.Roles.FREELANCER,
+         150.0),
+
+        ("Diseño de posts para redes sociales",
+         "posts_redes.jpg",
+         "Pack de creatividades para Instagram, Facebook o TikTok adaptadas a tu marca.",
+         "Marketing digital",
+         CustomUser.Roles.FREELANCER,
+         70.0),
+
+        ("Gestión de redes sociales",
+         "gestion_redes.webp",
+         "Planificación, publicación y seguimiento de redes sociales de tu negocio.",
+         "Community manager",
+         CustomUser.Roles.PROVIDER,
+         220.0),
+
+        ("Desarrollo de landing page",
+         "landing_page.jpg",
+         "Desarrollo de una landing page moderna y responsive para captar clientes.",
+         "Desarrollo web",
+         CustomUser.Roles.FREELANCER,
+         300.0),
+
+        ("Mantenimiento de página web",
+         "mantenimiento_web.jpeg",
+         "Actualizaciones, copias de seguridad y pequeñas mejoras en tu web.",
+         "Desarrollo web",
+         CustomUser.Roles.PROVIDER,
+         90.0),
+
+        ("Consultoría IT inicial",
+         "consultoria_it.webp",
+         "Sesión de consultoría para analizar necesidades tecnológicas de tu negocio.",
+         "Consultoría IT",
+         CustomUser.Roles.FREELANCER,
+         60.0),
+
+        # 👪 Cuidado y formación
+        ("Canguro de niños por horas",
+         "canguro_ninos.jpg",
+         "Cuidado de niños en domicilio, tardes, noches o fines de semana.",
+         "Niñeras",
+         CustomUser.Roles.COMPANY_WORKER,
+         12.0),
+
+        ("Cuidado de mascotas a domicilio",
+         "cuidado_mascotas.jpg",
+         "Paseo de perros, visita a domicilio y cuidado puntual de mascotas.",
+         "Cuidado de mascotas",
+         CustomUser.Roles.COMPANY_WORKER,
+         10.0),
+
+        ("Clases particulares de matemáticas",
+         "clases_matematicas.avif",
+         "Apoyo escolar en matemáticas para primaria, ESO y bachillerato.",
+         "Clases particulares",
+         CustomUser.Roles.FREELANCER,
+         18.0),
+
+        ("Clases de inglés online",
+         "clases_ingles.jpg",
+         "Clases de conversación y gramática en inglés por videollamada.",
+         "Idiomas",
+         CustomUser.Roles.FREELANCER,
+         20.0),
+
+        ("Entrenador personal a domicilio",
+         "entrenador_personal.jpg",
+         "Sesiones personalizadas de entrenamiento en casa o al aire libre.",
+         "Entrenador personal",
+         CustomUser.Roles.FREELANCER,
+         35.0),
+
+        # 🧾 Profesionales / negocio
+        ("Asesoría fiscal básica",
+         "asesoria_fiscal.jpg",
+         "Resolución de dudas fiscales, presentación de modelos básicos y orientación.",
+         "Asesoría fiscal y contable",
+         CustomUser.Roles.PROVIDER,
+         75.0),
     ]
 
     created_services = 0
     created_images = 0
     errors = 0
 
-    for name, filename, description, category_name, role_value in items:
+    for name, filename, description, category_name, role_value, price in items:
         try:
             provider = User.objects.filter(role=role_value).first()
             if not provider:
@@ -439,7 +590,7 @@ def create_default_services(image_dir=None, sender=None, **kwargs):
                 category = None
 
             slug = slugify(name)
-            defaults = {"description": description, "price": 20.0}
+            defaults = {"description": description, "price": price}
             # Intenta crear el servicio (ajusta campos si tu modelo requiere otros)
             service, created = Service.objects.get_or_create(
                 name=name,
@@ -455,9 +606,9 @@ def create_default_services(image_dir=None, sender=None, **kwargs):
                 if getattr(service, "description", None) != description:
                     service.description = description
                     changed = True
-                if getattr(service, "price", None) != 20.0:
+                if getattr(service, "price", None) != price:
                     try:
-                        service.price = 20.0
+                        service.price = price
                         changed = True
                     except Exception:
                         pass
@@ -476,17 +627,14 @@ def create_default_services(image_dir=None, sender=None, **kwargs):
             try:
                 has_images = False
                 if hasattr(service, "images"):
-                    # si related_name es 'images'
                     has_images = service.images.exists()
                 else:
-                    # intenta ServiceImage por FK
                     has_images = ServiceImage.objects.filter(service=service).exists()
 
                 image_path = os.path.join(image_dir, filename)
                 if not has_images and os.path.exists(image_path):
                     with open(image_path, "rb") as f:
                         django_file = File(f, name=filename)
-                        # intenta crear ServiceImage según firma esperada
                         si = ServiceImage.objects.create(service=service, image=django_file)
                         si.save()
                         created_images += 1
@@ -502,8 +650,11 @@ def create_default_services(image_dir=None, sender=None, **kwargs):
             errors += 1
 
     print(
-        f"[taskify_app] Servicios creados: {created_services}, imágenes añadidas: {created_images}, errores: {errors}")
+        f"[taskify_app] Servicios creados: {created_services}, imágenes añadidas: {created_images}, errores: {errors}"
+    )
     return {"created_services": created_services, "created_images": created_images, "errors": errors}
+
+
 
 
 def create_sample_conversations_and_messages(sender=None, **kwargs):

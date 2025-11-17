@@ -24,15 +24,21 @@ from .models import Service, ServiceImage, Contract, Review, Notification, Custo
 
 
 @ensure_csrf_cookie
+@ensure_csrf_cookie
 def home(request):
-    # Seleccionar hasta 7 categorías aleatorias
+    # Seleccionar hasta 6 categorías aleatorias
     all_categories = list(Category.objects.all())
     if len(all_categories) > 6:
         categories = random.sample(all_categories, 6)
     else:
         categories = all_categories
 
-    featured_services = Service.objects.all()[:6]
+    # Seleccionar hasta 12 servicios destacados aleatorios
+    all_featured_services = list(Service.objects.all())
+    if len(all_featured_services) > 12:
+        featured_services = random.sample(all_featured_services, 12)
+    else:
+        featured_services = all_featured_services
 
     user_favorites = {}
     if request.user.is_authenticated:
@@ -45,6 +51,8 @@ def home(request):
         'user_favorites_json': json.dumps(user_favorites),
     }
     return render(request, 'home.html', context)
+
+
 
 
 @require_POST
