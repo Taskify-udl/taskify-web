@@ -401,7 +401,7 @@ def profile(request):
     context = {
         'user': user,
         'profile': profile,
-        'avatar_url': avatar_url,  # <-- pásalo al template
+        'avatar_url': avatar_url,  
         'user_services': user_services,
         'user_contracts': user_contracts,
         'user_reviews': user_reviews[:3],
