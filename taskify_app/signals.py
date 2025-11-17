@@ -507,6 +507,109 @@ def create_default_services(image_dir=None, sender=None, **kwargs):
     return {"created_services": created_services, "created_images": created_images, "errors": errors}
 
 
+def create_sample_conversations_and_messages(sender=None, **kwargs):
+    """
+    Crea conversaciones y mensajes de ejemplo entre todos los usuarios activos (no superusers).
+    - Una conversación por cada par de usuarios (A-B).
+    - Si la conversación ya existe, la reutiliza.
+    - Si la conversación no tiene mensajes, se crean varios mensajes simulando un chat.
+    """
+    from django.contrib.auth import get_user_model
+    from django.db.models import Count
+
+    try:
+        from .models import Conversation, Message  # ajusta si tus modelos están en otro módulo
+    except Exception as e:
+        print("[taskify_app] No se pudieron importar Conversation/Message:", e)
+        return {"created_conversations": 0, "created_messages": 0, "errors": 1}
+
+    User = get_user_model()
+
+    # Cogemos solo usuarios activos y no superusers (para no meter al admin en todo)
+    users = list(User.objects.filter(is_active=True, is_superuser=False))
+    if len(users) < 2:
+        print("[taskify_app] No hay suficientes usuarios para crear conversaciones.")
+        return {"created_conversations": 0, "created_messages": 0, "errors": 0}
+
+    created_conversations = 0
+    created_messages = 0
+    errors = 0
+
+    # Mensajes “plantilla” para simular chats
+    base_dialog = [
+        "{sender}: Hola {receiver}, ¿qué tal? Quería comentarte un tema sobre un servicio.",
+        "{receiver}: ¡Hola {sender}! Claro, dime, ¿en qué puedo ayudarte?",
+        "{sender}: Estoy interesado en contratar uno de tus servicios. ¿Tienes disponibilidad esta semana?",
+        "{receiver}: Sí, podría hacer un hueco el jueves por la tarde o el viernes por la mañana.",
+        "{sender}: Perfecto, el jueves por la tarde me va genial. Muchas gracias.",
+        "{receiver}: Genial, entonces lo agendamos. ¡Nos vemos pronto!",
+    ]
+
+    # Recorremos todas las parejas de usuarios (i < j)
+    for i in range(len(users)):
+        for j in range(i + 1, len(users)):
+            u1 = users[i]
+            u2 = users[j]
+
+            try:
+                # Buscar conversación que tenga SOLO a estos 2 participantes
+                conv = (
+                    Conversation.objects
+                    .filter(participants=u1)
+                    .filter(participants=u2)
+                    .annotate(num_participants=Count("participants"))
+                    .filter(num_participants=2)
+                    .first()
+                )
+
+                if not conv:
+                    conv = Conversation.objects.create()
+                    conv.participants.add(u1, u2)
+                    created_conversations += 1
+                    print(f"[taskify_app] Conversación creada entre {u1.username} y {u2.username}")
+                else:
+                    print(f"[taskify_app] Conversación ya existía entre {u1.username} y {u2.username}")
+
+                # Si ya tiene mensajes, no tocamos nada (idempotente)
+                if conv.messages.exists():
+                    continue
+
+                # Creamos mensajes alternando sender/receiver
+                # Índices pares: u1 habla; impares: u2 responde (o al revés)
+                for idx, template in enumerate(base_dialog):
+                    if idx % 2 == 0:
+                        sender = u1
+                        receiver = u2
+                    else:
+                        sender = u2
+                        receiver = u1
+
+                    text = template.format(sender=sender.first_name or sender.username,
+                                           receiver=receiver.first_name or receiver.username)
+
+                    Message.objects.create(
+                        conversation=conv,
+                        sender=sender,
+                        content=text,
+                    )
+                    created_messages += 1
+
+            except Exception as e:
+                print(f"[taskify_app] Error creando conversación/mensajes entre {u1.username} y {u2.username}: {e}")
+                errors += 1
+
+    print(
+        f"[taskify_app] Conversaciones de ejemplo -> "
+        f"creadas: {created_conversations}, mensajes creados: {created_messages}, errores: {errors}"
+    )
+    return {
+        "created_conversations": created_conversations,
+        "created_messages": created_messages,
+        "errors": errors,
+    }
+
+
+
 def create_default_categories(sender, **kwargs):
     from .models import Category
 
