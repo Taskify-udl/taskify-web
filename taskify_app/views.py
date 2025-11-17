@@ -12,6 +12,7 @@ from datetime import timedelta
 from django.contrib.auth import logout
 from django.urls import reverse
 import json
+import random
 
 from django.utils.dateparse import parse_datetime
 from django.views.decorators.http import require_POST
@@ -24,7 +25,13 @@ from .models import Service, ServiceImage, Contract, Review, UserProfile, Notifi
 
 @ensure_csrf_cookie
 def home(request):
-    categories = Category.objects.all()
+    # Seleccionar hasta 7 categorías aleatorias
+    all_categories = list(Category.objects.all())
+    if len(all_categories) > 6:
+        categories = random.sample(all_categories, 6)
+    else:
+        categories = all_categories
+
     featured_services = Service.objects.all()[:6]
 
     user_favorites = {}
