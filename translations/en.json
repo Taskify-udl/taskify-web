@@ -166,8 +166,8 @@
     "no_category": "No category"
   },
   "public_profile": {
-    "services_label": "Services ({count})",
-    "reviews_label": "Reviews ({count})",
+    "services_label": "Services",
+    "reviews_label": "Reviews",
     "about_header": "About Me",
     "no_bio": "This user hasn’t added a bio yet.",
     "no_services": "This user hasn’t published any services yet.",
@@ -181,7 +181,7 @@
     "search_placeholder": "Search services...",
     "explore_all": "Explore all services",
     "results_for": "Results for",
-    "results_count": "{count} service(s) found.",
+    "results_count": "service(s) found.",
     "no_image": "No image",
     "add_favorite": "Add to favourites",
     "remove_favorite": "Remove from favourites",
@@ -193,12 +193,12 @@
     "hire": "Hire",
     "contact": "Contact",
     "description": "Description",
-    "reviews_title": "Reviews and Ratings ({count})",
+    "reviews_title": "Reviews and Ratings",
     "no_reviews": "This service hasn’t received any reviews yet.",
     "from_label": "From",
     "no_image": "No image",
     "no_comment": "(No comment)",
-    "reviews_count": "{count} reviews"
+    "reviews_count": "reviews"
   },
   "verify_email": {
     "page_title": "Verify Email",
@@ -227,6 +227,7 @@
     "no_notifications_desc": "When you have activity on your account, it will appear here.",
     "pagination_prev": "« Previous",
     "pagination_next": "Next »",
-    "page_info": "Page {current} of {total}"
+    "page_label": "Page",
+    "page_of": "of"
   }
 }

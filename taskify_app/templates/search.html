@@ -46,7 +46,8 @@
         {% else %}
             <span class="block text-xl font-semibold" role="heading" aria-level="1">{% t "search.explore_all" %}</span>
         {% endif %}
-        <p class="text-gray-600 mt-1 text-sm">{% t "search.results_count" %}</p>
+        <!-- Cambiado: mostrar el número fuera de la traducción -->
+        <p class="text-gray-600 mt-1 text-sm">{{ results|length }} {% t "search.results_count" %}</p>
     </div>
 
     <!-- Resultados -->
