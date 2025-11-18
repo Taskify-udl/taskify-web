@@ -69,12 +69,16 @@ def set_language(request):
     return redirect(next_url)
 
 
+from django.db.models import Q, Avg, Count
+import json
+
 def search(request):
     """
     Vista para la página de resultados de búsqueda.
-    Filtra por término de búsqueda (q).
+    Filtra por término de búsqueda (q) o por categoría.
     """
     query = request.GET.get('q', '')
+    category_id = request.GET.get('category')  # e.g. "46"
 
     # Empezamos con todos los servicios y optimizamos la consulta
     results = Service.objects.all().select_related(
@@ -90,6 +94,10 @@ def search(request):
             Q(description__icontains=query)
         )
 
+    # 2. Filtrar por categoría (ManyToMany)
+    if category_id:
+        results = results.filter(categories__id=category_id)
+
     # Añadimos anotaciones para la media de estrellas (para mostrar en las tarjetas)
     results = results.annotate(
         average_rating=Avg('reviews__rating'),
@@ -104,11 +112,13 @@ def search(request):
 
     context = {
         'query': query,
+        'category_id': category_id,  # por si quieres marcar la categoría activa en la plantilla
         'results': results,
         'user_favorites_json': json.dumps(user_favorites),
     }
 
     return render(request, 'search.html', context)
+
 
 
 @login_required
