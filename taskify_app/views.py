@@ -17,6 +17,7 @@ import random
 from django.utils.dateparse import parse_datetime
 from django.views.decorators.http import require_POST
 
+from core.decorators import allowed_roles
 from .forms import RegisterForm
 from django.templatetags.static import static
 from .models import Service, ServiceImage, Contract, Review, Notification, CustomUser, EmailVerification, \
@@ -751,6 +752,7 @@ def get_new_messages(request, conversation_id):
 
 
 @login_required
+@allowed_roles(CustomUser.Roles.PROVIDER, CustomUser.Roles.FREELANCER, CustomUser.Roles.COMPANY_ADMIN)
 def my_services(request):
     if request.method == 'POST':
         name = request.POST.get('name')
