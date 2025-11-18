@@ -32,7 +32,7 @@
                                 </div>
 
                                 <div class="swiper service-swiper-{{ service.id }} h-full">
-                                    <div class="swiper-wrapper">
+                                    <div class="swiper-wrapper h-full">
                                         {% if service.images.all %}
                                             {% with service.images.first as image %}
                                                 <img src="{{ image.image.url }}" alt="{{ service.name }}"
@@ -50,6 +50,7 @@
                                         <div class="swiper-button-next opacity-0 group-hover:opacity-100 transition-opacity duration-300 !right-2 !text-white" style="filter: drop-shadow(0 0 3px rgba(0,0,0,0.7)); --swiper-navigation-size: 24px;"></div>
                                     {% endif %}
                                 </div>
+
                             </div>
                             <div class="p-3">
                                 <span class="block text-lg font-semibold text-gray-900 mb-1 line-clamp-1 group-hover:text-blue-600 transition-colors cursor-pointer service-link"
