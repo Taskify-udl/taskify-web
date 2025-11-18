@@ -32,7 +32,7 @@
                                 </div>
 
                                 <div class="swiper service-swiper-{{ service.id }} h-full">
-                                    <div class="swiper-wrapper">
+                                    <div class="swiper-wrapper h-full">
                                         {% if service.images.all %}
                                             {% with service.images.first as image %}
                                                 <img src="{{ image.image.url }}" alt="{{ service.name }}"
