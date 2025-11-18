@@ -48,28 +48,31 @@
                             </div>
                         </div>
 
-                        <div class="p-3">
-                            <span class="block text-lg font-semibold text-gray-900 mb-2 line-clamp-1 group-hover:text-blue-600 transition-colors cursor-pointer service-link"
-                                  data-url="{% url 'service_detail' service.id %}">
-                                {{ service.name }}
-                            </span>
+                        <div class="p-3 grid grid-rows-[auto_1fr_auto] h-[calc(100%-220px)]">
+                            <div>
+                                <span class="block text-lg font-semibold text-gray-900 mb-2 line-clamp-1 group-hover:text-blue-600 transition-colors cursor-pointer service-link"
+                                      data-url="{% url 'service_detail' service.id %}">
+                                    {{ service.name }}
+                                </span>
 
-                            <div class="flex flex-row justify-between">
-                                <div class="flex flex-wrap gap-1 mb-3">
-                                    {% for category in service.categories.all %}
-                                        <span class="text-xs px-2 py-1 border border-gray-300 bg-gray-50 rounded-full">
-                                        {{ category.name }}
-                                        </span>
-                                    {% empty %}
-                                        <span class="text-xs px-2 py-1 border border-gray-300 bg-gray-50 rounded-full">
-                                        Sin categoría
-                                        </span>
-                                    {% endfor %}
-                                </div>
-                                <div class="flex-shrink-0">
-                                    <span class="text-xl font-bold text-gray-800 mr-1">€{{ service.price|floatformat:0 }}</span>
+                                <div class="flex flex-row justify-between">
+                                    <div class="flex flex-wrap gap-1 mb-3">
+                                        {% for category in service.categories.all %}
+                                            <span class="text-xs px-2 py-1 border border-gray-300 bg-gray-50 rounded-full">
+                                            {{ category.name }}
+                                            </span>
+                                        {% empty %}
+                                            <span class="text-xs px-2 py-1 border border-gray-300 bg-gray-50 rounded-full">
+                                            Sin categoría
+                                            </span>
+                                        {% endfor %}
+                                    </div>
+                                    <div class="flex-shrink-0">
+                                        <span class="text-xl font-bold text-gray-800 mr-1">€{{ service.price|floatformat:0 }}</span>
+                                    </div>
                                 </div>
                             </div>
+                            <div></div>
 
                             <div class="grid grid-cols-2 gap-2">
                                 <button

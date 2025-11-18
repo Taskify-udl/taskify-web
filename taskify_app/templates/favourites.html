@@ -51,19 +51,22 @@
                                     {% endif %}
                                 </div>
                             </div>
-                            <div class="p-3">
-                                <span class="block text-lg font-semibold text-gray-900 mb-1 line-clamp-1 group-hover:text-blue-600 transition-colors cursor-pointer service-link"
-                                      data-url="{% url 'service_detail' service.id %}">
-                                    {{ service.name }}
-                                </span>
+                            <div class="p-3 grid grid-rows-[auto_1fr_auto] h-[calc(100%-220px)]">
+                                <div>
+                                    <span class="block text-lg font-semibold text-gray-900 mb-1 line-clamp-1 group-hover:text-blue-600 transition-colors cursor-pointer service-link"
+                                          data-url="{% url 'service_detail' service.id %}">
+                                        {{ service.name }}
+                                    </span>
 
-                                <span class="text-xs px-2 py-1 mr-1 mb-1 border border-gray-300 bg-gray-50 rounded-full">
-                                    {% if service.categories.all %}
-                                        {{ service.categories.first.name }}
-                                    {% else %}
-                                        {% t 'favourites.category_none' %}
-                                    {% endif %}
-                                </span>
+                                    <span class="text-xs px-2 py-1 mr-1 mb-1 border border-gray-300 bg-gray-50 rounded-full">
+                                        {% if service.categories.all %}
+                                            {{ service.categories.first.name }}
+                                        {% else %}
+                                            {% t 'favourites.category_none' %}
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div></div>
                                 <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
                                     <div class="flex-1 min-w-0">
                                         <div class="flex items-center gap-2 mb-1">
