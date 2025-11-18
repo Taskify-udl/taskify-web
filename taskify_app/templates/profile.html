@@ -29,9 +29,7 @@
                                 {{ user.get_full_name|default:user.username }}
                             </h2>
                             <p class="text-sm sm:text-base text-gray-600 mt-1">
-                                {% t "profile.provider_label" %}
                                 {% if user.profession %}
-                                    <span class="mx-2">·</span>
                                     <span class="text-gray-900">{{ user.profession }}</span>
                                 {% endif %}
                             </p>
