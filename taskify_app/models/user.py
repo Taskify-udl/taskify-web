@@ -35,6 +35,7 @@ class CustomUser(AbstractUser):
     location = models.CharField(max_length=120, blank=True)
     website = models.URLField(blank=True)
     avatar = models.ImageField(upload_to=avatar_upload_to, blank=True, null=True)
+    profession = models.CharField(max_length=100, blank=True)
 
     @property
     def avatar_url(self):
