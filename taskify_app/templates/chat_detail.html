@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load json_i18n %}
+{% block content %}
+<div class="w-[1024px] mx-auto py-4">
+
+  <div class="border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+
+    <div class="flex flex-col h-[75vh] bg-white rounded-t-xl overflow-hidden">
+
+      <div class="bg-white border-b border-gray-200 p-3 shadow-md z-10 flex gap-3 items-center space-x-2">
+        <a href="{% url 'chats' %}" class="p-1.5 rounded-full text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors duration-150" title="{% t 'chats.back_to_chats' %}">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+          </svg>
+        </a>
+        <span class="text-xl font-semibold text-gray-800">{{ otro_usuario.get_full_name|default:otro_usuario.username }}</span>
+      </div>
+
+      <div id="message-container" class="flex-1 overflow-y-auto p-4 md:p-6">
+        <div id="message-list" class="space-y-5">
+          {% for message in messages %}
+            {% if message.sender == request.user %}
+              <div class="flex justify-end">
+                <div class="max-w-md lg:max-w-lg">
+                  <div class="bg-gray-100 rounded-lg px-3 py-2 shadow-sm">
+                    <p class="text-sm text-gray-800 mb-1">{{ message.content }}</p>
+                  </div>
+                  <span class="text-xs text-gray-400 block text-right mt-1 px-1">
+                    {{ message.timestamp|time:"H:i" }}
+                  </span>
+                </div>
+              </div>
+            {% else %}
+              <div class="flex justify-start">
+                <div class="max-w-md lg:max-w-lg">
+                  <div class="bg-gray-100 rounded-lg px-3 py-2 shadow-sm">
+                    <p class="text-sm text-gray-800 mb-1">{{ message.content }}</p>
+                  </div>
+                  <span class="text-xs text-gray-400 block text-left mt-1 px-1">
+                    {{ message.timestamp|time:"H:i" }}
+                  </span>
+                </div>
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+
+    </div> <div class="bg-white p-3 rounded-b-xl shadow-inner">
+      <form id="chat-form" class="grid grid-cols-[1fr_auto] items-center gap-2" method="POST">
+        {% csrf_token %}
+
+        <input
+          type="text"
+          name="content" id="message-input"
+          placeholder="{% t 'chats.placeholder_message' %}"
+          class="py-2 px-4 bg-gray-100 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent text-sm"
+          autocomplete="off"
+        />
+
+        <div id="submit-button" class="appearance-none h-10 w-10 bg-[#1c1b2b] text-white rounded-full hover:shadow-[0_2px_8px_rgba(0,0,0,0.3)] focus:outline-none cursor-pointer">
+            <span class="flex items-center justify-center h-full w-full">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.875L5.999 12zm0 0h7.5" />
+              </svg>
+            </span>
+        </div>
+      </form>
+    </div>
+
+  </div> </div>
+
+<script>
+  const CONVERSATION_ID = {{ conversation_id|default:0 }};
+  const CURRENT_USER_ID = {{ request.user.id }};
+  let lastMessageTimestamp = '{{ messages.last.timestamp|date:"c"|default:"" }}';
+</script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', (event) => {
+  const messageInput = document.getElementById('message-input');
+  const chatForm = document.getElementById('chat-form');
+  const submitButton = document.getElementById('submit-button');
+
+  const messageContainer = document.getElementById('message-container');
+  const messageList = document.getElementById('message-list');
+
+  if (messageInput && chatForm && submitButton) {
+
+    chatForm.addEventListener('submit', function(e) {
+      if (messageInput.value.trim().length === 0) {
+        e.preventDefault();
+        console.warn("{% t 'chats.warn_empty_message' %}");
+      }
+    });
+
+    messageInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        submitButton.click();
+      }
+    });
+
+    submitButton.addEventListener('click', function() {
+      chatForm.requestSubmit();
+    });
+  }
+
+  function scrollToBottom() {
+    if (messageContainer) {
+      messageContainer.scrollTop = messageContainer.scrollHeight;
+    }
+  }
+
+  function createMessageHTML(message) {
+    const isSender = message.sender_id === CURRENT_USER_ID;
+    const flexClass = isSender ? 'flex justify-end' : 'flex justify-start';
+    const textAlign = isSender ? 'text-right' : 'text-left';
+
+    let timeString = '';
+    try {
+      const messageDate = new Date(message.timestamp);
+      timeString = messageDate.toLocaleTimeString(navigator.language || 'es-ES', { hour: '2-digit', minute: '2-digit' });
+    } catch(e) {
+      console.error("{% t 'chats.err_invalid_timestamp' %}", message.timestamp);
+    }
+
+    return `
+      <div class="${flexClass}">
+        <div class="max-w-md lg:max-w-lg">
+          <div class="bg-gray-100 rounded-lg px-3 py-2 shadow-sm">
+            <p class="text-sm text-gray-800 mb-1">${message.content}</p>
+          </div>
+          <span class="text-xs text-gray-400 block ${textAlign} mt-1 px-1">
+            ${timeString}
+          </span>
+        </div>
+      </div>
+    `;
+  }
+
+  async function fetchNewMessages() {
+    if (!CONVERSATION_ID || !messageList) return;
+
+    try {
+      const url = `/api/chat/${CONVERSATION_ID}/new-messages/?since=${encodeURIComponent(lastMessageTimestamp)}`;
+
+      const response = await fetch(url);
+      if (!response.ok) {
+        console.error("{% t 'chats.err_fetch_new' %}", response.statusText);
+        return;
+      }
+
+      const newMessages = await response.json();
+
+      if (newMessages.length > 0) {
+        let addedMessagesHTML = '';
+        newMessages.forEach(message => {
+          addedMessagesHTML += createMessageHTML(message);
+        });
+
+        messageList.innerHTML += addedMessagesHTML;
+
+        lastMessageTimestamp = newMessages[newMessages.length - 1].timestamp;
+
+        scrollToBottom();
+      }
+
+    } catch (error) {
+      console.error("{% t 'chats.err_fetch' %}", error);
+    }
+  }
+
+  setInterval(fetchNewMessages, 3000); // Pregunta cada 3 segundos
+
+  scrollToBottom();
+
+});
+</script>
+
+{% endblock %}

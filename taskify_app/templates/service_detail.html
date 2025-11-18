@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load json_i18n %}
+
+{% block content %}
+    <link href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" rel="stylesheet"/>
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+    <div class="w-[1024px] mx-auto py-4 space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+
+            <div class="md:col-span-2">
+
+                <div class="h-[400px] w-full relative rounded-xl overflow-hidden border border-gray-200 group">
+                    <div class="swiper service-swiper h-full"
+                         style="--swiper-navigation-color: #ffffff;
+                    --swiper-navigation-size: 32px;
+                    filter: drop-shadow(0 0 3px rgba(0,0,0,0.7));">
+
+                        <div class="swiper-wrapper">
+                            {% for img in service.images.all %}
+                                <div class="swiper-slide h-full bg-cover bg-center"
+                                     style="background-image: url('{{ img.image.url }}');">
+                                </div>
+                            {% empty %}
+                                <div class="swiper-slide h-full bg-cover bg-center flex items-center justify-center bg-gray-100">
+                                    <span class="text-gray-500">Sin imagen</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        {% if service.images.count > 1 %}
+                            <div class="swiper-button-prev opacity-0 group-hover:opacity-100 transition-opacity duration-300 !left-2"></div>
+                            <div class="swiper-button-next opacity-0 group-hover:opacity-100 transition-opacity duration-300 !right-2"></div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="flex flex-col">
+                    <span class="text-3xl font-bold text-gray-900 mt-4">{{ service.name }}</span>
+                    <div class="flex items-center gap-2 mt-2 text-gray-700">
+                        <svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg"
+                             xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 47.94 47.94"
+                             style="enable-background:new 0 0 47.94 47.94;" xml:space="preserve"
+                             class="!h-[20px] !w-[20px]">
+            <path style="fill:#ED8A19;" d="M26.285,2.486l5.407,10.956c0.376,0.762,1.103,1.29,1.944,1.412l12.091,1.757
+                c2.118,0.308,2.963,2.91,1.431,4.403l-8.749,8.528c-0.608,0.593-0.886,1.448-0.742,2.285l2.065,12.042
+                c0.362,2.109-1.852,3.717-3.746,2.722l-10.814-5.685c-0.752-0.395-1.651-0.395-2.403,0l-10.814,5.685
+                c-1.894,0.996-4.108-0.613-3.746-2.722l2.065-12.042c0.144-0.837-0.134-1.692-0.742-2.285l-8.749-8.528
+                c-1.532-1.494-0.687-4.096,1.431-4.403l12.091-1.757c0.841-0.122,1.568-0.65,1.944-1.412l5.407-10.956
+                C22.602,0.567,25.338,0.567,26.285,2.486z"></path>
+          </svg>
+                        <span class="font-semibold text-gray-800">{{ average_rating|floatformat:1 }}</span>
+                        <span class="text-gray-600">({{ reviews_count }} {% t "service.reviews_count" %})</span>
+                    </div>
+                </div>
+
+                <div class="flex flex-row flex-wrap gap-2 mt-2 mb-3">
+                    {% for category in service.categories.all %}
+                        <span class="text-sm px-3 py-1 border border-gray-300 bg-gray-50 rounded-full">
+            {{ category.name }}
+          </span>
+                    {% empty %}
+                        <span class="text-sm px-3 py-1 border border-gray-300 bg-gray-100 rounded-full">
+            Sin categoría
+          </span>
+                    {% endfor %}
+                </div>
+
+                <div class="flex flex-col border-t border-gray-200 mt-2">
+                    <span class="text-xl font-semibold text-gray-900 my-2">{% t "service.description" %}</span>
+                    <p class="text-gray-700">
+                        {% if service.description %}
+                            {{ service.description|linebreaksbr }}
+                        {% else %}
+                            {% t "service.no_image" %}
+                        {% endif %}
+                    </p>
+                </div>
+
+                <div class="flex flex-col border-t border-gray-200">
+                    <span class="text-xl font-semibold text-gray-900 my-2">{% t "service.reviews_title" %} ({{ reviews_count }})</span>
+                    <div class="flex flex-col gap-2">
+                        {% for review in reviews %}
+                            <div class="border shadow-sm p-3 rounded-xl">
+                                <div class="flex justify-between mb-3">
+                                    <div class="flex items-center gap-3">
+                                        <img class="w-10 h-10 border rounded-full object-cover"
+                                             src="{{ review.user.avatar_url }}"
+                                             alt="Avatar de {{ review.user.username }}">
+                                        <div>
+                                            <span class="font-semibold text-gray-800">{{ review.user.get_full_name|default:review.user.username }}</span>
+                                            <div class="flex items-center">
+                                                {% for i in "12345" %}
+                                                    <svg class="w-4 h-4 {% if forloop.counter <= review.rating %}text-yellow-400{% else %}text-gray-300{% endif %}"
+                                                         xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                                                         fill="currentColor">
+                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 0 0 .95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 0 0-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 0 0-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 0 0-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 0 0 .951-.69l1.07-3.292Z"/>
+                                                    </svg>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <span class="text-sm text-gray-500">{{ review.created_at|date:"Y-m-d" }}</span>
+                                </div>
+                                <p class="m-0 text-gray-700">
+                                    {% if review.comment %}
+                                        {{ review.comment }}
+                                    {% else %}
+                                        {% t "service.no_comment" %}
+                                    {% endif %}
+
+                                </p>
+                            </div>
+                        {% empty %}
+                            <div class="text-left py-6 text-gray-500">
+                                <p>{% t "service.no_reviews" %}</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="md:col-span-1 flex flex-col gap-3">
+
+                <div class="border rounded-xl shadow-sm p-3">
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-xl font-medium text-gray-700">{% t "service.price" %}</span>
+                        <span class="text-2xl font-bold text-gray-900">€{{ service.price|floatformat:0 }}</span>
+                    </div>
+
+                    {% if request.user == service.provider %}
+                    {% elif request.user.is_authenticated %}
+                        <div class="w-full !py-3 !px-5 flex items-center justify-center bg-[#1c1b2b] text-white font-semibold rounded-xl hover:bg-opacity-90 transition-all shadow-sm disabled:opacity-50 my-2 hover:cursor-pointer">
+                            {% t "service.hire" %}
+                        </div>
+                        <a href="{% url 'start_chat' service.id %}"
+                           class="block w-full text-center !py-2.5 !px-5 bg-white text-gray-800 font-semibold border border-gray-300 rounded-xl hover:bg-gray-50 transition-all shadow-sm">
+                            {% t "service.contact" %}
+                        </a>
+                    {% else %}
+                        <a href="{% url 'login' %}?next={{ request.path }}">
+                            <div class="w-full !py-3 !px-5 flex items-center justify-center bg-[#1c1b2b] text-white font-semibold rounded-xl hover:bg-opacity-90 transition-all shadow-sm disabled:opacity-50 my-2 hover:cursor-pointer">
+                                {% t "service.hire" %}
+                            </div>
+                        </a>
+                        <a href="{% url 'login' %}?next={{ request.path }}"
+                           class="block w-full text-center !py-2.5 !px-5 bg-white text-gray-800 font-semibold border border-gray-300 rounded-xl hover:bg-gray-50 transition-all shadow-sm">
+                            {% t "service.contact" %}
+                        </a>
+                    {% endif %}
+                </div>
+
+                <div class="md:block border rounded-xl shadow-sm p-3 !pb-2">
+                    <a href="{% url 'public_profile' service.provider.username %}"
+                       class="block rounded-lg hover:bg-gray-50 transition-colors">
+                        <div class="flex flex-row items-center gap-2">
+                            <img class="w-14 h-14 rounded-full object-cover border"
+                                 src="{{ service.provider.avatar_url }}"
+                                 alt="Avatar de {{ service.provider.username }}">
+                            <div>
+                                <span class="text-lg font-bold text-gray-900">{{ service.provider.get_full_name|default:service.provider.username }}</span>
+                                <p class="text-md text-gray-600 m-0">{{ service.provider.profile.profession|default:"Profesional" }}</p>
+                            </div>
+                        </div>
+                    </a>
+                    <div class="border-t border-gray-100 mt-2 pt-2 text-sm text-gray-600">
+                        <div class="flex items-center gap-2 ml-1 ">
+                            <svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg"
+                                 xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 47.94 47.94"
+                                 style="enable-background:new 0 0 47.94 47.94;" xml:space="preserve"
+                                 class="!h-[20px] !w-[20px]">
+              <path style="fill:#ED8A19;" d="M26.285,2.486l5.407,10.956c0.376,0.762,1.103,1.29,1.944,1.412l12.091,1.757
+                  c2.118,0.308,2.963,2.91,1.431,4.403l-8.749,8.528c-0.608,0.593-0.886,1.448-0.742,2.285l2.065,12.042
+                  c0.362,2.109-1.852,3.717-3.746,2.722l-10.814-5.685c-0.752-0.395-1.651-0.395-2.403,0l-10.814,5.685
+                  c-1.894,0.996-4.108-0.613-3.746-2.722l2.065-12.042c0.144-0.837-0.134-1.692-0.742-2.285l-8.749-8.528
+                  c-1.532-1.494-0.687-4.096,1.431-4.403l12.091-1.757c0.841-0.122,1.568-0.65,1.944-1.412l5.407-10.956
+                  C22.602,0.567,25.338,0.567,26.285,2.486z"></path>
+            </svg>
+                            <span class="font-semibold text-gray-800">{{ provider_avg_rating|floatformat:1 }}</span>
+                            <span class="text-gray-500">·</span>
+                            <span class="text-gray-600">{{ provider_reviews_count }} servicios completados</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Inicializar Swiper
+            new Swiper('.service-swiper', {
+                navigation: {
+                    nextEl: '.swiper-button-next',
+                    prevEl: '.swiper-button-prev',
+                },
+                loop: true,
+                autoplay: {
+                    delay: 5000,
+                    disableOnInteraction: false,
+                },
+            });
+        });
+    </script>
+{% endblock %}

@@ -1,80 +1,198 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}Verify Email{% endblock %}
+{% load json_i18n %}
+{% block title %}{% t "verify_email.page_title" %}{% endblock %}
 
 {% block content %}
-<section class="vh-100 d-flex align-items-center bg-light">
-  <div class="container">
-    <div class="row justify-content-center">
-      <div class="col-md-6 col-lg-5">
-        <div class="card shadow p-4 rounded-4">
-          <div class="text-center mb-4">
-            <img src="{% static 'images/logo.png' %}" style="width:120px;">
-            <h4 class="mt-3">Verify your email</h4>
-            <p class="text-muted">We have sent a code to:</p>
-            <p class="fw-bold">{{ email }}</p>
-          </div>
+<!--
+  CAMBIO:
+  He quitado 'py-16' y 'sm:py-24' de esta línea para permitir
+  que 'items-center' y 'min-h-screen' centren la tarjeta verticalmente.
+-->
+<section class="relative flex min-h-screen items-center justify-center bg-white px-4 py-16 sm:py-24">
+    <div class="min-h-screen flex items-center justify-center">
+        <div class="relative w-full max-w-md mx-auto">
 
-          <form method="post" action="{% url 'verify_email' %}">
-            {% csrf_token %}
-            <input type="text"
-                   name="verification_code"
-                   maxlength="6"
-                   pattern="[0-9]{6}"
-                   required
-                   class="form-control text-center fs-4 {% if error_message %}is-invalid{% endif %}"
-                   placeholder="000000">
-            {% if error_message %}
-              <div class="invalid-feedback text-center">{{ error_message }}</div>
-            {% endif %}
-            <div class="w-100 mt-4 justify-content-center d-flex">
-              <button type="submit" class="btn btn-primary btn-lg">Verify</button>
+            <!--
+              Esta es la tarjeta principal, con los mismos estilos que signup.html
+              (rounded-3xl, shadow-xl, ring-1, etc.)
+            -->
+            <div class="px-3 rounded-3xl bg-white px-18 py-20 mt-8 shadow-xl ring-1 ring-black/10 sm:px-16 sm:py-20">
+                <div class="mb-10 text-center pt-4">
+                    <h2 class="text-xl font-semibold text-black">{% t "verify_email.header" %}</h2>
+                    <p id="step-description" class="mb-2 mt-1 text-sm text-black/60">{% t "verify_email.sent_to" %}</p>
+                    <p class="font-medium text-black">{{ email }}</p>
+                </div>
+
+                <!-- Notificación (en lugar de alert()) -->
+                <div id="notification" class="hidden p-3 mb-4 rounded-lg text-sm" role="alert">
+                  <span id="notification-message"></span>
+                </div>
+
+                <form method="post" action="{% url 'verify_email' %}" id="verify-form">
+                    {% csrf_token %}
+                    <div class="space-y-6">
+
+                        <div class="space-y-2">
+                            <label for="verification_code" class="ml-1 block text-sm font-medium text-black text-center">{% t "verify_email.verification_code_label" %}</label>
+                            <input
+                                type="text"
+                                name="verification_code"
+                                id="verification_code"
+                                maxlength="6"
+                                pattern="[0-9]{6}"
+                                required
+                                class="px-2 py-1 !rounded-xl bg-gray-50 border text-gray-900 focus:ring-blue-500 focus:border-blue-500 block w-full text-sm border-gray-300 p-2.5
+                                       text-center text-2xl font-medium tracking-[0.3em]
+                                       {% if error_message %}border-red-500 text-red-900{% endif %}"
+                                placeholder="{% t 'verify_email.placeholder_code' %}"
+                            />
+                        </div>
+                        {% if error_message %}
+                            <p class="text-sm text-red-500 -mt-3 text-center">{{ error_message }}</p>
+                        {% endif %}
+
+                        <!--
+                          Este es el DIV que actúa como botón de submit,
+                          con los mismos estilos que signup.html
+                        -->
+                        <div
+                            id="btn-submit-verify"
+                            class="mt-4 w-full rounded-xl bg-black py-3 text-sm font-semibold text-white text-center cursor-pointer select-none
+                                   transition-transform duration-150 hover:-translate-y-0.5 hover:bg-black/80 focus-visible:outline-none
+                                   flex items-center justify-center"
+                            role="button"
+                            tabindex="0"
+                        >
+                            {% t "verify_email.verify_button" %}
+                        </div>
+                    </div>
+
+                    <!--
+                      Este es el link para reenviar, con los mismos estilos que el de "Iniciar Sesión"
+                      en signup.html. Hecho con un SPAN en lugar de un botón.
+                    -->
+                    <div class="mt-10 border-black/10 pt-4 pb-2 text-center text-sm text-black/60">
+                        <p>
+                            {% t "verify_email.didnt_receive" %}
+                            <span
+                                id="resendBtn"
+                                class="font-medium text-black hover:text-black/60 cursor-pointer select-none"
+                                role="button"
+                                tabindex="0"
+                            >
+                                {% t "verify_email.resend_button" %}
+                            </span>
+                            <span id="resendLoader" class="hidden font-medium text-black/60">
+                                {% t "verify_email.resending" %}
+                            </span>
+                        </p>
+                    </div>
+
+                </form>
             </div>
-          </form>
-
-          <div class="text-center mt-3">
-            <p class="text-muted">Didn't receive the code?</p>
-            <button id="resendBtn" class="btn btn-link p-0">Resend code</button>
-          </div>
         </div>
-      </div>
     </div>
-  </div>
 </section>
 
-<script>
-const btn = document.getElementById('resendBtn');
-btn.addEventListener('click', () => {
-  btn.disabled = true;
-  btn.textContent = 'Sending...';
 
-  fetch("{% url 'resend_verification_code' %}", {
-    method: 'POST',
-    headers: {
-      'X-CSRFToken': '{{ csrf_token }}',
-      'Content-Type': 'application/json',
-    },
-  })
-  .then(r => r.json())
-  .then(d => {
-    if (d.success) {
-      alert('Code resent. Please check your email.');
-      btn.textContent = 'Code sent';
-      setTimeout(() => {
-        btn.disabled = false;
-        btn.textContent = 'Resend code';
-      }, 30000);
-    } else {
-      alert('Error: ' + d.error);
-      btn.disabled = false;
-      btn.textContent = 'Resend code';
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const TR_RESENDING = "{% t 'verify_email.resending' %}";
+  const TR_CODE_RESENT = "{% t 'verify_email.code_resent' %}";
+  const TR_CODE_SENT = "{% t 'verify_email.code_sent' %}";
+  const TR_ERR_PREFIX = "{% t 'verify_email.err_prefix' %}";
+  const TR_ERR_CONNECTION = "{% t 'verify_email.err_connection' %}";
+
+  // --- Lógica para los DIVs como botones (copiada de signup.html) ---
+  function setupDivAsButton(divElement, callback) {
+    if (divElement) {
+        divElement.addEventListener('click', callback);
+        divElement.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                callback();
+            }
+        });
     }
-  })
-  .catch(() => {
-    alert('Connection error.');
-    btn.disabled = false;
-    btn.textContent = 'Resend code';
+  }
+
+  // --- Lógica para el botón de Submit (DIV) ---
+  const form = document.getElementById('verify-form');
+  const submitBtn = document.getElementById('btn-submit-verify');
+  setupDivAsButton(submitBtn, () => {
+    if (form) {
+      form.submit();
+    }
   });
+
+  // --- Lógica para el botón de Reenviar (SPAN) ---
+  const resendBtn = document.getElementById('resendBtn');
+  const resendLoader = document.getElementById('resendLoader');
+  let isResending = false;
+
+  // --- Lógica de Notificación (para no usar alert()) ---
+  const notification = document.getElementById('notification');
+  const notificationMessage = document.getElementById('notification-message');
+
+  function showNotification(message, isError = false) {
+    notificationMessage.textContent = message;
+    notification.classList.remove('hidden', 'bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700');
+    if (isError) {
+      notification.classList.add('bg-red-100', 'text-red-700');
+    } else {
+      notification.classList.add('bg-green-100', 'text-green-700');
+    }
+    // Ocultar después de 5 segundos
+    setTimeout(() => {
+      notification.classList.add('hidden');
+    }, 5000);
+  }
+
+  // --- Función de Reenviar ---
+  function handleResend() {
+    if (isResending) return;
+    isResending = true;
+
+    resendBtn.classList.add('hidden');
+    resendLoader.classList.remove('hidden');
+    resendLoader.textContent = TR_RESENDING;
+
+    fetch("{% url 'resend_verification_code' %}", {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+        'Content-Type': 'application/json',
+      },
+    })
+    .then(r => r.json())
+    .then(d => {
+      if (d.success) {
+        showNotification(TR_CODE_RESENT);
+        resendLoader.textContent = TR_CODE_SENT;
+        setTimeout(() => {
+          resendLoader.classList.add('hidden');
+          resendBtn.classList.remove('hidden');
+          isResending = false;
+        }, 30000); // 30 segundos de espera
+      } else {
+        showNotification(TR_ERR_PREFIX + (d.error || ''), true);
+        resendLoader.classList.add('hidden');
+        resendBtn.classList.remove('hidden');
+        isResending = false;
+      }
+    })
+    .catch(() => {
+      showNotification(TR_ERR_CONNECTION, true);
+      resendLoader.classList.add('hidden');
+      resendBtn.classList.remove('hidden');
+      isResending = false;
+    });
+  }
+
+  setupDivAsButton(resendBtn, handleResend);
+
 });
 </script>
+
 {% endblock %}

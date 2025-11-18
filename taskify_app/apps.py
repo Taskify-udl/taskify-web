@@ -1,4 +1,6 @@
 from django.apps import AppConfig
+from django.db.models.signals import post_migrate
+
 
 
 class TaskifyAppConfig(AppConfig):
@@ -6,4 +8,33 @@ class TaskifyAppConfig(AppConfig):
     name = 'taskify_app'
 
     def ready(self):
-        import taskify_app.signals  # noqa
+        # Conectar el handler después de que se hayan aplicado las migraciones
+        from . import signals
+
+        post_migrate.connect(
+            signals.create_default_categories,
+            sender=self,
+            dispatch_uid="taskify_create_default_categories",
+        )
+        post_migrate.connect(
+            signals.create_default_users,
+            sender=self,
+            dispatch_uid="taskify_create_default_users",
+        )
+        post_migrate.connect(
+            signals.create_default_services,
+            sender=self,
+            dispatch_uid="taskify_create_default_services",
+        )
+        post_migrate.connect(
+            signals.create_sample_conversations_and_messages,
+            sender=self,
+            dispatch_uid="create_sample_conversations_and_messages",
+        )
+        post_migrate.connect(
+            signals.create_random_favorites,
+            sender=self,
+            dispatch_uid="create_random_favorites",
+        )
+
+

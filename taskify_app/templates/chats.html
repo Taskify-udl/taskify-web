@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load json_i18n %}
+{% block content %}
+
+<div class="w-[1024px] mx-auto">
+  <div class="my-4">
+              <span class="text-2xl font-semibold text-gray-900 mb-6 block">{% t "chats.header" %}</span>
+
+  </div>
+
+  <div>
+    <div class="flex flex-col">
+
+      {% for conv in conversations %}
+
+        <a href="{% url 'chat_detail' conv.conversation_obj.id %}" class="flex items-center pt-2 px-3 border mb-2 rounded-xl !no-underline hover:bg-gray-50" >
+
+          <div class="flex-shrink-0 mr-4">
+            <span class="inline-flex items-center justify-center h-12 w-12 rounded-full bg-gray-200">
+               <img class="h-12 w-12 rounded-full object-cover" src="{{ conv.otro_usuario.avatar_url }}" alt="">
+            </span>
+          </div>
+
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-gray-900 truncate my-2 ">
+              {{ conv.otro_usuario.get_full_name|default:conv.otro_usuario.username }}
+            </p>
+            {% if conv.ultimo_mensaje %}
+            <p class="text-sm text-gray-500 truncate mt-1">
+              {{ conv.ultimo_mensaje.content }}
+            </p>
+            {% endif %}
+          </div>
+
+          <div class="flex-shrink-0 flex flex-col items-end ml-4">
+            {% if conv.ultimo_mensaje %}
+            <span class="text-xs text-gray-400 mb-2">
+              {{ conv.ultimo_mensaje.timestamp|date:"d M" }}
+            </span>
+            {% endif %}
+
+            {% if conv.no_leidos > 0 %}
+            <span class="m-1 inline-flex items-center justify-center h-5 w-5 rounded-full bg-[#1c1b2b] text-white text-xs font-bold">
+              {{ conv.no_leidos }}
+            </span>
+            {% endif %}
+          </div>
+        </a>
+      {% empty %}
+        <div>
+          <p>{% t "chats.no_conversations" %}</p>
+        </div>
+      {% endfor %} </div>
+  </div>
+</div>
+{% endblock %}

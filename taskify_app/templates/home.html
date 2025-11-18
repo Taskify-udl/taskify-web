@@ -1,172 +1,298 @@
 {% extends "base.html" %}
+{% load json_i18n %}
 
 {% block content %}
-<div class="container">
-    <section class="hero-section">
-        <div class="hero-content row align-items-center">
-            <div class="col-lg-9">
-                <h1 class="hero-title">Connect with local experts. Bring your ideas to life.</h1>
-                <p class="hero-subtitle">Find trusted professionals for any service you can imagine, right in your neighborhood.</p>
-            </div>
-            <div class="col-lg-3">
-                <ul class="hero-stats">
-                    <li class="hero-stat-item">
-                        <strong class="stat-number">5k+</strong>
-                        <span class="stat-label">Verified Professionals</span>
-                    </li>
-                    <li class="hero-stat-item">
-                        <strong class="stat-number">12k+</strong>
-                        <span class="stat-label">Projects Completed</span>
-                    </li>
-                    <li class="hero-stat-item">
-                        <strong class="stat-number">98%</strong>
-                        <span class="stat-label">Customer Satisfaction</span>
-                    </li>
-                </ul>
+    <link href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" rel="stylesheet"/>
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+    <div class="min-h-screen bg-gray-50">
+        <div class="text-white py-12 px-4 pb-20" style="background: linear-gradient(135deg, #030214 0%, #155af4 100%);">
+            <div class="max-w-2xl mx-auto">
+                <div class="text-center mb-8">
+                    <h1 class="mb-3 text-3xl font-bold text-white">{% t "home.hero_title" %}</h1>
+                    <p class="text-base text-white/90">
+                        {% t "home.hero_sub" %}
+                    </p>
+                </div>
+
+                <form action="{% url 'search' %}" method="get" class="!my-4 w-[500px] justify-self-center" id="searchForm">
+                    <div class="relative">
+                        <input
+                            type="text"
+                            name="q"
+                            value="{{ query|default:'' }}"
+                            placeholder="{% t 'home.search_placeholder' %}"
+                            class="w-full pl-3 pr-5 py-2 text-base text-gray-900 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+                        >
+
+                        <div id="searchButton"
+                             role="button"
+                             tabindex="0"
+                             class="absolute right-2 top-1/2 -translate-y-1/2 !p-1.5 text-black rounded-xl cursor-pointer hover:bg-gray-200 focus:ring-2 focus:ring-blue-500 transition-colors"
+                             title="{% t 'home.search_button_title' %}">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                 stroke="currentColor" class="w-5 h-5">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
-    </section>
 
-    <div class="content-box">
-        <section class="services-container">
-            <div class="section-header">
-                <h2 class="section-title">Explore Our Services</h2>
-            </div>
-            
-            <div class="categories-wrapper">
-                <button class="category-chip active" data-category="all">View all</button>
-                <button class="category-chip" data-category="plumbing">Plumbing</button>
-                <button class="category-chip" data-category="electrical">Electrical</button>
-                <button class="category-chip" data-category="carpentry">Carpentry</button>
-                <button class="category-chip" data-category="cleaning">Cleaning</button>
-                <button class="category-chip" data-category="painting">Painting</button>
-            </div>
-            
-            <div class="services-wrapper">
-                <div class="service-card-wrapper" data-category="plumbing">
-                    <div class="service-card"><div class="service-image-wrapper"><img src="/static/images/plumber2.jpg" alt="Service" class="service-img"></div><div class="service-details"><span class="service-category">Plumbing</span><h3 class="service-title">Leaky Faucet Repair</h3></div></div>
+        <div class="max-w-7xl mx-auto px-4 py-12">
+            <section class="mb-12">
+                <h2 class="mb-6 text-2xl font-semibold text-gray-900">{% t "home.categories_header" %}</h2>
+                <div class="pb-4">
+                    <div class="overflow-x-auto whitespace-nowrap py-2 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent">
+                        {% if categories %}
+                            {% for category in categories %}
+                                <a href="{% url 'search' %}?category={{ category.id }}"
+                                   class="inline-flex flex-col items-center justify-center p-3 bg-white rounded-xl shadow-sm hover:shadow-md transform hover:scale-105 hover:-translate-y-1 transition-transform duration-200 ease-out text-center !no-underline hover:!no-underline focus:!no-underline active:!no-underline !text-black hover:!text-black visited:!text-black focus:!text-black active:!text-black min-w-[140px] mx-2 focus:outline-none focus:ring-0">
+                                    <i class="{{ category.icon }} text-2xl"></i>
+                                    <span class="mt-1 text-sm !text-black truncate block">{{ category.name }}</span>
+                                </a>
+                            {% endfor %}
+                        {% else %}
+                            <p class="inline-block align-middle text-gray-500 ml-2">{% t "home.no_categories" %}</p>
+
+                        {% endif %}
+                    </div>
                 </div>
-                <div class="service-card-wrapper" data-category="electrical">
-                    <div class="service-card"><div class="service-image-wrapper"><img src="/static/images/electrician2.jpg" alt="Service" class="service-img"></div><div class="service-details"><span class="service-category">Electrical</span><h3 class="service-title">Light Fixture Installation</h3></div></div>
-                </div>
-                <div class="service-card-wrapper" data-category="carpentry">
-                    <div class="service-card"><div class="service-image-wrapper"><img src="/static/images/carpenter.jpg" alt="Service" class="service-img"></div><div class="service-details"><span class="service-category">Carpentry</span><h3 class="service-title">Custom Shelving</h3></div></div>
-                </div>
-                <div class="service-card-wrapper" data-category="plumbing">
-                    <div class="service-card"><div class="service-image-wrapper"><img src="/static/images/plumber1.jpg" alt="Service" class="service-img"></div><div class="service-details"><span class="service-category">Plumbing</span><h3 class="service-title">Clogged Drain Service</h3></div></div>
-                </div>
-                <div class="service-card-wrapper" data-category="painting">
-                    <div class="service-card"><div class="service-image-wrapper"><img src="/static/images/painter.jpeg" alt="Service" class="service-img"></div><div class="service-details"><span class="service-category">Painting</span><h3 class="service-title">Interior Room Painting</h3></div></div>
-                </div>
-                <div class="service-card-wrapper" data-category="electrical">
-                    <div class="service-card"><div class="service-image-wrapper"><img src="/static/images/electrician1.jpeg" alt="Service" class="service-img"></div><div class="service-details"><span class="service-category">Electrical</span><h3 class="service-title">Outlet Replacement</h3></div></div>
-                </div>
-            </div>
-        </section>
+            </section>
+
+            <section>
+                <h2 class="mb-6 text-2xl font-semibold text-gray-900">{% t "home.featured_header" %}</h2>
+                {% if featured_services %}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {% for service in featured_services %}
+                            <article class="rounded-xl border border-gray-200 group shadow-sm bg-white overflow-hidden">
+
+                                <div class="h-[220px] relative rounded-t-lg overflow-hidden cursor-pointer"
+                                     onclick="window.location.href='{% url 'service_detail' service.id %}'" role="link">
+
+                                    {% if request.user.is_authenticated %}
+                                    <div
+                                        role="button"
+                                        tabindex="0"
+                                        class="flex align-items favorite-btn absolute top-2 right-2 z-10 p-2 bg-white/80 rounded-full cursor-pointer backdrop-blur-sm
+                                               transition-colors duration-200 hover:bg-white"
+                                        data-service-id="{{ service.id }}"
+                                        title="{% t 'home.add_favorite' %}"
+                                        style="outline: none !important; box-shadow: none !important;">
+                                        <i class="fa-regular text-gray-700 hover:text-red-500 fa-heart text-xl"
+                                           aria-hidden="true"></i>
+                                    </div>
+                                    {% endif %}
+
+                                    <div class="swiper service-swiper-{{ service.id }} h-full">
+                                        <div class="swiper-wrapper">
+                                            {% for img in service.images.all %}
+                                                <div class="swiper-slide h-full bg-cover bg-center"
+                                                     style="background-image: url('{{ img.image.url }}');"></div>
+                                            {% empty %}
+                                                <div class="swiper-slide h-full bg-cover bg-center flex items-center justify-center bg-gray-100">
+                                                    <span class="text-gray-500">{% t "home.no_image" %}</span>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+
+                                        {% if service.images.count > 1 %}
+                                            <div class="swiper-button-prev opacity-0 group-hover:opacity-100 transition-opacity duration-300 !left-2 !text-white" style="filter: drop-shadow(0 0 3px rgba(0,0,0,0.7)); --swiper-navigation-size: 24px;"></div>
+                                            <div class="swiper-button-next opacity-0 group-hover:opacity-100 transition-opacity duration-300 !right-2 !text-white" style="filter: drop-shadow(0 0 3px rgba(0,0,0,0.7)); --swiper-navigation-size: 24px;"></div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="p-3">
+                                    <span class="block text-lg font-semibold text-gray-900 mb-1 line-clamp-1 group-hover:text-blue-600 transition-colors cursor-pointer"
+                                          onclick="window.location.href='{% url 'service_detail' service.id %}'" role="link">
+                                        {{ service.name }}
+                                    </span>
+
+                                    <span class="text-xs px-2 py-1 mr-1 mb-1 border border-gray-300 bg-gray-50 rounded-full">
+                                        {% if service.categories.all %}
+                                            {{ service.categories.first.name }}
+                                        {% else %}
+                                            {% t "home.no_category" %}
+                                        {% endif %}
+                                    </span>
+
+                                    <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center gap-2 mb-1">
+                                                {% if service.provider.user_profile.avatar %}
+                                                    <img class="w-6 h-6 rounded-full object-cover"
+                                                         src="{{ service.provider.user_profile.avatar.url }}"
+                                                         alt="{{ service.provider.first_name }}">
+                                                {% endif %}
+                                                <span class="text-sm font-medium text-gray-700 truncate">{{ service.provider.first_name }}</span>
+                                            </div>
+                                            <div class="flex items-center gap-1 text-sm text-gray-600">
+                                                <svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 47.94 47.94" style="enable-background:new 0 0 47.94 47.94;" xml:space="preserve" class="!h-[15px] !w-[15px]">
+                                                    <path style="fill:#ED8A19;" d="M26.285,2.486l5.407,10.956c0.376,0.762,1.103,1.29,1.944,1.412l12.091,1.757
+                                                      c2.118,0.308,2.963,2.91,1.431,4.403l-8.749,8.528c-0.608,0.593-0.886,1.448-0.742,2.285l2.065,12.042
+                                                      c0.362,2.109-1.852,3.717-3.746,2.722l-10.814-5.685c-0.752-0.395-1.651-0.395-2.403,0l-10.814,5.685
+                                                      c-1.894,0.996-4.108-0.613-3.746-2.722l2.065-12.042c0.144-0.837-0.134-1.692-0.742-2.285l-8.749-8.528
+                                                      c-1.532-1.494-0.687-4.096,1.431-4.403l12.091-1.757c0.841-0.122,1.568-0.65,1.944-1.412l5.407-10.956
+                                                      C22.602,0.567,25.338,0.567,26.285,2.486z"></path>
+                                                </svg>
+                                                <span class="font-semibold text-gray-800">{{ service.average_rating|default:0|floatformat:1 }}</span>
+                                                <span>({{ service.reviews.count|default:0 }})</span>
+                                            </div>
+                                        </div>
+                                        <div class="flex-shrink-0">
+                                            <span class="text-xl font-bold text-gray-800">€{{ service.price|floatformat:0 }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="bg-white rounded-lg p-8 text-center text-gray-500">
+                        <p>{% t "home.no_services" %}</p>
+                    </div>
+                {% endif %}
+            </section>
+        </div>
     </div>
-</div>
 
-<style>
-    :root {
-        --primary-color: #6366f1;
-        --secondary-color: #1e293b;
-        --medium-gray-color: #e2e8f0;
-        --light-gray-bg: #f8f9fa;
-        --text-color: #334155;
-        --text-color-light: #64748b;
-        --white-color: #ffffff;
-        --border-radius-lg: 16px;
-        --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.05);
-        --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        --transition-fast: all 0.2s ease-in-out;
-    }
-    .container { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
-    .section-header { margin-bottom: 1.5rem; }
-    .section-title { font-size: 2rem; font-weight: 700; color: var(--secondary-color); margin: 0; }
-    
-    /* Hero Section */
-    .hero-section { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: var(--border-radius-lg); padding: 1.5rem 2rem; margin: 2rem 0; color: var(--white-color); }
-    .hero-title { font-size: 2.5rem; font-weight: 600; line-height: 1.2; margin-bottom: 1rem; }
-    .hero-subtitle { font-size: 1.15rem; opacity: 0.9; max-width: 100%; }
-    .hero-stats { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 1.5rem; align-items: flex-start; }
-    .hero-stat-item .stat-number { font-size: 2.25rem; font-weight: 700; }
-    .hero-stat-item .stat-label { font-size: 0.9rem; opacity: 0.9; }
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const TR_ADD_FAV = "{% t 'home.add_favorite' %}";
+            const TR_REMOVE_FAV = "{% t 'home.remove_favorite' %}";
+            const userFavorites = JSON.parse('{{ user_favorites_json|default:"{}"|escapejs }}');
 
-    /* Content Box for Services */
-    .content-box {
-        background-color: var(--light-gray-bg);
-        border: 1px solid var(--medium-gray-color);
-        border-radius: var(--border-radius-lg);
-        padding: 2rem;
-        margin-top: 3rem;
-        box-shadow: var(--shadow-sm);
-    }
-    
-    .services-container { margin: 0; }
-    .categories-wrapper { display: flex; gap: 0.75rem; overflow-x: auto; padding-bottom: 1rem; margin-bottom: 1.5rem; }
-    .category-chip { background: var(--white-color); border: 1px solid var(--medium-gray-color); padding: 0.75rem 1.5rem; border-radius: 50px; font-weight: 500; color: var(--text-color-light); cursor: pointer; transition: var(--transition-fast); white-space: nowrap; font-size: 1rem; }
-    .category-chip:hover { border-color: var(--primary-color); color: var(--primary-color); box-shadow: var(--shadow-sm); }
-    .category-chip.active { background: var(--primary-color); color: var(--white-color); border-color: var(--primary-color); }
-    
-    .services-wrapper { display: flex; gap: 1.5rem; overflow-x: auto; padding-bottom: 1.5rem; scrollbar-width: thin; scrollbar-color: var(--medium-gray-color) transparent; }
-    .services-wrapper::-webkit-scrollbar { height: 8px; }
-    .services-wrapper::-webkit-scrollbar-track { background: transparent; }
-    .services-wrapper::-webkit-scrollbar-thumb { background-color: var(--medium-gray-color); border-radius: 4px; }
-    .service-card-wrapper { min-width: 280px; flex-shrink: 0; display: block; }
-    
-    /* MODIFICADO: La transición ahora está en el elemento base para que la animación sea suave al entrar y al salir. */
-    .service-card {
-        background: var(--white-color);
-        border: 1px solid var(--medium-gray-color);
-        border-radius: var(--border-radius-lg);
-        overflow: hidden;
-        height: 100%;
-        cursor: pointer;
-        /* La transición se aplica a las propiedades que van a cambiar */
-        transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
-    }
-    
-    /* MODIFICADO: Eliminado el 'transform: scale'. Ahora solo cambia la sombra y el borde. */
-    .service-card-wrapper:hover .service-card {
-        border-color: var(--primary-color);
-        box-shadow: var(--shadow-md);
-    }
+            // --- Lógica de filtro de categorías (Existente) ---
+            const categoryButtons = document.querySelectorAll('[data-category]');
+            const serviceCards = document.querySelectorAll('[data-service-category]');
 
-    .service-image-wrapper { height: 180px; }
-    .service-img { width: 100%; height: 100%; object-fit: cover; }
-    .service-details { padding: 1rem; }
-    .service-category { font-size: 0.8rem; color: var(--text-color-light); font-weight: 500; text-transform: uppercase; }
-    .service-title { font-size: 1.1rem; font-weight: 600; margin: 0.25rem 0; }
+            categoryButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const filterCategory = button.dataset.category;
 
-    /* Responsive */
-    @media (max-width: 992px) {
-        .hero-title { font-size: 2.5rem; }
-        .hero-content { text-align: center; }
-        .hero-stats { flex-direction: row; justify-content: center; padding-left: 0; }
-    }
-</style>
+                    categoryButtons.forEach(btn => btn.classList.remove('ring-2', 'ring-indigo-600'));
+                    button.classList.add('ring-2', 'ring-indigo-600');
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const categoryButtons = document.querySelectorAll('.category-chip');
-        const serviceCards = document.querySelectorAll('.service-card-wrapper');
+                    serviceCards.forEach(card => {
+                        const cardCategory = card.dataset.serviceCategory;
+                        if (filterCategory === 'all' || cardCategory === filterCategory) {
+                            card.classList.remove('hidden');
+                        } else {
+                            card.classList.add('hidden');
+                        }
+                    });
+                });
+            });
 
-        categoryButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const filterCategory = button.dataset.category;
-                categoryButtons.forEach(btn => btn.classList.remove('active'));
-                button.classList.add('active');
-                serviceCards.forEach(card => {
-                    const cardCategory = card.dataset.category;
-                    if (filterCategory === 'all' || cardCategory === filterCategory) {
-                        card.style.display = 'block';
-                    } else {
-                        card.style.display = 'none';
+            // --- (AÑADIDO) Activar Swipers ---
+            document.querySelectorAll('.swiper').forEach((el) => {
+                new Swiper(el, {
+                    navigation: {
+                        nextEl: el.querySelector('.swiper-button-next'),
+                        prevEl: el.querySelector('.swiper-button-prev'),
+                    },
+                    loop: true,
+                });
+            });
+
+
+            // --- (AÑADIDO) Helper para DIVs como botones ---
+            function setupDivAsButton(divElement, callback) {
+                if (divElement) {
+                    divElement.addEventListener('click', callback);
+                    divElement.addEventListener('keydown', (event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            callback(event);
+                        }
+                    });
+                }
+            }
+
+            // --- (MODIFICADO) Lógica de Favoritos (para DIVs) ---
+            const favoriteButtons = document.querySelectorAll('.favorite-btn');
+
+            favoriteButtons.forEach(buttonDiv => {
+                const serviceId = parseInt(buttonDiv.dataset.serviceId);
+                const icon = buttonDiv.querySelector('i');
+
+                // Establecer estado inicial
+                if (serviceId in userFavorites) {
+                    icon.classList.remove('fa-regular', 'text-gray-400', 'text-gray-700');
+                    icon.classList.add('fa-solid', 'text-red-500');
+                    buttonDiv.setAttribute('title', TR_REMOVE_FAV);
+                }
+
+                // Manejar click usando el helper
+                setupDivAsButton(buttonDiv, async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation(); // Evita que el click se propague al enlace de la tarjeta
+
+                    try {
+                        const response = await fetch(`/service/${serviceId}/toggle-favorite/`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': getCookie('csrftoken')
+                            }
+                        });
+
+                        if (response.ok) {
+                            const data = await response.json();
+
+                            if (data.action === 'added') {
+                                icon.classList.remove('fa-regular', 'text-gray-400', 'text-gray-700');
+                                icon.classList.add('fa-solid', 'text-red-500');
+                                buttonDiv.setAttribute('title', TR_REMOVE_FAV);
+                                userFavorites[serviceId] = data.favorite_id;
+                            } else if (data.action === 'removed') {
+                                icon.classList.remove('fa-solid', 'text-red-500');
+                                icon.classList.add('fa-regular', 'text-gray-700'); // Clase base del icono nuevo
+                                buttonDiv.setAttribute('title', TR_ADD_FAV);
+                                delete userFavorites[serviceId];
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error al gestionar favorito:', error);
                     }
                 });
             });
-        });
-    });
-</script>
 
-{% endblock %}
+            // --- Función para obtener el CSRF token (Existente) ---
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+        });
+
+        // --- Lógica del formulario de búsqueda (Existente) ---
+        const searchButton = document.getElementById('searchButton');
+        const searchForm = document.getElementById('searchForm');
+        if (searchButton && searchForm) {
+            searchButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                searchForm.submit();
+            });
+            searchButton.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    searchForm.submit();
+                }
+            });
+        }
+    </script>
+    {% endblock %}

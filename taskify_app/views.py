@@ -1,28 +1,143 @@
-from urllib import response
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from django.core.paginator import Paginator
-from django.db import models
 from django.http import JsonResponse
-from django.db.models import Count, Avg
+from django.db.models import Count, Avg, Q
 from django.core.mail import send_mail
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth import logout
+from django.urls import reverse
+import json
+import random
 
-
+from django.utils.dateparse import parse_datetime
+from django.views.decorators.http import require_POST
 
 from .forms import RegisterForm
-from .models import Service, Contract, Review, UserProfile, Notification, CustomUser, EmailVerification
+from django.templatetags.static import static
+from .models import Service, ServiceImage, Contract, Review, Notification, CustomUser, EmailVerification, \
+    Category, Conversation, Message, Favorite
 
+
+@ensure_csrf_cookie
+@ensure_csrf_cookie
 def home(request):
-    return render(request, 'home.html')
+    # Seleccionar hasta 6 categorías aleatorias
+    all_categories = list(Category.objects.all())
+    if len(all_categories) > 6:
+        categories = random.sample(all_categories, 6)
+    else:
+        categories = all_categories
+
+    # Seleccionar hasta 12 servicios destacados aleatorios
+    all_featured_services = list(Service.objects.all())
+    if len(all_featured_services) > 12:
+        featured_services = random.sample(all_featured_services, 12)
+    else:
+        featured_services = all_featured_services
+
+    user_favorites = {}
+    if request.user.is_authenticated:
+        favorites = Favorite.objects.filter(user=request.user).values('id', 'service_id')
+        user_favorites = {fav['service_id']: fav['id'] for fav in favorites}
+
+    context = {
+        'categories': categories,
+        'featured_services': featured_services,
+        'user_favorites_json': json.dumps(user_favorites),
+    }
+    return render(request, 'home.html', context)
+
+
+
+
+@require_POST
+def set_language(request):
+    lang = request.POST.get("language", "es")
+    # Limitamos a los idiomas que realmente tenemos
+    if lang not in ("es", "en", "ca"):
+        lang = "es"
+
+    request.session["lang"] = lang
+
+    # Volver a la página anterior o a la home
+    next_url = request.POST.get("next") or "/"
+    return redirect(next_url)
+
+
+from django.db.models import Q, Avg, Count
+import json
 
 def search(request):
-    return render(request, 'search.html')
+    """
+    Vista para la página de resultados de búsqueda.
+    Filtra por término de búsqueda (q) o por categoría.
+    """
+    query = request.GET.get('q', '')
+    category_id = request.GET.get('category')  # e.g. "46"
+
+    # Empezamos con todos los servicios y optimizamos la consulta
+    results = Service.objects.all().select_related(
+        'provider__profile'
+    ).prefetch_related(
+        'images', 'categories', 'reviews'
+    )
+
+    # 1. Filtrar por término de búsqueda (en nombre o descripción)
+    if query:
+        results = results.filter(
+            Q(name__icontains=query) |
+            Q(description__icontains=query)
+        )
+
+    # 2. Filtrar por categoría (ManyToMany)
+    if category_id:
+        results = results.filter(categories__id=category_id)
+
+    # Añadimos anotaciones para la media de estrellas (para mostrar en las tarjetas)
+    results = results.annotate(
+        average_rating=Avg('reviews__rating'),
+        review_count=Count('reviews')
+    ).distinct()
+
+    # (Pasamos los favoritos del usuario para los botones de corazón)
+    user_favorites = {}
+    if request.user.is_authenticated:
+        favorites = Favorite.objects.filter(user=request.user).values('id', 'service_id')
+        user_favorites = {fav['service_id']: fav['id'] for fav in favorites}
+
+    context = {
+        'query': query,
+        'category_id': category_id,  # por si quieres marcar la categoría activa en la plantilla
+        'results': results,
+        'user_favorites_json': json.dumps(user_favorites),
+    }
+
+    return render(request, 'search.html', context)
+
+
+
+@login_required
+def favourites(request):
+    """
+    Pantalla de servicios favoritos del usuario autenticado.
+    """
+    from .models import Favorite
+
+    user = request.user
+    favorite_services = Service.objects.filter(
+        favorited_by__user=user
+    ).prefetch_related('categories', 'images').order_by('-favorited_by__favorited_at')
+
+    context = {
+        'favorite_services': favorite_services,
+    }
+    return render(request, 'favourites.html', context)
+
 
 def user_login(request):
     if request.method == "POST":
@@ -45,18 +160,39 @@ def signup(request):
         email = request.POST.get('email')
         password = request.POST.get('password')
 
-        if CustomUser.objects.filter(email=email).exists():
-            messages.error(request, "Ya existe un usuario con ese correo.")
+        if CustomUser.objects.filter(username__iexact=username, is_active=True).exists():
+            messages.error(request, f"El nombre de usuario '{username}' ya está en uso. Por favor, elige otro.")
             return redirect('signup')
 
-        user = CustomUser.objects.create_user(username=username, email=email, password=password)
-        user.is_active = False
-        user.save()
+        if CustomUser.objects.filter(email__iexact=email, is_active=True).exists():
+            messages.error(request, f"El correo electrónico '{email}' ya está registrado. Por favor, inicia sesión.")
+            return redirect('signup')
+
+        user = CustomUser.objects.filter(email__iexact=email, is_active=False).first()
+
+        if user:
+            if CustomUser.objects.filter(username__iexact=username).exclude(email__iexact=email).exists():
+                messages.error(request, f"El nombre de usuario '{username}' ya está en uso. Por favor, elige otro.")
+                return redirect('signup')
+
+            user.username = username
+            user.set_password(password)
+            user.save()
+
+        else:
+            user = CustomUser.objects.filter(username__iexact=username, is_active=False).first()
+            if user:
+                user.email = email
+                user.set_password(password)
+                user.save()
+            else:
+                user = CustomUser.objects.create_user(username=username, email=email, password=password)
+                user.is_active = False
+                user.save()
 
         verification, _ = EmailVerification.objects.get_or_create(user=user)
         verification.generate_code()
 
-        # Enviar correo
         send_mail(
             subject="Verifica tu cuenta en Taskify",
             message=f"Tu código de verificación es: {verification.code}",
@@ -65,44 +201,203 @@ def signup(request):
         )
 
         request.session['pending_email'] = email
-
         return redirect('verify_email')
 
     return render(request, 'registration/signup.html')
 
 
+def validate_signup(request):
+    """
+    Una vista API para validar username y email en tiempo real
+    desde el formulario de registro.
+    """
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            username = data.get('username', '').strip()
+            email = data.get('email', '').strip()
+
+            username_taken = CustomUser.objects.filter(username__iexact=username, is_active=True).exists()
+            email_taken = CustomUser.objects.filter(email__iexact=email, is_active=True).exists()
+
+            return JsonResponse({
+                'username_taken': username_taken,
+                'email_taken': email_taken,
+            })
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
 @login_required
 def user_logout(request):
     # Recomendado: cerrar sesión solo por POST para evitar CSRF por enlaces GET
-    if request.method == "POST":
-        logout(request)
-        messages.success(request, "Has cerrado sesión correctamente.")
-        return redirect("login")  # o "home", como prefieras
-    # Si alguien entra por GET, lo devolvemos a algún sitio seguro
-    return redirect("home")
+    if request.method != 'POST':
+        return redirect("home")
+    logout(request)
+    messages.success(request, "Has cerrado sesión correctamente.")
+    return redirect("login")
 
-
-@login_required
-def chats(request):
-    return render(request, 'chats.html')
-
-@login_required
-def my_services(request):
-    return render(request, 'my_services.html')
 
 @login_required
 def my_orders(request):
-    return render(request, 'my_orders.html')
+    user = request.user
+
+    if request.method == 'POST' and user.is_provider:
+        contract_id = request.POST.get('contract_id')
+        action = request.POST.get('action')
+        next_status = {
+            'accept': 'accepted',
+            'reject': 'rejected',
+        }.get(action)
+
+        if contract_id and next_status:
+            contract = get_object_or_404(
+                Contract, pk=contract_id, service__provider=user
+            )
+            if contract.status != next_status:
+                contract.status = next_status
+                contract.save(update_fields=['status'])
+                if next_status == 'accepted':
+                    messages.success(
+                        request,
+                        'Has aceptado la solicitud. El cliente será notificado.',
+                    )
+                else:
+                    messages.info(
+                        request,
+                        'Has rechazado la solicitud. El cliente será notificado.',
+                    )
+        return redirect('my_orders')
+
+    if user.is_provider:
+        contracts_qs = (
+            Contract.objects.filter(service__provider=user)
+            .select_related('service', 'user')
+            .order_by('-created_at')
+        )
+    else:
+        contracts_qs = (
+            Contract.objects.filter(user=user)
+            .select_related('service', 'service__provider')
+            .order_by('-created_at')
+        )
+
+    status_styles = {
+        'pending': {
+            'badge_classes': 'bg-amber-100 text-amber-700',
+            'dot_classes': 'bg-amber-500',
+            'label': 'Pendiente de aceptar',
+            'group': 'pending',
+        },
+        'accepted': {
+            'badge_classes': 'bg-blue-100 text-blue-700',
+            'dot_classes': 'bg-blue-500',
+            'label': 'Aceptado',
+            'group': 'accepted',
+        },
+        'rejected': {
+            'badge_classes': 'bg-red-100 text-red-700',
+            'dot_classes': 'bg-red-500',
+            'label': 'Rechazado',
+            'group': 'rejected',
+        },
+        'active': {
+            'badge_classes': 'bg-blue-100 text-blue-700',
+            'dot_classes': 'bg-blue-500',
+            'label': 'Aceptado',
+            'group': 'accepted',
+        },
+        'finished': {
+            'badge_classes': 'bg-green-100 text-green-700',
+            'dot_classes': 'bg-green-500',
+            'label': 'Completado',
+            'group': 'accepted',
+        },
+        'cancelled': {
+            'badge_classes': 'bg-red-100 text-red-700',
+            'dot_classes': 'bg-red-500',
+            'label': 'Cancelado',
+            'group': 'rejected',
+        },
+        'paused': {
+            'badge_classes': 'bg-gray-100 text-gray-700',
+            'dot_classes': 'bg-gray-400',
+            'label': 'En pausa',
+            'group': 'pending',
+        },
+    }
+
+    status_totals = {'pending': 0, 'accepted': 0, 'rejected': 0}
+    for bucket in contracts_qs.values('status').annotate(total=Count('id')):
+        status_key = bucket['status']
+        group = status_styles.get(status_key, {}).get('group')
+        if group in status_totals:
+            status_totals[group] += bucket['total']
+
+    orders = []
+    for contract in contracts_qs:
+        status_config = status_styles.get(
+            contract.status,
+            {
+                'badge_classes': 'bg-gray-100 text-gray-600',
+                'dot_classes': 'bg-gray-400',
+                'label': contract.status.title(),
+            },
+        )
+
+        price_value = contract.price if contract.price is not None else contract.service.price
+
+        if user.is_provider:
+            counterpart = contract.user
+            counterpart_label = 'Cliente'
+            counterpart_name = counterpart.get_full_name() or counterpart.username
+        else:
+            counterpart = contract.service.provider
+            counterpart_label = 'Profesional'
+            counterpart_name = counterpart.get_full_name() or counterpart.username
+
+        orders.append(
+            {
+                'id': contract.id,
+                'service_name': contract.service.name,
+                'counterpart_label': counterpart_label,
+                'counterpart_name': counterpart_name,
+                'status': contract.status,
+                'status_label': status_config['label'],
+                'badge_classes': status_config['badge_classes'],
+                'dot_classes': status_config['dot_classes'],
+                'start_date': contract.start_date,
+                'created_at': contract.created_at,
+                'price': price_value,
+                'has_price': price_value is not None,
+                'detail_url': reverse('service_detail', args=[contract.service.id]),
+                'service_description': contract.service.description,
+                'code': contract.code,
+                'can_manage': user.is_provider and contract.status == 'pending',
+            }
+        )
+
+    context = {
+        'orders': orders,
+        'is_provider': user.is_provider,
+        'pending_orders_count': status_totals['pending'],
+        'accepted_orders_count': status_totals['accepted'],
+        'rejected_orders_count': status_totals['rejected'],
+    }
+    return render(request, 'my_orders.html', context)
+
 
 @login_required
 def profile(request):
     user = request.user
 
     # Get or create user profile
-    profile, _ = UserProfile.objects.get_or_create(user=user)
+    profile, _ = CustomUser.objects.get_or_create(username=user)
 
     # Avatar URL (fallback a una imagen estática si no hay)
-    avatar_url = profile.avatar.url if getattr(profile, "avatar", None) else static('images/default-avatar.png')
+    avatar_url = profile.avatar.url if getattr(profile, "avatar", None) else static('images/user-icon.png')
 
     # Services (paginated)
     services_list = Service.objects.filter(provider=user).order_by('-created_at')
@@ -131,7 +426,7 @@ def profile(request):
     context = {
         'user': user,
         'profile': profile,
-        'avatar_url': avatar_url,       # <-- pásalo al template
+        'avatar_url': avatar_url,
         'user_services': user_services,
         'user_contracts': user_contracts,
         'user_reviews': user_reviews[:3],
@@ -146,7 +441,7 @@ def profile(request):
 
 @login_required
 def edit_profile(request):
-    profile, created = UserProfile.objects.get_or_create(user=request.user)
+    profile, created = CustomUser.objects.get_or_create(username=request.user)
 
     if request.method == 'POST':
         # Update user basic info
@@ -160,6 +455,7 @@ def edit_profile(request):
         profile.phone = request.POST.get('phone', '')
         profile.location = request.POST.get('location', '')
         profile.website = request.POST.get('website', '')
+        profile.profession = request.POST.get('profession', '')
 
         # Handle avatar upload
         if request.FILES.get('avatar'):
@@ -348,3 +644,355 @@ def resend_verification_code(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
 
+
+@login_required
+def chat_list_view(request):
+    """
+    Vista para la "bandeja de entrada" (chat_list.html).
+    Muestra todas las conversaciones del usuario logueado.
+    """
+    conversations_qs = Conversation.objects.filter(participants=request.user)
+
+    context_conversations = []
+
+    for conv in conversations_qs:
+        otro_usuario = conv.get_other_participant(request.user)
+        ultimo_mensaje = conv.messages.order_by('-timestamp').first()
+        no_leidos = conv.messages.filter(is_read=False).exclude(sender=request.user).count()
+
+        context_conversations.append({
+            'conversation_obj': conv,
+            'otro_usuario': otro_usuario,
+            'ultimo_mensaje': ultimo_mensaje,
+            'no_leidos': no_leidos,
+        })
+
+    context_conversations.sort(
+        key=lambda x: x['ultimo_mensaje'].timestamp if x['ultimo_mensaje'] else x['conversation_obj'].created_at,
+        reverse=True
+    )
+
+    return render(request, 'chats.html', {
+        'conversations': context_conversations
+    })
+
+
+@login_required
+def chat_detail_view(request, conversation_id):
+    try:
+        conversation = get_object_or_404(Conversation, id=conversation_id, participants=request.user)
+        Message.objects.filter(
+            conversation=conversation,
+            is_read=False
+        ).exclude(sender=request.user).update(is_read=True)
+        messages = Message.objects.filter(conversation=conversation).order_by('timestamp')
+        otro_usuario = conversation.participants.exclude(id=request.user.id).first()
+
+    except Exception as e:
+        print(f"Error al cargar chat: {e}")
+        return redirect('chats')
+
+    if request.method == "POST":
+        content = request.POST.get('content', '').strip()
+        if content:
+            Message.objects.create(
+                conversation=conversation,
+                sender=request.user,
+                content=content
+            )
+            return redirect('chat_detail', conversation_id=conversation_id)
+
+    context = {
+        'messages': messages,
+        'conversation_id': conversation_id,
+        'otro_usuario': otro_usuario,
+        'conversation': conversation,
+    }
+    return render(request, 'chat_detail.html', context)
+
+
+@login_required
+def get_new_messages(request, conversation_id):
+    """
+    Esta es la vista de API que el JavaScript llama cada 3 segundos.
+    Devuelve mensajes nuevos en formato JSON.
+    """
+
+    since_timestamp_str = request.GET.get('since')
+
+    try:
+        conversation = Conversation.objects.get(id=conversation_id, participants=request.user)
+        messages = Message.objects.filter(conversation=conversation)
+
+    except Conversation.DoesNotExist:
+        return JsonResponse({"error": "No autorizado o no encontrado"}, status=403)
+
+    if since_timestamp_str:
+        try:
+            since_timestamp = parse_datetime(since_timestamp_str)
+            if since_timestamp:
+                messages = messages.filter(timestamp__gt=since_timestamp)
+        except ValueError:
+            pass
+
+    messages = messages.order_by('timestamp')
+
+    new_messages_data = [
+        {
+            'id': message.id,
+            'sender_id': message.sender.id,
+            'content': message.content,
+            'timestamp': message.timestamp.isoformat(),  # Envía en formato ISO
+        }
+        for message in messages
+    ]
+
+    return JsonResponse(new_messages_data, safe=False)
+
+
+@login_required
+def my_services(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        description = request.POST.get('description', '')
+        price_str = request.POST.get('price')
+        cover_images = request.FILES.getlist('cover_images')  # Cambiado a plural
+        category_ids = request.POST.getlist('categories')
+        service_id = request.POST.get('service_id')
+
+        if not name or not price_str:
+            messages.error(request, 'El nombre y el precio son obligatorios.')
+            return redirect('my_services')
+
+        try:
+            price = float(price_str)
+        except ValueError:
+            messages.error(request, 'El precio debe ser un número válido.')
+            return redirect('my_services')
+
+        if service_id:
+            # EDITAR SERVICIO EXISTENTE
+            try:
+                service = Service.objects.get(id=service_id, provider=request.user)
+                service.name = name
+                service.description = description
+                service.price = price
+
+                # Eliminar imágenes marcadas
+                images_to_delete_ids = request.POST.getlist('delete_images')
+                if images_to_delete_ids:
+                    ServiceImage.objects.filter(id__in=images_to_delete_ids, service=service).delete()
+
+                # Agregar nuevas imágenes
+                for f in cover_images:
+                    ServiceImage.objects.create(service=service, image=f)
+
+                service.save()
+
+                # Actualizar categorías
+                if category_ids:
+                    service.categories.set(category_ids)
+                else:
+                    service.categories.clear()
+
+                # Verificar que tenga al menos una imagen
+                if service.images.count() == 0:
+                    messages.error(request, 'El servicio debe tener al menos una imagen.')
+                    return redirect('my_services')
+
+                messages.success(request, 'Servicio actualizado correctamente.')
+
+            except Service.DoesNotExist:
+                messages.error(request, 'Servicio no encontrado.')
+        else:
+            # CREAR NUEVO SERVICIO
+            if not cover_images:
+                messages.error(request, 'Debes subir al menos una imagen.')
+                return redirect('my_services')
+
+            new_service = Service.objects.create(
+                provider=request.user,
+                name=name,
+                description=description,
+                price=price
+            )
+
+            # Agregar imágenes
+            for f in cover_images:
+                ServiceImage.objects.create(service=new_service, image=f)
+
+            # Agregar categorías
+            if category_ids:
+                new_service.categories.set(category_ids)
+
+            messages.success(request, 'Servicio creado correctamente.')
+
+        return redirect('my_services')
+
+    # GET request
+    user_services = Service.objects.filter(provider=request.user).prefetch_related('images', 'categories').order_by(
+        '-created_at')
+    all_categories = Category.objects.all()
+
+    context = {
+        'services': user_services,
+        'categories': all_categories,
+    }
+    return render(request, 'my_services.html', context)
+
+
+@login_required
+def delete_service(request, service_id):
+    service = get_object_or_404(Service, id=service_id, provider=request.user)
+
+    if request.method == 'POST':
+        service.delete()
+        messages.success(request, 'Servicio eliminado correctamente.')
+
+    return redirect('my_services')
+
+
+@login_required
+def toggle_favorite(request, service_id):
+    """
+    Vista para añadir/quitar un servicio de favoritos.
+    Devuelve JSON con el estado del favorito.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+    service = get_object_or_404(Service, id=service_id)
+
+    try:
+        # Intentar obtener el favorito existente
+        favorite = Favorite.objects.filter(user=request.user, service=service).first()
+
+        if favorite:
+            # Si existe, eliminarlo
+            favorite_id = favorite.id
+            favorite.delete()
+            return JsonResponse({
+                'success': True,
+                'action': 'removed',
+                'message': 'Servicio eliminado de favoritos'
+            })
+        else:
+            # Si no existe, crearlo
+            favorite = Favorite.objects.create(user=request.user, service=service)
+            return JsonResponse({
+                'success': True,
+                'action': 'added',
+                'favorite_id': favorite.id,
+                'message': 'Servicio añadido a favoritos'
+            })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+def public_profile(request, username):
+    """
+    Muestra el perfil público de un usuario, sus servicios y reseñas.
+    """
+    # 1. Obtener el usuario y su perfil
+    try:
+        user = CustomUser.objects.get(username=username)
+    except CustomUser.DoesNotExist:
+        # Aquí podrías redirigir a una página 404
+        messages.error(request, "El usuario no existe.")
+        return redirect('home')
+
+    profile, _ = CustomUser.objects.get_or_create(username=user)
+
+    # 2. Obtener los servicios de este usuario
+    services = Service.objects.filter(provider=user).prefetch_related('images', 'categories')
+
+    # 3. Obtener las reseñas recibidas por este usuario (en cualquiera de sus servicios)
+    reviews = Review.objects.filter(service__provider=user).select_related('user', 'user__profile').order_by(
+        '-created_at')
+
+    # 4. Calcular estadísticas
+    reviews_count = reviews.count()
+    average_rating = reviews.aggregate(avg=Avg('rating'))['avg'] or 0
+
+    context = {
+        'profile_user': user,
+        'profile': profile,
+        'services': services,
+        'reviews': reviews,
+        'reviews_count': reviews_count,
+        'average_rating': average_rating,
+    }
+
+    return render(request, 'public_profile.html', context)
+
+
+def service_detail(request, service_id):
+    """
+    Muestra la página de detalle de un servicio.
+    """
+    service = get_object_or_404(
+        Service.objects.select_related('provider', 'provider__profile')
+        .prefetch_related('images', 'categories'),
+        id=service_id
+    )
+
+    # Obtener reviews y estadísticas
+    reviews = Review.objects.filter(service=service).select_related('user', 'user__profile').order_by('-created_at')
+
+    stats = reviews.aggregate(
+        average_rating=Avg('rating'),
+        reviews_count=Count('id')
+    )
+
+    average_rating = stats.get('average_rating') or 0
+    reviews_count = stats.get('reviews_count') or 0
+
+    # Obtener estadísticas GLOBALES del proveedor
+    provider = service.provider
+    provider_reviews = Review.objects.filter(service__provider=provider)
+    provider_stats = provider_reviews.aggregate(
+        total_avg_rating=Avg('rating'),
+        total_reviews_count=Count('id')
+    )
+    provider_avg_rating = provider_stats.get('total_avg_rating') or 0
+    provider_reviews_count = provider_stats.get('total_reviews_count') or 0
+
+    context = {
+        'service': service,
+        'reviews': reviews,
+        'average_rating': average_rating,
+        'reviews_count': reviews_count,
+        'provider_avg_rating': provider_avg_rating,
+        'provider_reviews_count': provider_reviews_count,
+    }
+    return render(request, 'service_detail.html', context)
+
+
+@login_required
+def start_chat(request, service_id):
+    """
+    Busca o crea una conversación con el proveedor de un servicio
+    y redirige a la sala de chat.
+    """
+    service = get_object_or_404(Service, id=service_id)
+    provider = service.provider
+    user = request.user
+
+    # No puedes chatear contigo mismo
+    if provider == user:
+        messages.error(request, "No puedes contactar contigo mismo.")
+        return redirect('service_detail', service_id=service.id)
+
+    # Buscar conversación existente entre los dos participantes
+    # Usamos Q para buscar participantes en cualquier orden
+    conversation = Conversation.objects.filter(participants=user).filter(participants=provider).first()
+
+    if conversation:
+        # Ya existe una conversación, redirigir a ella
+        return redirect('chat_detail', conversation_id=conversation.id)
+    else:
+        # Crear una nueva conversación
+        new_convo = Conversation.objects.create()
+        new_convo.participants.add(user, provider)
+        new_convo.save()
+        return redirect('chat_detail', conversation_id=new_convo.id)

@@ -7,8 +7,10 @@ from django.conf.urls.static import static
 from taskify_app import views
 
 urlpatterns = [
+    path("set-language/", views.set_language, name="set_language"),
     path("admin/", admin.site.urls),
     path("api/", include("api.urls")),
+    path("api/validate-signup/", views.validate_signup, name='validate_signup'),
 
     path("", views.home, name='home'),
 
@@ -17,13 +19,25 @@ urlpatterns = [
     path("logout/", views.user_logout, name="logout"),
 
     path("search/", views.search, name='search'),
-    path("chats/", views.chats, name='chats'),
-    path("my_services/", views.my_services, name='my_services'),
-    path("my_orders/", views.my_orders, name='my_orders'),
-    path("profile/", views.profile, name='profile'),
 
+    path('chats/', views.chat_list_view, name='chats'),
+    path('chat/<int:conversation_id>/', views.chat_detail_view, name='chat_detail'),
+
+    path("my_services/", views.my_services, name='my_services'),
+    path('my_services/delete/<int:service_id>/', views.delete_service, name='delete_service'),
+
+    path("service/<int:service_id>/", views.service_detail, name="service_detail"),
+    path("service/<int:service_id>/contact/", views.start_chat, name="start_chat"),
+
+    path("my_orders/", views.my_orders, name='my_orders'),
+    path("favourites/", views.favourites, name='favourites'),
+    path("service/<int:service_id>/toggle-favorite/", views.toggle_favorite, name='toggle_favorite'),
+
+    path("profile/", views.profile, name='profile'),
+    path("user/<str:username>/", views.public_profile, name="public_profile"),
     path("profile/edit/", views.edit_profile, name='edit_profile'),
     path("profile/stats/", views.advanced_stats, name='advanced_stats'),
+
     path("notifications/", views.notifications, name='notifications'),
     path("notifications/mark-read/<int:notification_id>/", views.mark_notification_read, name='mark_notification_read'),
 

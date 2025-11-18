@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework.authtoken.models import Token
 from rest_framework import status
-from rest_framework. decorators import authentication_classes, permission_classes
+from rest_framework.decorators import authentication_classes, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
 
@@ -15,33 +15,59 @@ from taskify_app.models import CustomUser
 
 @api_view(['POST'])
 def login(request):
-    user = get_object_or_404(CustomUser, username=request.data['username'])
-    if not user.check_password(request.data['password']):
-        return Response({"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
+    username = request.data.get('username')
+    password = request.data.get('password')
+
+    user = get_object_or_404(CustomUser, username=username)
+
+    if not user.check_password(password):
+        return Response(
+            {"error": "Invalid credentials"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
     token, created = Token.objects.get_or_create(user=user)
 
     user_data = UserSerializer(user).data
-    user_data.pop('password', None)
-    return Response({"token": token.key, "user": user_data}, status=status.HTTP_200_OK)
+    user_data.pop('password', None)  # por si acaso
+
+    user_data['role'] = user.role
+
+    return Response(
+        {
+            "token": token.key,
+            "user": user_data,
+        },
+        status=status.HTTP_200_OK
+    )
+
 
 @api_view(['POST'])
 def register(request):
-    print(request.data)
     serializer = UserSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save()
 
-        user = CustomUser.objects.get(username=request.data['username'])
-        print(serializer.data)
-        user.set_password(serializer.data['password'])
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    user = serializer.save()
+
+    raw_password = request.data.get('password')
+    if raw_password:
+        user.set_password(raw_password)
         user.save()
 
-        user_data = serializer.data
-        user_data.pop('password', None)
-        token = Token.objects.create(user=user)
-        return Response({"token": token.key, "user": user_data}, status=status.HTTP_201_CREATED)
-    else:
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    # Token
+    token = Token.objects.create(user=user)
+
+    user_data = UserSerializer(user).data
+    user_data.pop('password', None)
+    user_data['role'] = user.role
+
+    return Response(
+        {"token": token.key, "user": user_data},
+        status=status.HTTP_201_CREATED
+    )
+
 
 @api_view(['GET'])
 @authentication_classes([TokenAuthentication])
