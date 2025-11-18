@@ -139,9 +139,11 @@
                             {% t "service.contact" %}
                         </a>
                     {% else %}
-                        <div class="w-full !py-3 !px-5 flex items-center justify-center bg-[#1c1b2b] text-white font-semibold rounded-xl hover:bg-opacity-90 transition-all shadow-sm disabled:opacity-50 my-2 hover:cursor-pointer">
-                            {% t "service.hire" %}
-                        </div>
+                        <a href="{% url 'login' %}?next={{ request.path }}">
+                            <div class="w-full !py-3 !px-5 flex items-center justify-center bg-[#1c1b2b] text-white font-semibold rounded-xl hover:bg-opacity-90 transition-all shadow-sm disabled:opacity-50 my-2 hover:cursor-pointer">
+                                {% t "service.hire" %}
+                            </div>
+                        </a>
                         <a href="{% url 'login' %}?next={{ request.path }}"
                            class="block w-full text-center !py-2.5 !px-5 bg-white text-gray-800 font-semibold border border-gray-300 rounded-xl hover:bg-gray-50 transition-all shadow-sm">
                             {% t "service.contact" %}
