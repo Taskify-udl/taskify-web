@@ -827,6 +827,91 @@ def create_sample_conversations_and_messages(sender=None, **kwargs):
     }
 
 
+def create_random_favorites(sender=None, **kwargs):
+    """
+    Crea favoritos aleatorios para los usuarios.
+    - Cada usuario tendrá un número aleatorio de servicios en favoritos.
+    - Los favoritos varían por usuario y no son todos iguales.
+    - Si ya existen favoritos, no se borran, solo se añaden los que falten.
+    """
+    import random
+    from django.contrib.auth import get_user_model
+
+    try:
+        from .models import Service, Favorite  # ajusta el import si están en otro módulo
+    except Exception as e:
+        print("[taskify_app] No se pudieron importar Service/Favorite:", e)
+        return {"created": 0, "errors": 1}
+
+    User = get_user_model()
+
+    users = list(User.objects.filter(is_active=True, is_superuser=False))
+    services = list(Service.objects.all())
+
+    if not users or not services:
+        print("[taskify_app] No hay usuarios o servicios suficientes para crear favoritos.")
+        return {"created": 0, "errors": 0}
+
+    created = 0
+    errors = 0
+
+    for user in users:
+        try:
+            # Ajustamos el rango según el rol (opcional, solo para hacerlo más realista)
+            if getattr(user, "role", None) == CustomUser.Roles.CUSTOMER:
+                min_favs = 2
+                max_favs = min(8, len(services))
+            elif getattr(user, "role", None) in (CustomUser.Roles.PROVIDER, CustomUser.Roles.FREELANCER):
+                min_favs = 1
+                max_favs = min(5, len(services))
+            else:
+                # COMPANY_ADMIN, COMPANY_WORKER u otros
+                min_favs = 0
+                max_favs = min(4, len(services))
+
+            if max_favs <= 0:
+                continue
+
+            # Número de favoritos que queremos que tenga este usuario
+            target_favs = random.randint(min_favs, max_favs)
+
+            existing_service_ids = set(
+                Favorite.objects.filter(user=user).values_list("service_id", flat=True)
+            )
+
+            # Si ya tiene al menos ese número, no hacemos nada
+            if len(existing_service_ids) >= target_favs:
+                continue
+
+            # Cuántos nuevos favoritos necesitamos crear
+            to_create = target_favs - len(existing_service_ids)
+
+            # Servicios candidatos: todos menos los que ya tiene en favoritos
+            candidate_services = [s for s in services if s.id not in existing_service_ids]
+
+            if not candidate_services:
+                continue
+
+            # Elegimos aleatoriamente servicios para añadir
+            chosen_services = random.sample(candidate_services, min(to_create, len(candidate_services)))
+
+            for service in chosen_services:
+                fav, created_obj = Favorite.objects.get_or_create(
+                    user=user,
+                    service=service,
+                )
+                if created_obj:
+                    created += 1
+
+        except Exception as e:
+            print(f"[taskify_app] Error creando favoritos para {user.username}: {e}")
+            errors += 1
+
+    print(f"[taskify_app] Favoritos aleatorios -> creados: {created}, errores: {errors}")
+    return {"created": created, "errors": errors}
+
+
+
 def create_default_categories(sender, **kwargs):
     from .models import Category
 
