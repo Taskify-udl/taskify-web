@@ -681,6 +681,10 @@ def chat_list_view(request):
 def chat_detail_view(request, conversation_id):
     try:
         conversation = get_object_or_404(Conversation, id=conversation_id, participants=request.user)
+        Message.objects.filter(
+            conversation=conversation,
+            is_read=False
+        ).exclude(sender=request.user).update(is_read=True)
         messages = Message.objects.filter(conversation=conversation).order_by('timestamp')
         otro_usuario = conversation.participants.exclude(id=request.user.id).first()
 
