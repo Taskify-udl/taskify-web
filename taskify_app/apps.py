@@ -26,5 +26,15 @@ class TaskifyAppConfig(AppConfig):
             sender=self,
             dispatch_uid="taskify_create_default_services",
         )
+        post_migrate.connect(
+            signals.create_sample_conversations_and_messages,
+            sender=self,
+            dispatch_uid="create_sample_conversations_and_messages",
+        )
+        post_migrate.connect(
+            signals.create_random_favorites,
+            sender=self,
+            dispatch_uid="create_random_favorites",
+        )
 
 

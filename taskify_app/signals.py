@@ -188,46 +188,194 @@ CATEGORIES = [
     ("Automatización e IA", "fa-solid fa-robot"),
 ]
 
+# Debajo de CATEGORIES, por ejemplo:
+
+PROFILE_SEED_DATA = {
+    CustomUser.Roles.CUSTOMER: {
+        "first_name": "Laura",
+        "last_name": "García",
+        "phone": "612345678",
+        "location": "Barcelona, España",
+        "website": "https://lauragarcia.example.com",
+        "bio": "Usuario particular que contrata servicios de reformas y mantenimiento del hogar.",
+        "profession": "Cliente particular",
+        "avatar_file": "customer.jpg",
+    },
+    CustomUser.Roles.PROVIDER: {
+        "first_name": "Carlos",
+        "last_name": "López",
+        "phone": "622334455",
+        "location": "Madrid, España",
+        "website": "https://carlos-servicios.example.com",
+        "bio": "Proveedor profesional con años de experiencia coordinando equipos y proyectos.",
+        "profession": "Proveedor profesional",
+        "avatar_file": "provider.jpg",
+    },
+    CustomUser.Roles.FREELANCER: {
+        "first_name": "Marta",
+        "last_name": "Sánchez",
+        "phone": "633445566",
+        "location": "Valencia, España",
+        "website": "https://marta-freelance.example.com",
+        "bio": "Freelancer especializada en diseño gráfico y branding para pequeñas empresas.",
+        "profession": "Diseñadora gráfica",
+        "avatar_file": "freelancer.webp",
+    },
+    CustomUser.Roles.COMPANY_ADMIN: {
+        "first_name": "Javier",
+        "last_name": "Ruiz",
+        "phone": "644556677",
+        "location": "Sevilla, España",
+        "website": "https://empresa-obras.example.com",
+        "bio": "Administrador de empresa de construcción y reformas, responsable de la gestión de contratos.",
+        "profession": "Administrador de empresa",
+        "avatar_file": "company_admin.webp",
+    },
+    CustomUser.Roles.COMPANY_WORKER: {
+        "first_name": "Ana",
+        "last_name": "Fernández",
+        "phone": "655667788",
+        "location": "Bilbao, España",
+        "website": "https://ana-tecnica.example.com",
+        "bio": "Trabajadora de empresa especializada en instalaciones y mantenimiento técnico.",
+        "profession": "Técnica de instalaciones",
+        "avatar_file": "company_worker.jpg",
+    },
+}
+
+
+def _assign_seed_avatar(user, profile, image_dir):
+    """
+    Asigna el avatar desde seed_images/users si existe el archivo.
+    Elimina el avatar anterior si existe.
+    """
+    import os
+    from django.core.files import File
+
+    avatar_filename = profile.get("avatar_file")
+    if not avatar_filename:
+        print(f"[taskify_app] Usuario {user.username}: no hay avatar_file definido en PROFILE_SEED_DATA.")
+        return
+
+    avatar_path = os.path.join(image_dir, avatar_filename)
+    print(f"[taskify_app] Usuario {user.username}: buscando avatar en: {avatar_path}")
+
+    if not os.path.exists(avatar_path):
+        print(f"[taskify_app] AVISO: archivo de avatar NO encontrado: {avatar_path}")
+        return
+
+    # Elimina el avatar anterior si existe
+    if user.avatar and user.avatar.name:
+        try:
+            user.avatar.delete(save=False)
+            print(f"[taskify_app] Avatar anterior eliminado para {user.username}.")
+        except Exception as e:
+            print(f"[taskify_app] ERROR eliminando avatar anterior de {user.username}: {e}")
+
+    try:
+        with open(avatar_path, "rb") as f:
+            user.avatar.save(avatar_filename, File(f), save=True)
+        print(f"[taskify_app] Usuario {user.username}: avatar asignado correctamente.")
+    except Exception as e:
+        print(f"[taskify_app] ERROR asignando avatar a {user.username}: {e}")
+
 
 def create_default_users(sender=None, **kwargs):
     """
-    Crea un usuario por cada rol en CustomUser.Roles.
-    - username: user_<role_lower>
+    Crea un usuario por cada rol en CustomUser.Roles con datos de ejemplo.
+    - username: <role_lower>
     - email: <role_lower>@example.com
     - password (solo para usuarios creados): '1234'
     - role: el rol correspondiente
+    - Rellena phone, bio, location, website y avatar si hay datos en PROFILE_SEED_DATA.
     """
+    import os
     from django.contrib.auth import get_user_model
 
     User = get_user_model()
     created_count = 0
     updated_count = 0
 
+    base_dir = os.path.dirname(__file__)
+    image_dir = os.path.join(base_dir, "seed_images", "users")
+    print(f"[taskify_app] Carpeta de avatares seed: {image_dir}")
+    if not os.path.isdir(image_dir):
+        print(f"[taskify_app] AVISO: la carpeta de avatares no existe: {image_dir}")
+
     for role_value, _ in CustomUser.Roles.choices:
         username = f"{role_value.lower()}"
         email = f"{role_value.lower()}@example.com"
-        first_name = role_value.capitalize().replace("_", " ")
+
+        default_first_name = role_value.capitalize().replace("_", " ")
+        profile = PROFILE_SEED_DATA.get(role_value, {})
+        first_name = profile.get("first_name", default_first_name)
+        last_name = profile.get("last_name", "")
 
         user = User.objects.filter(username=username).first()
         if not user:
+            # Crear usuario nuevo
             user = User(
                 username=username,
                 email=email,
                 first_name=first_name,
+                last_name=last_name,
                 role=role_value,
                 is_active=True,
             )
+            # Rellenar todos los campos posibles
+            user.phone = profile.get("phone", "")
+            user.location = profile.get("location", "")
+            user.website = profile.get("website", "")
+            user.bio = profile.get("bio", "")
+            user.profession = profile.get("profession", "")
             user.set_password("1234")
             user.save()
             created_count += 1
+            print(f"[taskify_app] Usuario creado: {username} ({role_value})")
+            # Asignar avatar (siempre, elimina el anterior si hay)
+            _assign_seed_avatar(user, profile, image_dir)
         else:
+            # Usuario ya existía → actualizar datos de perfil
             changed = False
+
             if getattr(user, "role", None) != role_value:
                 user.role = role_value
                 changed = True
+
+            if user.first_name != first_name:
+                user.first_name = first_name
+                changed = True
+
+            if user.last_name != last_name:
+                user.last_name = last_name
+                changed = True
+
+            if user.phone != profile.get("phone", ""):
+                user.phone = profile.get("phone", "")
+                changed = True
+
+            if user.location != profile.get("location", ""):
+                user.location = profile.get("location", "")
+                changed = True
+
+            if user.website != profile.get("website", ""):
+                user.website = profile.get("website", "")
+                changed = True
+
+            if user.bio != profile.get("bio", ""):
+                user.bio = profile.get("bio", "")
+                changed = True
+
+            if hasattr(user, "profession") and user.profession != profile.get("profession", ""):
+                user.profession = profile.get("profession", "")
+                changed = True
+
             if changed:
                 user.save()
                 updated_count += 1
+                print(f"[taskify_app] Usuario actualizado: {username} ({role_value})")
+            # Asignar avatar (siempre, elimina el anterior si hay)
+            _assign_seed_avatar(user, profile, image_dir)
 
     if created_count or updated_count:
         print(
@@ -240,9 +388,9 @@ def create_default_users(sender=None, **kwargs):
 # python
 def create_default_services(image_dir=None, sender=None, **kwargs):
     """
-    Crea 3 servicios de ejemplo y les asigna imágenes desde:
+    Crea servicios de ejemplo y les asigna imágenes desde:
     taskify_app/seed_images/services/
-    Archivos esperados: fontaneria.jpg, albanileria.jpg, diseno.jpg
+    Las imágenes deben existir con los nombres indicados en 'items'.
     """
     import os
     from django.utils.text import slugify
@@ -261,21 +409,172 @@ def create_default_services(image_dir=None, sender=None, **kwargs):
     if not image_dir:
         image_dir = os.path.join(os.path.dirname(__file__), "seed_images", "services")
 
-    # Mapeo: (nombre_del_servicio, filename_imagen, descripcion, categoría_preferida, rol_asignado)
+    # Mapeo: (nombre_del_servicio, filename_imagen, descripcion, categoría_preferida, rol_asignado, precio)
     items = [
-        ("Fontanería", "fontaneria.jpg", "Reparación y mantenimiento de tuberías y grifería.", "Fontanería",
-         CustomUser.Roles.FREELANCER),
-        ("Albañilería", "albanileria.jpg", "Obras, reformas y pequeñas construcciones.", "Albañilería",
-         CustomUser.Roles.COMPANY_ADMIN),
-        ("Diseño gráfico", "diseno.jpg", "Diseño de logotipos, piezas gráficas y branding.", "Diseño gráfico",
-         CustomUser.Roles.FREELANCER),
+        # 🧱 Hogar / construcción
+        ("Reparación de grifos y fugas",
+         "reparacion_grifos.webp",
+         "Arreglo de grifos, fugas de agua y pequeños problemas de fontanería en el hogar.",
+         "Fontanería",
+         CustomUser.Roles.FREELANCER,
+         45.0),
+
+        ("Instalación de sanitarios y mamparas",
+         "instalacion_sanitarios.webp",
+         "Instalación de inodoros, lavabos, platos de ducha y mamparas.",
+         "Fontanería",
+         CustomUser.Roles.PROVIDER,
+         120.0),
+
+        ("Reforma básica de baño",
+         "reforma_bano.jpg",
+         "Pequeñas reformas de baño: alicatado, suelo y sanitarios.",
+         "Albañilería",
+         CustomUser.Roles.COMPANY_ADMIN,
+         850.0),
+
+        ("Pintura completa de piso",
+         "pintura_piso.webp",
+         "Pintura de paredes y techos de vivienda, incluye preparación de superficies.",
+         "Pintura",
+         CustomUser.Roles.COMPANY_ADMIN,
+         350.0),
+
+        ("Pequeños arreglos de albañilería",
+         "arreglos_albanileria.jpg",
+         "Reparación de grietas, colocación de pladur y pequeñas obras.",
+         "Albañilería",
+         CustomUser.Roles.COMPANY_WORKER,
+         60.0),
+
+        ("Mantenimiento general del hogar",
+         "mantenimiento_hogar.png",
+         "Servicio de manitas para arreglos eléctricos, de fontanería y carpintería sencillos.",
+         "Mantenimiento general",
+         CustomUser.Roles.PROVIDER,
+         40.0),
+
+        ("Jardinería y mantenimiento de jardín",
+         "jardineria_mantenimiento.webp",
+         "Corte de césped, poda de arbustos y mantenimiento básico de jardines.",
+         "Jardinería",
+         CustomUser.Roles.COMPANY_WORKER,
+         55.0),
+
+        ("Limpieza de hogar por horas",
+         "limpieza_hogar.jpg",
+         "Servicio de limpieza a domicilio puntual o recurrente.",
+         "Limpieza",
+         CustomUser.Roles.PROVIDER,
+         15.0),
+
+        ("Limpieza de oficinas",
+         "limpieza_oficinas.jpg",
+         "Limpieza y mantenimiento de espacios de trabajo y despachos.",
+         "Limpieza industrial",
+         CustomUser.Roles.COMPANY_ADMIN,
+         80.0),
+
+        ("Mudanzas locales",
+         "mudanzas_locales.jpg",
+         "Servicio de mudanza dentro de la misma ciudad, incluye carga y descarga.",
+         "Mudanzas",
+         CustomUser.Roles.COMPANY_ADMIN,
+         180.0),
+
+        # 💻 Digital / creativo
+        ("Diseño de logotipo profesional",
+         "diseno_logotipo.jpg",
+         "Creación de logotipo vectorial con varias propuestas y revisiones.",
+         "Diseño gráfico",
+         CustomUser.Roles.FREELANCER,
+         150.0),
+
+        ("Diseño de posts para redes sociales",
+         "posts_redes.jpg",
+         "Pack de creatividades para Instagram, Facebook o TikTok adaptadas a tu marca.",
+         "Marketing digital",
+         CustomUser.Roles.FREELANCER,
+         70.0),
+
+        ("Gestión de redes sociales",
+         "gestion_redes.webp",
+         "Planificación, publicación y seguimiento de redes sociales de tu negocio.",
+         "Community manager",
+         CustomUser.Roles.PROVIDER,
+         220.0),
+
+        ("Desarrollo de landing page",
+         "landing_page.jpg",
+         "Desarrollo de una landing page moderna y responsive para captar clientes.",
+         "Desarrollo web",
+         CustomUser.Roles.FREELANCER,
+         300.0),
+
+        ("Mantenimiento de página web",
+         "mantenimiento_web.jpeg",
+         "Actualizaciones, copias de seguridad y pequeñas mejoras en tu web.",
+         "Desarrollo web",
+         CustomUser.Roles.PROVIDER,
+         90.0),
+
+        ("Consultoría IT inicial",
+         "consultoria_it.webp",
+         "Sesión de consultoría para analizar necesidades tecnológicas de tu negocio.",
+         "Consultoría IT",
+         CustomUser.Roles.FREELANCER,
+         60.0),
+
+        # 👪 Cuidado y formación
+        ("Canguro de niños por horas",
+         "canguro_ninos.jpg",
+         "Cuidado de niños en domicilio, tardes, noches o fines de semana.",
+         "Niñeras",
+         CustomUser.Roles.COMPANY_WORKER,
+         12.0),
+
+        ("Cuidado de mascotas a domicilio",
+         "cuidado_mascotas.jpg",
+         "Paseo de perros, visita a domicilio y cuidado puntual de mascotas.",
+         "Cuidado de mascotas",
+         CustomUser.Roles.COMPANY_WORKER,
+         10.0),
+
+        ("Clases particulares de matemáticas",
+         "clases_matematicas.avif",
+         "Apoyo escolar en matemáticas para primaria, ESO y bachillerato.",
+         "Clases particulares",
+         CustomUser.Roles.FREELANCER,
+         18.0),
+
+        ("Clases de inglés online",
+         "clases_ingles.jpg",
+         "Clases de conversación y gramática en inglés por videollamada.",
+         "Idiomas",
+         CustomUser.Roles.FREELANCER,
+         20.0),
+
+        ("Entrenador personal a domicilio",
+         "entrenador_personal.jpg",
+         "Sesiones personalizadas de entrenamiento en casa o al aire libre.",
+         "Entrenador personal",
+         CustomUser.Roles.FREELANCER,
+         35.0),
+
+        # 🧾 Profesionales / negocio
+        ("Asesoría fiscal básica",
+         "asesoria_fiscal.jpg",
+         "Resolución de dudas fiscales, presentación de modelos básicos y orientación.",
+         "Asesoría fiscal y contable",
+         CustomUser.Roles.PROVIDER,
+         75.0),
     ]
 
     created_services = 0
     created_images = 0
     errors = 0
 
-    for name, filename, description, category_name, role_value in items:
+    for name, filename, description, category_name, role_value, price in items:
         try:
             provider = User.objects.filter(role=role_value).first()
             if not provider:
@@ -291,7 +590,7 @@ def create_default_services(image_dir=None, sender=None, **kwargs):
                 category = None
 
             slug = slugify(name)
-            defaults = {"description": description, "price": 20.0}
+            defaults = {"description": description, "price": price}
             # Intenta crear el servicio (ajusta campos si tu modelo requiere otros)
             service, created = Service.objects.get_or_create(
                 name=name,
@@ -307,9 +606,9 @@ def create_default_services(image_dir=None, sender=None, **kwargs):
                 if getattr(service, "description", None) != description:
                     service.description = description
                     changed = True
-                if getattr(service, "price", None) != 20.0:
+                if getattr(service, "price", None) != price:
                     try:
-                        service.price = 20.0
+                        service.price = price
                         changed = True
                     except Exception:
                         pass
@@ -328,17 +627,14 @@ def create_default_services(image_dir=None, sender=None, **kwargs):
             try:
                 has_images = False
                 if hasattr(service, "images"):
-                    # si related_name es 'images'
                     has_images = service.images.exists()
                 else:
-                    # intenta ServiceImage por FK
                     has_images = ServiceImage.objects.filter(service=service).exists()
 
                 image_path = os.path.join(image_dir, filename)
                 if not has_images and os.path.exists(image_path):
                     with open(image_path, "rb") as f:
                         django_file = File(f, name=filename)
-                        # intenta crear ServiceImage según firma esperada
                         si = ServiceImage.objects.create(service=service, image=django_file)
                         si.save()
                         created_images += 1
@@ -354,8 +650,266 @@ def create_default_services(image_dir=None, sender=None, **kwargs):
             errors += 1
 
     print(
-        f"[taskify_app] Servicios creados: {created_services}, imágenes añadidas: {created_images}, errores: {errors}")
+        f"[taskify_app] Servicios creados: {created_services}, imágenes añadidas: {created_images}, errores: {errors}"
+    )
     return {"created_services": created_services, "created_images": created_images, "errors": errors}
+
+
+
+
+def create_sample_conversations_and_messages(sender=None, **kwargs):
+    """
+    Crea conversaciones y mensajes de ejemplo entre todos los usuarios activos (no superusers).
+    - Una conversación por cada par de usuarios (A-B).
+    - Si la conversación ya existe, la reutiliza.
+    - Si la conversación no tiene mensajes, se crean varios mensajes simulando un chat,
+      con longitud y contenido variados.
+    """
+    import random
+    from django.contrib.auth import get_user_model
+    from django.db.models import Count
+
+    try:
+        from .models import Conversation, Message  # ajusta si tus modelos están en otro módulo
+    except Exception as e:
+        print("[taskify_app] No se pudieron importar Conversation/Message:", e)
+        return {"created_conversations": 0, "created_messages": 0, "errors": 1}
+
+    User = get_user_model()
+
+    users = list(User.objects.filter(is_active=True, is_superuser=False))
+    if len(users) < 2:
+        print("[taskify_app] No hay suficientes usuarios para crear conversaciones.")
+        return {"created_conversations": 0, "created_messages": 0, "errors": 0}
+
+    created_conversations = 0
+    created_messages = 0
+    errors = 0
+
+    # Distintos patrones de diálogos para variar los mensajes
+    DIALOG_PATTERNS = [
+        [
+            "Hola {receiver}, he estado mirando tus servicios y me interesa pedir presupuesto.",
+            "¡Hola {sender}! Genial, ¿qué necesitas exactamente?",
+            "Sería para un trabajo pequeño esta semana, algo sencillo.",
+            "Sin problema, puedo pasarte un presupuesto aproximado ahora mismo.",
+            "Perfecto, así veo si encaja con lo que estoy buscando.",
+            "Te lo envío por aquí en unos minutos. 😊",
+        ],
+        [
+            "Buenas {receiver}, vengo por la reforma del baño que comentamos.",
+            "Hola {sender}, sí, lo tengo apuntado. ¿Has decidido fechas?",
+            "Preferiría a partir del mes que viene, cuando tenga unos días libres.",
+            "Creo que puedo hacerte hueco a partir del día 10, ¿te encajaría?",
+            "Sí, ese rango de fechas me iría bien.",
+        ],
+        [
+            "Hey {receiver}, ¿cómo va todo? Vi tu perfil y me llamó la atención lo que haces.",
+            "¡Ey {sender}! Todo bien, gracias. Me alegro de que te haya gustado.",
+            "Estoy pensando en externalizar algunas tareas, quizá podríamos colaborar.",
+            "Me encantaría, dime qué necesitas y vemos cómo encajarlo.",
+        ],
+        [
+            "Hola {receiver}, quería comentarte que quedé muy contento con el último trabajo.",
+            "¡Muchas gracias {sender}! Me alegra muchísimo leer eso.",
+            "Seguramente te vuelva a contactar para otro proyecto a finales de mes.",
+            "Perfecto, cuando lo tengas claro me escribes y lo organizamos.",
+            "Genial, gracias por la atención.",
+            "A ti por confiar en mi trabajo. 🙌",
+        ],
+        [
+            "Buenas {receiver}, tengo una incidencia con el servicio que contraté.",
+            "Vaya, lo siento {sender}. ¿Qué ha pasado exactamente?",
+            "Parece que algo no quedó bien instalado y me está dando problemas.",
+            "Entiendo, puedo pasarme a revisarlo sin coste adicional.",
+            "Te lo agradezco, así nos quedamos tranquilos.",
+            "Te propongo ir mañana por la tarde, ¿te va bien?",
+            "Sí, perfecto. Muchas gracias por la rapidez.",
+        ],
+        [
+            "Hola {receiver}, ¿sigues ofreciendo clases particulares?",
+            "Hola {sender}, sí, sigo dando clases. ¿De qué materia te interesa?",
+            "Sobre todo matemáticas y un poco de física.",
+            "Perfecto, son mis especialidades. Podemos hacer 1 o 2 sesiones semanales.",
+        ],
+        [
+            "Buenas {receiver}, me gustaría pedirte un logo para mi nueva marca.",
+            "¡Hola {sender}! Qué buena noticia. ¿Tienes alguna idea o referencia?",
+            "Tengo algunas imágenes de referencia, pero me gustaría que me propusieras algo creativo.",
+            "Genial, mándame las referencias y preparo un par de propuestas.",
+            "Hecho, te las paso ahora mismo.",
+        ],
+        [
+            "Hola {receiver}, vi que ofreces servicios de mantenimiento.",
+            "Así es {sender}, ¿qué tipo de mantenimiento necesitas?",
+            "Es para una pequeña oficina, algo periódico.",
+            "Entonces podemos montar un plan mensual, te paso detalles por aquí.",
+        ],
+        [
+            "Ey {receiver}, ¿tienes hueco esta semana para un trabajo rápido?",
+            "Depende del día, {sender}. ¿Qué tenías en mente?",
+            "Algo de revisión y pequeños arreglos.",
+            "Creo que el miércoles por la tarde podría ser, si te sirve.",
+            "Me va perfecto, lo agendamos.",
+        ],
+    ]
+
+    for i in range(len(users)):
+        for j in range(i + 1, len(users)):
+            u1 = users[i]
+            u2 = users[j]
+
+            try:
+                # Buscar conversación que tenga SOLO a estos 2 participantes
+                conv = (
+                    Conversation.objects
+                    .filter(participants=u1)
+                    .filter(participants=u2)
+                    .annotate(num_participants=Count("participants"))
+                    .filter(num_participants=2)
+                    .first()
+                )
+
+                if not conv:
+                    conv = Conversation.objects.create()
+                    conv.participants.add(u1, u2)
+                    created_conversations += 1
+                    print(f"[taskify_app] Conversación creada entre {u1.username} y {u2.username}")
+                else:
+                    print(f"[taskify_app] Conversación ya existía entre {u1.username} y {u2.username}")
+
+                # Si ya tiene mensajes, no tocamos nada (idempotente)
+                if conv.messages.exists():
+                    continue
+
+                # Elegimos un patrón de diálogo aleatorio
+                pattern = random.choice(DIALOG_PATTERNS)
+
+                # Elegimos una longitud aleatoria (al menos 3 mensajes)
+                max_len = len(pattern)
+                num_msgs = random.randint(3, max_len)
+
+                for idx in range(num_msgs):
+                    template = pattern[idx]
+
+                    # Alternamos quién habla
+                    if idx % 2 == 0:
+                        sender = u1
+                        receiver = u2
+                    else:
+                        sender = u2
+                        receiver = u1
+
+                    sender_name = sender.first_name or sender.username
+                    receiver_name = receiver.first_name or receiver.username
+
+                    text = template.format(sender=sender_name, receiver=receiver_name)
+
+                    Message.objects.create(
+                        conversation=conv,
+                        sender=sender,
+                        content=text,
+                    )
+                    created_messages += 1
+
+            except Exception as e:
+                print(f"[taskify_app] Error creando conversación/mensajes entre {u1.username} y {u2.username}: {e}")
+                errors += 1
+
+    print(
+        f"[taskify_app] Conversaciones de ejemplo -> "
+        f"creadas: {created_conversations}, mensajes creados: {created_messages}, errores: {errors}"
+    )
+    return {
+        "created_conversations": created_conversations,
+        "created_messages": created_messages,
+        "errors": errors,
+    }
+
+
+def create_random_favorites(sender=None, **kwargs):
+    """
+    Crea favoritos aleatorios para los usuarios.
+    - Cada usuario tendrá un número aleatorio de servicios en favoritos.
+    - Los favoritos varían por usuario y no son todos iguales.
+    - Si ya existen favoritos, no se borran, solo se añaden los que falten.
+    """
+    import random
+    from django.contrib.auth import get_user_model
+
+    try:
+        from .models import Service, Favorite  # ajusta el import si están en otro módulo
+    except Exception as e:
+        print("[taskify_app] No se pudieron importar Service/Favorite:", e)
+        return {"created": 0, "errors": 1}
+
+    User = get_user_model()
+
+    users = list(User.objects.filter(is_active=True, is_superuser=False))
+    services = list(Service.objects.all())
+
+    if not users or not services:
+        print("[taskify_app] No hay usuarios o servicios suficientes para crear favoritos.")
+        return {"created": 0, "errors": 0}
+
+    created = 0
+    errors = 0
+
+    for user in users:
+        try:
+            # Ajustamos el rango según el rol (opcional, solo para hacerlo más realista)
+            if getattr(user, "role", None) == CustomUser.Roles.CUSTOMER:
+                min_favs = 2
+                max_favs = min(8, len(services))
+            elif getattr(user, "role", None) in (CustomUser.Roles.PROVIDER, CustomUser.Roles.FREELANCER):
+                min_favs = 1
+                max_favs = min(5, len(services))
+            else:
+                # COMPANY_ADMIN, COMPANY_WORKER u otros
+                min_favs = 0
+                max_favs = min(4, len(services))
+
+            if max_favs <= 0:
+                continue
+
+            # Número de favoritos que queremos que tenga este usuario
+            target_favs = random.randint(min_favs, max_favs)
+
+            existing_service_ids = set(
+                Favorite.objects.filter(user=user).values_list("service_id", flat=True)
+            )
+
+            # Si ya tiene al menos ese número, no hacemos nada
+            if len(existing_service_ids) >= target_favs:
+                continue
+
+            # Cuántos nuevos favoritos necesitamos crear
+            to_create = target_favs - len(existing_service_ids)
+
+            # Servicios candidatos: todos menos los que ya tiene en favoritos
+            candidate_services = [s for s in services if s.id not in existing_service_ids]
+
+            if not candidate_services:
+                continue
+
+            # Elegimos aleatoriamente servicios para añadir
+            chosen_services = random.sample(candidate_services, min(to_create, len(candidate_services)))
+
+            for service in chosen_services:
+                fav, created_obj = Favorite.objects.get_or_create(
+                    user=user,
+                    service=service,
+                )
+                if created_obj:
+                    created += 1
+
+        except Exception as e:
+            print(f"[taskify_app] Error creando favoritos para {user.username}: {e}")
+            errors += 1
+
+    print(f"[taskify_app] Favoritos aleatorios -> creados: {created}, errores: {errors}")
+    return {"created": created, "errors": errors}
+
 
 
 def create_default_categories(sender, **kwargs):

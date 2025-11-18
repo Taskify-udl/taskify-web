@@ -19,20 +19,26 @@ from django.views.decorators.http import require_POST
 
 from .forms import RegisterForm
 from django.templatetags.static import static
-from .models import Service, ServiceImage, Contract, Review, UserProfile, Notification, CustomUser, EmailVerification, \
+from .models import Service, ServiceImage, Contract, Review, Notification, CustomUser, EmailVerification, \
     Category, Conversation, Message, Favorite
 
 
 @ensure_csrf_cookie
+@ensure_csrf_cookie
 def home(request):
-    # Seleccionar hasta 7 categorías aleatorias
+    # Seleccionar hasta 6 categorías aleatorias
     all_categories = list(Category.objects.all())
     if len(all_categories) > 6:
         categories = random.sample(all_categories, 6)
     else:
         categories = all_categories
 
-    featured_services = Service.objects.all()[:6]
+    # Seleccionar hasta 12 servicios destacados aleatorios
+    all_featured_services = list(Service.objects.all())
+    if len(all_featured_services) > 12:
+        featured_services = random.sample(all_featured_services, 12)
+    else:
+        featured_services = all_featured_services
 
     user_favorites = {}
     if request.user.is_authenticated:
@@ -45,6 +51,8 @@ def home(request):
         'user_favorites_json': json.dumps(user_favorites),
     }
     return render(request, 'home.html', context)
+
+
 
 
 @require_POST
@@ -376,10 +384,10 @@ def profile(request):
     user = request.user
 
     # Get or create user profile
-    profile, _ = UserProfile.objects.get_or_create(user=user)
+    profile, _ = CustomUser.objects.get_or_create(username=user)
 
     # Avatar URL (fallback a una imagen estática si no hay)
-    avatar_url = profile.avatar.url if getattr(profile, "avatar", None) else static('images/default-avatar.png')
+    avatar_url = profile.avatar.url if getattr(profile, "avatar", None) else static('images/user-icon.png')
 
     # Services (paginated)
     services_list = Service.objects.filter(provider=user).order_by('-created_at')
@@ -408,7 +416,7 @@ def profile(request):
     context = {
         'user': user,
         'profile': profile,
-        'avatar_url': avatar_url,  
+        'avatar_url': avatar_url,
         'user_services': user_services,
         'user_contracts': user_contracts,
         'user_reviews': user_reviews[:3],
@@ -423,7 +431,7 @@ def profile(request):
 
 @login_required
 def edit_profile(request):
-    profile, created = UserProfile.objects.get_or_create(user=request.user)
+    profile, created = CustomUser.objects.get_or_create(username=request.user)
 
     if request.method == 'POST':
         # Update user basic info
@@ -879,7 +887,7 @@ def public_profile(request, username):
         messages.error(request, "El usuario no existe.")
         return redirect('home')
 
-    profile, _ = UserProfile.objects.get_or_create(user=user)
+    profile, _ = CustomUser.objects.get_or_create(username=user)
 
     # 2. Obtener los servicios de este usuario
     services = Service.objects.filter(provider=user).prefetch_related('images', 'categories')
@@ -893,7 +901,7 @@ def public_profile(request, username):
     average_rating = reviews.aggregate(avg=Avg('rating'))['avg'] or 0
 
     context = {
-        'profile_user': user,  # El usuario del perfil que estamos viendo
+        'profile_user': user,
         'profile': profile,
         'services': services,
         'reviews': reviews,

@@ -30,9 +30,9 @@
                             </h2>
                             <p class="text-sm sm:text-base text-gray-600 mt-1">
                                 {% t "profile.provider_label" %}
-                                {% if user.profile.profession %}
+                                {% if user.profession %}
                                     <span class="mx-2">·</span>
-                                    <span class="text-gray-900">{{ user.profile.profession }}</span>
+                                    <span class="text-gray-900">{{ user.profession }}</span>
                                 {% endif %}
                             </p>
                         </div>
@@ -46,41 +46,41 @@
                         <div class="text-gray-900 sm:col-span-8 break-words">{{ user.email }}</div>
                     </div>
 
-                    {% if user.profile.profession %}
+                    {% if user.profession %}
                         <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center py-3 border-b border-gray-200">
                             <div class="text-sm text-gray-500 sm:col-span-4">{% t "profile.profession_label" %}</div>
-                            <div class="text-gray-900 sm:col-span-8">{{ user.profile.profession }}</div>
+                            <div class="text-gray-900 sm:col-span-8">{{ user.profession }}</div>
                         </div>
                     {% endif %}
 
-                    {% if user.profile.bio %}
+                    {% if user.bio %}
                         <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-start py-3 border-b border-gray-200">
                             <div class="text-sm text-gray-500 sm:col-span-4">{% t "profile.description_label" %}</div>
-                            <div class="text-gray-900 sm:col-span-8">{{ user.profile.bio }}</div>
+                            <div class="text-gray-900 sm:col-span-8">{{ user.bio }}</div>
                         </div>
                     {% endif %}
 
-                    {% if user.profile.location %}
+                    {% if user.location %}
                         <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center py-3 border-b border-gray-200">
                             <div class="text-sm text-gray-500 sm:col-span-4">{% t "profile.location_label" %}</div>
-                            <div class="text-gray-900 sm:col-span-8">{{ user.profile.location }}</div>
+                            <div class="text-gray-900 sm:col-span-8">{{ user.location }}</div>
                         </div>
                     {% endif %}
 
-                    {% if user.profile.phone %}
+                    {% if user.phone %}
                         <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center py-3 border-b border-gray-200">
                             <div class="text-sm text-gray-500 sm:col-span-4">{% t "profile.phone_label" %}</div>
-                            <div class="text-gray-900 sm:col-span-8">{{ user.profile.phone }}</div>
+                            <div class="text-gray-900 sm:col-span-8">{{ user.phone }}</div>
                         </div>
                     {% endif %}
 
-                    {% if user.profile.website %}
+                    {% if user.website %}
                         <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center py-3 border-b border-gray-200">
                             <div class="text-sm text-gray-500 sm:col-span-4">{% t "profile.website_label" %}</div>
                             <div class="sm:col-span-8">
-                                <a href="{{ user.profile.website }}" target="_blank"
+                                <a href="{{ user.website }}" target="_blank"
                                    class="text-blue-600 hover:underline break-words">
-                                    {{ user.profile.website }}
+                                    {{ user.website }}
                                 </a>
                             </div>
                         </div>

@@ -14,11 +14,11 @@
 
       {% for conv in conversations %}
 
-        <a href="{% url 'chat_detail' conv.conversation_obj.id %}" class="flex items-center pt-2 px-3 border mb-2 rounded-xl">
+        <a href="{% url 'chat_detail' conv.conversation_obj.id %}" class="flex items-center pt-2 px-3 border mb-2 rounded-xl !no-underline hover:bg-gray-50" >
 
           <div class="flex-shrink-0 mr-4">
             <span class="inline-flex items-center justify-center h-12 w-12 rounded-full bg-gray-200">
-               <img class="h-12 w-12 rounded-full object-cover" src="" alt="">
+               <img class="h-12 w-12 rounded-full object-cover" src="{{ conv.otro_usuario.avatar_url }}" alt="">
             </span>
           </div>
 

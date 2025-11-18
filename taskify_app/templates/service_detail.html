@@ -85,7 +85,7 @@
                                 <div class="flex justify-between mb-3">
                                     <div class="flex items-center gap-3">
                                         <img class="w-10 h-10 border rounded-full object-cover"
-                                             src="{{ review.user.profile.avatar_url }}"
+                                             src="{{ review.user.avatar_url }}"
                                              alt="Avatar de {{ review.user.username }}">
                                         <div>
                                             <span class="font-semibold text-gray-800">{{ review.user.get_full_name|default:review.user.username }}</span>
@@ -154,7 +154,7 @@
                        class="block rounded-lg hover:bg-gray-50 transition-colors">
                         <div class="flex flex-row items-center gap-2">
                             <img class="w-14 h-14 rounded-full object-cover border"
-                                 src="{{ service.provider.profile.avatar_url }}"
+                                 src="{{ service.provider.avatar_url }}"
                                  alt="Avatar de {{ service.provider.username }}">
                             <div>
                                 <span class="text-lg font-bold text-gray-900">{{ service.provider.get_full_name|default:service.provider.username }}</span>
