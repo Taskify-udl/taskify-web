@@ -1,0 +1,57 @@
+{% if page_obj.has_other_pages %}
+<div class="flex justify-center items-center mt-8 w-full mb-12">
+    <div class="inline-flex flex-row items-center gap-2" role="navigation" aria-label="Pagination">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+            class="inline-flex items-center justify-center w-10 h-10 rounded-xl border border-gray-200 hover:bg-gray-50 text-gray-600 transition-all duration-200 bg-white shadow-sm"
+            aria-label="Previous">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                stroke="currentColor" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+            </svg>
+        </a>
+        {% else %}
+        <span
+            class="inline-flex items-center justify-center w-10 h-10 rounded-xl border border-gray-100 text-gray-300 cursor-not-allowed bg-gray-50">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                stroke="currentColor" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+            </svg>
+        </span>
+        {% endif %}
+
+        {% for i in page_obj.paginator.page_range %}
+        {% if page_obj.number == i %}
+        <span
+            class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-[#1c1b2b] text-white font-bold text-sm shadow-md">
+            {{ i }}
+        </span>
+        {% elif i > page_obj.number|add:'-3' and i < page_obj.number|add:'3' %} <a
+            href="?page={{ i }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+            class="inline-flex items-center justify-center w-10 h-10 rounded-xl border border-gray-200 hover:bg-gray-50 text-gray-600 font-medium text-sm transition-all duration-200 bg-white hover:border-gray-300 hover:shadow-sm">
+            {{ i }}
+            </a>
+            {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+                class="inline-flex items-center justify-center w-10 h-10 rounded-xl border border-gray-200 hover:bg-gray-50 text-gray-600 transition-all duration-200 bg-white shadow-sm"
+                aria-label="Next">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                    stroke="currentColor" class="w-5 h-5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                </svg>
+            </a>
+            {% else %}
+            <span
+                class="inline-flex items-center justify-center w-10 h-10 rounded-xl border border-gray-100 text-gray-300 cursor-not-allowed bg-gray-50">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                    stroke="currentColor" class="w-5 h-5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                </svg>
+            </span>
+            {% endif %}
+    </div>
+</div>
+{% endif %}

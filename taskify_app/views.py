@@ -34,12 +34,14 @@ def home(request):
     else:
         categories = all_categories
 
-    # Seleccionar hasta 12 servicios destacados aleatorios
-    all_featured_services = list(Service.objects.all())
-    if len(all_featured_services) > 12:
-        featured_services = random.sample(all_featured_services, 12)
-    else:
-        featured_services = all_featured_services
+    # Servicios destacados paginados (ordenados por rating o fecha)
+    featured_services_list = Service.objects.annotate(
+        avg_rating=Avg('reviews__rating')
+    ).order_by('-avg_rating', '-created_at')
+    
+    paginator = Paginator(featured_services_list, 12)
+    page_number = request.GET.get('page')
+    featured_services = paginator.get_page(page_number)
 
     user_favorites = {}
     if request.user.is_authenticated:
@@ -49,6 +51,7 @@ def home(request):
     context = {
         'categories': categories,
         'featured_services': featured_services,
+        'page_obj': featured_services, # Para el template de paginación
         'user_favorites_json': json.dumps(user_favorites),
     }
     return render(request, 'home.html', context)
@@ -105,6 +108,11 @@ def search(request):
         review_count=Count('reviews')
     ).distinct()
 
+    # Paginación
+    paginator = Paginator(results, 12)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     # (Pasamos los favoritos del usuario para los botones de corazón)
     user_favorites = {}
     if request.user.is_authenticated:
@@ -114,7 +122,8 @@ def search(request):
     context = {
         'query': query,
         'category_id': category_id,  # por si quieres marcar la categoría activa en la plantilla
-        'results': results,
+        'results': page_obj,
+        'page_obj': page_obj,
         'user_favorites_json': json.dumps(user_favorites),
     }
 
@@ -130,12 +139,17 @@ def favourites(request):
     from .models import Favorite
 
     user = request.user
-    favorite_services = Service.objects.filter(
+    favorite_services_list = Service.objects.filter(
         favorited_by__user=user
     ).prefetch_related('categories', 'images').order_by('-favorited_by__favorited_at')
 
+    paginator = Paginator(favorite_services_list, 12)
+    page_number = request.GET.get('page')
+    favorite_services = paginator.get_page(page_number)
+
     context = {
         'favorite_services': favorite_services,
+        'page_obj': favorite_services,
     }
     return render(request, 'favourites.html', context)
 
@@ -673,8 +687,14 @@ def chat_list_view(request):
         reverse=True
     )
 
+    # Paginación manual de la lista ordenada
+    paginator = Paginator(context_conversations, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     return render(request, 'chats.html', {
-        'conversations': context_conversations
+        'conversations': page_obj,
+        'page_obj': page_obj
     })
 
 
@@ -832,12 +852,18 @@ def my_services(request):
         return redirect('my_services')
 
     # GET request
-    user_services = Service.objects.filter(provider=request.user).prefetch_related('images', 'categories').order_by(
+    user_services_list = Service.objects.filter(provider=request.user).prefetch_related('images', 'categories').order_by(
         '-created_at')
+    
+    paginator = Paginator(user_services_list, 10)
+    page_number = request.GET.get('page')
+    user_services = paginator.get_page(page_number)
+
     all_categories = Category.objects.all()
 
     context = {
         'services': user_services,
+        'page_obj': user_services,
         'categories': all_categories,
     }
     return render(request, 'my_services.html', context)
@@ -906,7 +932,11 @@ def public_profile(request, username):
     profile, _ = CustomUser.objects.get_or_create(username=user)
 
     # 2. Obtener los servicios de este usuario
-    services = Service.objects.filter(provider=user).prefetch_related('images', 'categories')
+    services_list = Service.objects.filter(provider=user).prefetch_related('images', 'categories').order_by('-created_at')
+    
+    paginator = Paginator(services_list, 6)
+    page_number = request.GET.get('page')
+    services = paginator.get_page(page_number)
 
     # 3. Obtener las reseñas recibidas por este usuario (en cualquiera de sus servicios)
     reviews = Review.objects.filter(service__provider=user).select_related('user', 'user__profile').order_by(
@@ -915,14 +945,17 @@ def public_profile(request, username):
     # 4. Calcular estadísticas
     reviews_count = reviews.count()
     average_rating = reviews.aggregate(avg=Avg('rating'))['avg'] or 0
+    total_services_count = services_list.count()
 
     context = {
         'profile_user': user,
         'profile': profile,
         'services': services,
+        'page_obj': services,
         'reviews': reviews,
         'reviews_count': reviews_count,
         'average_rating': average_rating,
+        'total_services_count': total_services_count,
     }
 
     return render(request, 'public_profile.html', context)
