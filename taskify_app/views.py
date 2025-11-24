@@ -998,3 +998,54 @@ def start_chat(request, service_id):
         new_convo.participants.add(user, provider)
         new_convo.save()
         return redirect('chat_detail', conversation_id=new_convo.id)
+
+
+@login_required
+def request_service(request, service_id):
+    """
+    Procesa la solicitud de contratación de un servicio.
+    Crea un contrato en estado 'pending'.
+    """
+    if request.method != 'POST':
+        return redirect('service_detail', service_id=service_id)
+
+    service = get_object_or_404(Service, id=service_id)
+    
+    # No puedes contratar tu propio servicio
+    if service.provider == request.user:
+        messages.error(request, "No puedes contratar tu propio servicio.")
+        return redirect('service_detail', service_id=service_id)
+
+    start_date = request.POST.get('start_date')
+    start_time = request.POST.get('start_time')
+    description = request.POST.get('description')
+
+    if not start_date or not start_time:
+        messages.error(request, "Debes seleccionar fecha y hora.")
+        return redirect('service_detail', service_id=service_id)
+
+    try:
+        contract = Contract.objects.create(
+            user=request.user,
+            service=service,
+            start_date=start_date,
+            start_time=start_time,
+            description=description,
+            status='pending',
+            price=service.price  # Guardamos el precio actual
+        )
+        
+        # Crear notificación para el proveedor
+        create_notification(
+            user=service.provider,
+            title="Nueva solicitud de servicio",
+            message=f"{request.user.get_full_name() or request.user.username} ha solicitado contratar '{service.name}'.",
+            notification_type='contract_update'
+        )
+        
+        messages.success(request, "Solicitud enviada correctamente. El profesional revisará tu petición.")
+        return redirect('my_orders')
+        
+    except Exception as e:
+        messages.error(request, f"Error al procesar la solicitud: {str(e)}")
+        return redirect('service_detail', service_id=service_id)
