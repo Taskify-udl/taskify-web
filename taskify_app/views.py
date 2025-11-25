@@ -273,7 +273,11 @@ def my_orders(request):
             )
             if contract.status != next_status:
                 contract.status = next_status
-                contract.save(update_fields=['status'])
+                if next_status == 'rejected':
+                    contract.rejection_reason = request.POST.get('rejection_reason', '')
+                    contract.save(update_fields=['status', 'rejection_reason'])
+                else:
+                    contract.save(update_fields=['status'])
                 if next_status == 'accepted':
                     messages.success(
                         request,
@@ -376,9 +380,11 @@ def my_orders(request):
         orders.append(
             {
                 'id': contract.id,
+                'service_id': contract.service.id,
                 'service_name': contract.service.name,
                 'counterpart_label': counterpart_label,
                 'counterpart_name': counterpart_name,
+                'counterpart_id': counterpart.id,
                 'status': contract.status,
                 'status_label': status_config['label'],
                 'badge_classes': status_config['badge_classes'],
@@ -1031,3 +1037,83 @@ def start_chat(request, service_id):
         new_convo.participants.add(user, provider)
         new_convo.save()
         return redirect('chat_detail', conversation_id=new_convo.id)
+
+
+def start_chat_order(request, contract_id):
+    """
+    Inicia un chat desde un pedido/contrato.
+    Identifica automáticamente quién es el interlocutor.
+    """
+    contract = get_object_or_404(Contract, id=contract_id)
+    user = request.user
+    
+    # Determinar el interlocutor
+    if user == contract.service.provider:
+        counterpart = contract.user
+    elif user == contract.user:
+        counterpart = contract.service.provider
+    else:
+        messages.error(request, "No tienes permiso para acceder a este chat.")
+        return redirect('my_orders')
+
+    # Buscar conversación existente
+    conversation = Conversation.objects.filter(participants=user).filter(participants=counterpart).first()
+
+    if conversation:
+        return redirect('chat_detail', conversation_id=conversation.id)
+    else:
+        new_convo = Conversation.objects.create()
+        new_convo.participants.add(user, counterpart)
+        new_convo.save()
+        return redirect('chat_detail', conversation_id=new_convo.id)
+
+
+@login_required
+def request_service(request, service_id):
+    """
+    Procesa la solicitud de contratación de un servicio.
+    Crea un contrato en estado 'pending'.
+    """
+    if request.method != 'POST':
+        return redirect('service_detail', service_id=service_id)
+
+    service = get_object_or_404(Service, id=service_id)
+    
+    # No puedes contratar tu propio servicio
+    if service.provider == request.user:
+        messages.error(request, "No puedes contratar tu propio servicio.")
+        return redirect('service_detail', service_id=service_id)
+
+    start_date = request.POST.get('start_date')
+    start_time = request.POST.get('start_time')
+    description = request.POST.get('description')
+
+    if not start_date or not start_time:
+        messages.error(request, "Debes seleccionar fecha y hora.")
+        return redirect('service_detail', service_id=service_id)
+
+    try:
+        contract = Contract.objects.create(
+            user=request.user,
+            service=service,
+            start_date=start_date,
+            start_time=start_time,
+            description=description,
+            status='pending',
+            price=service.price  # Guardamos el precio actual
+        )
+        
+        # Crear notificación para el proveedor
+        create_notification(
+            user=service.provider,
+            title="Nueva solicitud de servicio",
+            message=f"{request.user.get_full_name() or request.user.username} ha solicitado contratar '{service.name}'.",
+            notification_type='contract_update'
+        )
+        
+        messages.success(request, "Solicitud enviada correctamente. El profesional revisará tu petición.")
+        return redirect('my_orders')
+        
+    except Exception as e:
+        messages.error(request, f"Error al procesar la solicitud: {str(e)}")
+        return redirect('service_detail', service_id=service_id)

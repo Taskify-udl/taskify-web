@@ -31,10 +31,29 @@ def create_review_notification(sender, instance, created, **kwargs):
         )
 
 
+@receiver(pre_save, sender=Contract)
+def store_original_contract_status(sender, instance, **kwargs):
+    """
+    Guarda el estado original del contrato antes de guardarlo,
+    para poder detectar cambios en el post_save.
+    """
+    if instance.pk:
+        try:
+            original = Contract.objects.get(pk=instance.pk)
+            instance._original_status = original.status
+        except Contract.DoesNotExist:
+            instance._original_status = None
+    else:
+        instance._original_status = None
+
+
 @receiver(post_save, sender=Contract)
 def update_contract_status_notification(sender, instance, created, **kwargs):
-    if not created and instance.status != instance._original_status:
+    if not created and hasattr(instance, '_original_status') and instance._original_status and instance.status != instance._original_status:
         status_messages = {
+            'pending': 'Tu solicitud está pendiente de aceptación.',
+            'accepted': 'Tu solicitud ha sido aceptada.',
+            'rejected': 'Tu solicitud ha sido rechazada.',
             'active': 'Tu contrato ha sido activado.',
             'paused': 'Tu contrato ha sido pausado.',
             'cancelled': 'Tu contrato ha sido cancelado.',
@@ -45,6 +64,9 @@ def update_contract_status_notification(sender, instance, created, **kwargs):
             instance.status,
             f'El estado de tu contrato ha cambiado a: {instance.status}',
         )
+
+        if instance.status == 'rejected' and instance.rejection_reason:
+            message += f' Motivo: {instance.rejection_reason}'
 
         Notification.objects.create(
             user=instance.user,

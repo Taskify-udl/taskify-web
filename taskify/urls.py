@@ -28,8 +28,10 @@ urlpatterns = [
 
     path("service/<int:service_id>/", views.service_detail, name="service_detail"),
     path("service/<int:service_id>/contact/", views.start_chat, name="start_chat"),
+    path("service/<int:service_id>/request/", views.request_service, name="request_service"),
 
     path("my_orders/", views.my_orders, name='my_orders'),
+    path("order/<int:contract_id>/chat/", views.start_chat_order, name='start_chat_order'),
     path("favourites/", views.favourites, name='favourites'),
     path("service/<int:service_id>/toggle-favorite/", views.toggle_favorite, name='toggle_favorite'),
 
