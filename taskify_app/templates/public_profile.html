@@ -3,35 +3,35 @@
 {% load json_i18n %}
 
 {% block content %}
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
 <div class="w-[1024px] mx-auto py-4 space-y-6">
-
-    <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-3 my-4">
+    <!-- Profile Header -->
+    <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
         <div class="flex items-center gap-4">
             <img class="w-24 h-24 rounded-full object-cover border-2 border-gray-100" src="{{ profile.avatar_url }}"
                 alt="{{ profile_user.username }}">
             <div>
-                <span class="text-xl font-bold text-gray-900">
-                    {{ profile_user.get_full_name|default:profile_user.username }}</span>
-                <p class="text-md m-0 text-gray-600">{{ profile.profession|default:"Profesional" }}</p>
+                <h1 class="text-2xl font-bold text-gray-900">
+                    {{ profile_user.get_full_name|default:profile_user.username }}
+                </h1>
+                <p class="text-gray-600">{{ profile.profession|default:"Profesional" }}</p>
                 <div class="flex items-center gap-2 mt-2 text-gray-700">
-                    <!-- ...rating svg... -->
-                    <span class="text-md font-semibold text-gray-800">{{ average_rating|floatformat:1 }}</span>
-                    <span class="text-md text-gray-500">·</span>
-                    <!-- Mostrar la traducción y el conteo fuera de la traducción -->
-                    <span class="text-md text-gray-600">
-                        {% t "public_profile.services_label" %} ({{ total_services_count }})</span>
+                    <span class="font-semibold text-gray-800">{{ average_rating|floatformat:1 }}</span>
+                    <span class="text-gray-500">·</span>
+                    <span class="text-gray-600">
+                        {% t "public_profile.services_label" %} ({{ total_services_count }})
+                    </span>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-3 mb-4">
-        <span class="text-lg font-semibold text-gray-900 mb-3">{% t "public_profile.about_header" %}</span>
-        <p class="text-md text-gray-700 mb-2">
+    <!-- About Section -->
+    <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-3">{% t "public_profile.about_header" %}</h2>
+        <p class="text-gray-700 mb-2">
             {% if profile.bio %}
             {{ profile.bio|linebreaksbr }}
             {% else %}
@@ -39,43 +39,49 @@
             {% endif %}
         </p>
         {% if profile.location %}
-        <div class="text-md mb-2 text-gray-600">
-            <div class="flex flex-row gap-1">
-                <!-- ...svg... -->
-                <span>{{ profile.location }}</span>
-            </div>
+        <div class="text-gray-600 mt-2">
+            <span>📍 {{ profile.location }}</span>
         </div>
         {% endif %}
     </div>
 
+    <!-- Tabs -->
     <div>
-        <div class="flex items-center bg-gray-50 border border-gray-200 shadow-sm rounded-full !p-[1px]">
+        <div class="flex items-center bg-gray-50 border border-gray-200 shadow-sm rounded-full p-1 mb-4">
             <div id="btnServices"
-                class="w-50 py-2 px-3 font-medium text-black rounded-full flex justify-center hover:cursor-pointer border bg-white">
+                class="flex-1 py-2 px-4 font-medium text-black rounded-full flex justify-center cursor-pointer border bg-white">
                 {% t "public_profile.services_label" %} ({{ total_services_count }})
             </div>
             <div id="btnReviews"
-                class="w-50 py-2 px-3 font-medium text-gray-500 rounded-full flex justify-center hover:cursor-pointer hover:bg-gray-100">
+                class="flex-1 py-2 px-4 font-medium text-gray-500 rounded-full flex justify-center cursor-pointer hover:bg-gray-100">
                 {% t "public_profile.reviews_label" %} ({{ reviews|length }})
             </div>
         </div>
 
+        <!-- Services Content -->
         <div id="contentServices" class="pt-3">
             {% if services %}
-            <div class="grid grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {% for service in services %}
-                <article class="rounded-xl border border-gray-200 group shadow-sm">
+                <article class="rounded-xl border border-gray-200 group shadow-sm bg-white overflow-hidden">
                     <a href="{% url 'service_detail' service.id %}"
-                        class="block h-[220px] !border-b border-gray-200 relative rounded-t-xl overflow-hidden">
-                        <div class="swiper service-swiper-{{ service.id }} h-full" style="--swiper-navigation-color: #ffffff;
-                          --swiper-navigation-size: 24px;
-                          filter: drop-shadow(0 0 3px rgba(0,0,0,0.7));">
+                        class="block h-[220px] relative rounded-t-lg overflow-hidden">
 
+                        {% if request.user.is_authenticated %}
+                        <div role="button" tabindex="0"
+                            class="flex align-items favorite-btn absolute top-2 right-2 z-10 p-2 bg-white/80 rounded-full cursor-pointer backdrop-blur-sm transition-colors duration-200 hover:bg-white"
+                            data-service-id="{{ service.id }}" title="{% t 'public_profile.add_favorite' %}"
+                            style="outline: none !important; box-shadow: none !important;">
+                            <i class="fa-regular text-gray-700 hover:text-red-500 fa-heart text-xl"
+                                aria-hidden="true"></i>
+                        </div>
+                        {% endif %}
+
+                        <div class="swiper service-swiper-{{ service.id }} h-full">
                             <div class="swiper-wrapper">
                                 {% for img in service.images.all %}
                                 <div class="swiper-slide h-full bg-cover bg-center"
-                                    style="background-image: url('{{ img.image.url }}');">
-                                </div>
+                                    style="background-image: url('{{ img.image.url }}');"></div>
                                 {% empty %}
                                 <div
                                     class="swiper-slide h-full bg-cover bg-center flex items-center justify-center bg-gray-100">
@@ -84,48 +90,45 @@
                                 {% endfor %}
                             </div>
                             {% if service.images.count > 1 %}
-                            <div
-                                class="swiper-button-prev opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <div class="swiper-button-prev opacity-0 group-hover:opacity-100 transition-opacity duration-300 !left-2 !text-white"
+                                style="filter: drop-shadow(0 0 3px rgba(0,0,0,0.7)); --swiper-navigation-size: 24px;">
                             </div>
-                            <div
-                                class="swiper-button-next opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <div class="swiper-button-next opacity-0 group-hover:opacity-100 transition-opacity duration-300 !right-2 !text-white"
+                                style="filter: drop-shadow(0 0 3px rgba(0,0,0,0.7)); --swiper-navigation-size: 24px;">
                             </div>
                             {% endif %}
                         </div>
                     </a>
 
-                    <div class="p-3 flex flex-col justify-between h-[170px]">
-                        <div>
-                            <a href="{% url 'service_detail' service.id %}"
-                                class="!ml-[1px] text-lg font-medium text-gray-800 line-clamp-1 group-hover:text-blue-600 transition-colors block no-underline hover:no-underline overflow-hidden text-ellipsis whitespace-nowrap">
-                                {{ service.name }}</a>
-                            <p class="!ml-[2px] mb-2 text-gray-500 text-sm line-clamp-2">
-                                {{ service.description|truncatewords:15 }}</p>
-                        </div>
+                    <div class="p-3">
+                        <a href="{% url 'service_detail' service.id %}"
+                            class="text-lg font-medium text-gray-800 line-clamp-1 group-hover:text-blue-600 transition-colors block no-underline hover:no-underline overflow-hidden text-ellipsis whitespace-nowrap">
+                            {{ service.name }}
+                        </a>
 
-                        <div>
-                            <div class="flex flex-row flex-wrap max-h-[26px] overflow-y-hidden mb-2">
-                                {% for category in service.categories.all|slice:":2" %}
-                                <span
-                                    class="text-xs px-2 py-1 mr-1 mb-1 border border-gray-300 bg-gray-50 rounded-full">
-                                    {{ category.name }}
+                        <span class="text-xs px-2 py-1 mr-1 mb-1 border border-gray-300 bg-gray-50 rounded-full">
+                            {% if service.categories.all %}
+                            {{ service.categories.first.name }}
+                            {% else %}
+                            Sin categoría
+                            {% endif %}
+                        </span>
+
+                        <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+                            <div class="flex items-center gap-1 text-sm text-gray-600">
+                                <span class="font-semibold text-gray-800">
+                                    {{ service.average_rating|default:0|floatformat:1 }}
                                 </span>
-                                {% endfor %}
+                                <span>({{ service.review_count|default:0 }})</span>
                             </div>
-
-                            <div class="flex mt-2 mr-1 mb-1 justify-start items-baseline border-t border-gray-100 pt-2">
-                                <span class="text-sm font-semibold text-gray-800">
-                                    {{ service.average_rating|default:0|floatformat:1 }}</span>
-                                <span class="text-sm text-gray-500 ml-1">({{ service.reviews.count|default:0 }})</span>
+                            <div class="flex-shrink-0">
+                                <span class="text-xl font-bold text-gray-800">€{{ service.price|floatformat:0 }}</span>
                             </div>
-
                         </div>
-
                     </div>
                 </article>
                 {% endfor %}
             </div>
-            {% include 'includes/pagination.html' %}
             {% else %}
             <div class="text-center py-12 text-gray-500">
                 <p>{% t "public_profile.no_services" %}</p>
@@ -133,16 +136,18 @@
             {% endif %}
         </div>
 
+        <!-- Reviews Content -->
         <div id="contentReviews" class="pt-3 space-y-3 hidden">
             {% for review in reviews %}
-            <div class="bg-white border border-gray-200 rounded-xl p-3">
+            <div class="bg-white border border-gray-200 rounded-xl p-4">
                 <div class="flex items-top justify-between mb-3">
                     <div class="flex items-center gap-3">
                         <img class="w-10 h-10 rounded-full object-cover" src="{{ review.user.profile.avatar_url }}"
                             alt="Avatar de {{ review.user.username }}">
                         <div>
                             <span class="font-semibold text-gray-800">
-                                {{ review.user.get_full_name|default:review.user.username }}</span>
+                                {{ review.user.get_full_name|default:review.user.username }}
+                            </span>
                             <div class="flex items-center">
                                 {% for i in "12345" %}
                                 <svg class="w-4 h-4 {% if forloop.counter <= review.rating %}text-yellow-400{% else %}text-gray-300{% endif %}"
@@ -155,9 +160,10 @@
                         </div>
                     </div>
                     <span class="text-sm text-gray-500">
-                        {{ review.created_at|date:"Y-m-d" }}</span>
+                        {{ review.created_at|date:"Y-m-d" }}
+                    </span>
                 </div>
-                <p class="m-0 text-gray-700">
+                <p class="text-gray-700">
                     {{ review.comment|default:"(Sin comentario)" }}
                 </p>
             </div>
@@ -167,13 +173,18 @@
             </div>
             {% endfor %}
         </div>
-
     </div>
 </div>
 
+{% include "includes/confirmation_modal.html" with modal_id="removeFavoriteModal" title="favourites.remove_title" description="favourites.remove_confirmation_text" confirm_text="favourites.confirm_remove" cancel_text="favourites.cancel" confirm_id="confirmRemoveFavBtn" cancel_id="cancelRemoveFavBtn" %}
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Inicializar Swipers
+        const TR_ADD_FAV = "{% t 'public_profile.add_favorite' %}";
+        const TR_REMOVE_FAV = "{% t 'public_profile.remove_favorite' %}";
+        const userFavorites = JSON.parse('{{ user_favorites_json|default:"{}"|escapejs }}');
+
+        // Initialize Swipers
         document.querySelectorAll('.swiper').forEach((el) => {
             new Swiper(el, {
                 navigation: {
@@ -184,35 +195,146 @@
             });
         });
 
-        // Lógica de Pestañas (Tabs)
+        // Tab Logic
         const btnServices = document.getElementById('btnServices');
         const btnReviews = document.getElementById('btnReviews');
         const contentServices = document.getElementById('contentServices');
         const contentReviews = document.getElementById('contentReviews');
 
-        btnServices.addEventListener('click', () => {
-            // Activar botón
-            btnServices.classList.add('border', 'bg-white', 'text-black');
-            btnServices.classList.remove('text-gray-500', 'hover:text-gray-700', 'hover:bg-gray-100');
-            // Desactivar otro botón
-            btnReviews.classList.add('text-gray-500', 'hover:text-gray-700', 'hover:bg-gray-100');
-            btnReviews.classList.remove('border', 'bg-white', 'text-black');
-            // Mostrar contenido
-            contentServices.classList.remove('hidden');
-            contentReviews.classList.add('hidden');
+        if (btnServices && btnReviews && contentServices && contentReviews) {
+            btnServices.addEventListener('click', () => {
+                btnServices.classList.add('border', 'bg-white', 'text-black');
+                btnServices.classList.remove('text-gray-500', 'hover:bg-gray-100');
+                btnReviews.classList.add('text-gray-500', 'hover:bg-gray-100');
+                btnReviews.classList.remove('border', 'bg-white', 'text-black');
+                contentServices.classList.remove('hidden');
+                contentReviews.classList.add('hidden');
+            });
+
+            btnReviews.addEventListener('click', () => {
+                btnReviews.classList.add('border', 'bg-white', 'text-black');
+                btnReviews.classList.remove('text-gray-500', 'hover:bg-gray-100');
+                btnServices.classList.add('text-gray-500', 'hover:bg-gray-100');
+                btnServices.classList.remove('border', 'bg-white', 'text-black');
+                contentReviews.classList.remove('hidden');
+                contentServices.classList.add('hidden');
+            });
+        }
+
+        // Helper para DIVs como botones
+        function setupDivAsButton(divElement, callback) {
+            if (divElement) {
+                divElement.addEventListener('click', callback);
+                divElement.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        callback(event);
+                    }
+                });
+            }
+        }
+
+        // Lógica de Favoritos con Modal
+        const favoriteButtons = document.querySelectorAll('.favorite-btn');
+        const removeModal = document.getElementById('removeFavoriteModal');
+        const confirmRemoveBtn = document.getElementById('confirmRemoveFavBtn');
+        const cancelRemoveBtn = document.getElementById('cancelRemoveFavBtn');
+
+        let pendingServiceId = null;
+        let pendingButtonDiv = null;
+
+        const closeRemoveModal = () => {
+            removeModal.classList.add('hidden');
+            pendingServiceId = null;
+            pendingButtonDiv = null;
+        };
+
+        if (cancelRemoveBtn) {
+            cancelRemoveBtn.addEventListener('click', closeRemoveModal);
+        }
+
+        if (confirmRemoveBtn) {
+            confirmRemoveBtn.addEventListener('click', async () => {
+                if (pendingServiceId && pendingButtonDiv) {
+                    await toggleFavorite(pendingServiceId, pendingButtonDiv);
+                }
+                closeRemoveModal();
+            });
+        }
+
+        async function toggleFavorite(serviceId, buttonDiv) {
+            const icon = buttonDiv.querySelector('i');
+            try {
+                const response = await fetch(`/service/${serviceId}/toggle-favorite/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+
+                    if (data.action === 'added') {
+                        icon.classList.remove('fa-regular', 'text-gray-400', 'text-gray-700');
+                        icon.classList.add('fa-solid', 'text-red-500');
+                        buttonDiv.setAttribute('title', TR_REMOVE_FAV);
+                        userFavorites[serviceId] = data.favorite_id;
+                    } else if (data.action === 'removed') {
+                        icon.classList.remove('fa-solid', 'text-red-500');
+                        icon.classList.add('fa-regular', 'text-gray-700');
+                        buttonDiv.setAttribute('title', TR_ADD_FAV);
+                        delete userFavorites[serviceId];
+                    }
+                }
+            } catch (error) {
+                console.error('Error al gestionar favorito:', error);
+            }
+        }
+
+        favoriteButtons.forEach(buttonDiv => {
+            const serviceId = parseInt(buttonDiv.dataset.serviceId);
+            const icon = buttonDiv.querySelector('i');
+
+            // Establecer estado inicial
+            if (serviceId in userFavorites) {
+                icon.classList.remove('fa-regular', 'text-gray-400', 'text-gray-700');
+                icon.classList.add('fa-solid', 'text-red-500');
+                buttonDiv.setAttribute('title', TR_REMOVE_FAV);
+            }
+
+            // Manejar click
+            setupDivAsButton(buttonDiv, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                if (serviceId in userFavorites) {
+                    // Mostrar modal de confirmación
+                    pendingServiceId = serviceId;
+                    pendingButtonDiv = buttonDiv;
+                    removeModal.classList.remove('hidden');
+                } else {
+                    // Agregar inmediatamente
+                    toggleFavorite(serviceId, buttonDiv);
+                }
+            });
         });
 
-        btnReviews.addEventListener('click', () => {
-            // Activar botón
-            btnReviews.classList.add('border', 'bg-white', 'text-black');
-            btnReviews.classList.remove('text-gray-500', 'hover:text-gray-700', 'hover:bg-gray-100');
-            // Desactivar otro botón
-            btnServices.classList.add('text-gray-500', 'hover:text-gray-700', 'hover:bg-gray-100');
-            btnServices.classList.remove('border', 'bg-white', 'text-black');
-            // Mostrar contenido
-            contentReviews.classList.remove('hidden');
-            contentServices.classList.add('hidden');
-        });
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
     });
 </script>
 {% endblock %}

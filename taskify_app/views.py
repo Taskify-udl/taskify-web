@@ -953,6 +953,12 @@ def public_profile(request, username):
     average_rating = reviews.aggregate(avg=Avg('rating'))['avg'] or 0
     total_services_count = services_list.count()
 
+    # 5. Obtener favoritos del usuario actual
+    user_favorites = {}
+    if request.user.is_authenticated:
+        favorites = Favorite.objects.filter(user=request.user).values('service_id', 'id')
+        user_favorites = {fav['service_id']: fav['id'] for fav in favorites}
+
     context = {
         'profile_user': user,
         'profile': profile,
@@ -962,6 +968,7 @@ def public_profile(request, username):
         'reviews_count': reviews_count,
         'average_rating': average_rating,
         'total_services_count': total_services_count,
+        'user_favorites_json': json.dumps(user_favorites),
     }
 
     return render(request, 'public_profile.html', context)
