@@ -17,6 +17,7 @@ class Contract(models.Model):
     start_date = models.DateField()
     start_time = models.TimeField(null=True, blank=True)
     description = models.TextField(blank=True)
+    rejection_reason = models.TextField(blank=True, null=True)
     status = models.CharField(
         max_length=30,
         default="active",

@@ -259,7 +259,11 @@ def my_orders(request):
             )
             if contract.status != next_status:
                 contract.status = next_status
-                contract.save(update_fields=['status'])
+                if next_status == 'rejected':
+                    contract.rejection_reason = request.POST.get('rejection_reason', '')
+                    contract.save(update_fields=['status', 'rejection_reason'])
+                else:
+                    contract.save(update_fields=['status'])
                 if next_status == 'accepted':
                     messages.success(
                         request,
@@ -362,9 +366,11 @@ def my_orders(request):
         orders.append(
             {
                 'id': contract.id,
+                'service_id': contract.service.id,
                 'service_name': contract.service.name,
                 'counterpart_label': counterpart_label,
                 'counterpart_name': counterpart_name,
+                'counterpart_id': counterpart.id,
                 'status': contract.status,
                 'status_label': status_config['label'],
                 'badge_classes': status_config['badge_classes'],
@@ -996,6 +1002,35 @@ def start_chat(request, service_id):
         # Crear una nueva conversación
         new_convo = Conversation.objects.create()
         new_convo.participants.add(user, provider)
+        new_convo.save()
+        return redirect('chat_detail', conversation_id=new_convo.id)
+
+
+def start_chat_order(request, contract_id):
+    """
+    Inicia un chat desde un pedido/contrato.
+    Identifica automáticamente quién es el interlocutor.
+    """
+    contract = get_object_or_404(Contract, id=contract_id)
+    user = request.user
+    
+    # Determinar el interlocutor
+    if user == contract.service.provider:
+        counterpart = contract.user
+    elif user == contract.user:
+        counterpart = contract.service.provider
+    else:
+        messages.error(request, "No tienes permiso para acceder a este chat.")
+        return redirect('my_orders')
+
+    # Buscar conversación existente
+    conversation = Conversation.objects.filter(participants=user).filter(participants=counterpart).first()
+
+    if conversation:
+        return redirect('chat_detail', conversation_id=conversation.id)
+    else:
+        new_convo = Conversation.objects.create()
+        new_convo.participants.add(user, counterpart)
         new_convo.save()
         return redirect('chat_detail', conversation_id=new_convo.id)
 
