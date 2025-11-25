@@ -3,6 +3,17 @@
 {% load json_i18n %}
 
 {% block content %}
+    <style>
+        article:target {
+            border-color: #1c1b2b;
+            box-shadow: 0 0 0 2px rgba(28, 27, 43, 0.1);
+            animation: highlight 2s ease-out;
+        }
+        @keyframes highlight {
+            0% { background-color: rgba(28, 27, 43, 0.05); }
+            100% { background-color: white; }
+        }
+    </style>
 
     <div class="w-[1024px] mx-auto">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-6 mb-4">
@@ -61,7 +72,7 @@
         {% if orders %}
             <div class="space-y-4 mb-12">
                 {% for order in orders %}
-                    <article class="bg-white border border-gray-200 rounded-2xl shadow-sm p-5 flex flex-col gap-4">
+                    <article id="order-{{ order.id }}" class="bg-white border border-gray-200 rounded-2xl shadow-sm p-5 flex flex-col gap-4 scroll-mt-24 transition-colors duration-500">
                         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                             <div>
                                 <span class="text-lg font-semibold text-gray-900">{{ order.service_name }}</span>
@@ -87,22 +98,18 @@
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-600">
                             <div class="flex items-center gap-2">
-                                <!-- ...existing icon... -->
                                 <span class="font-medium text-gray-900">{% t "orders.service_start" %}</span>
                                 <span>{{ order.start_date|date:'d \d\e F, Y' }}</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <!-- ...existing icon... -->
                                 <span class="font-medium text-gray-900">{% t "orders.contract" %}</span>
                                 <span class="line-clamp-2 text-xs uppercase tracking-wide">{{ order.code }}</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <!-- ...existing icon... -->
                                 <span class="font-medium text-gray-900">{% t "orders.created" %}</span>
                                 <span>{{ order.created_at|date:'d/m/Y H:i' }}</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <!-- ...existing icon... -->
                                 <span class="font-medium text-gray-900">{% t "orders.price_agreed" %}</span>
                                 {% if order.has_price %}
                                     <span>€{{ order.price|floatformat:2 }}</span>
@@ -132,7 +139,6 @@
                                         <button type="submit" class="px-4 py-2 text-sm font-medium bg-emerald-600 text-white !rounded-xl hover:bg-emerald-700 transition cursor-pointer">{% t "orders.accept" %}</button>
                                     </form>
                                     
-                                    <!-- Reject Button triggers Modal -->
                                     <button type="button" onclick="openRejectModal('{{ order.id }}')" class="px-4 py-2 text-sm font-medium bg-red-600 text-white !rounded-xl hover:bg-red-700 transition cursor-pointer">{% t "orders.reject" %}</button>
                                 {% endif %}
                             </div>

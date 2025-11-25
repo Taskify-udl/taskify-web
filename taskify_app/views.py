@@ -945,7 +945,7 @@ def public_profile(request, username):
     services = paginator.get_page(page_number)
 
     # 3. Obtener las reseñas recibidas por este usuario (en cualquiera de sus servicios)
-    reviews = Review.objects.filter(service__provider=user).select_related('user', 'user__profile').order_by(
+    reviews = Review.objects.filter(service__provider=user).select_related('user').order_by(
         '-created_at')
 
     # 4. Calcular estadísticas
@@ -979,13 +979,13 @@ def service_detail(request, service_id):
     Muestra la página de detalle de un servicio.
     """
     service = get_object_or_404(
-        Service.objects.select_related('provider', 'provider__profile')
+        Service.objects.select_related('provider')
         .prefetch_related('images', 'categories'),
         id=service_id
     )
 
     # Obtener reviews y estadísticas
-    reviews = Review.objects.filter(service=service).select_related('user', 'user__profile').order_by('-created_at')
+    reviews = Review.objects.filter(service=service).select_related('user').order_by('-created_at')
 
     stats = reviews.aggregate(
         average_rating=Avg('rating'),
@@ -1005,6 +1005,15 @@ def service_detail(request, service_id):
     provider_avg_rating = provider_stats.get('total_avg_rating') or 0
     provider_reviews_count = provider_stats.get('total_reviews_count') or 0
 
+    # Verificar si el usuario ya tiene un contrato activo/pendiente para este servicio
+    existing_contract = None
+    if request.user.is_authenticated:
+        existing_contract = Contract.objects.filter(
+            user=request.user,
+            service=service,
+            status__in=['pending', 'accepted', 'active']
+        ).first()
+
     context = {
         'service': service,
         'reviews': reviews,
@@ -1012,6 +1021,7 @@ def service_detail(request, service_id):
         'reviews_count': reviews_count,
         'provider_avg_rating': provider_avg_rating,
         'provider_reviews_count': provider_reviews_count,
+        'existing_contract': existing_contract,
     }
     return render(request, 'service_detail.html', context)
 
@@ -1091,6 +1101,17 @@ def request_service(request, service_id):
         messages.error(request, "No puedes contratar tu propio servicio.")
         return redirect('service_detail', service_id=service_id)
 
+    # Verificar duplicados
+    existing = Contract.objects.filter(
+        user=request.user,
+        service=service,
+        status__in=['pending', 'accepted', 'active']
+    ).exists()
+
+    if existing:
+        messages.warning(request, "Ya tienes una solicitud activa para este servicio.")
+        return redirect('service_detail', service_id=service_id)
+
     start_date = request.POST.get('start_date')
     start_time = request.POST.get('start_time')
     description = request.POST.get('description')
@@ -1124,3 +1145,28 @@ def request_service(request, service_id):
     except Exception as e:
         messages.error(request, f"Error al procesar la solicitud: {str(e)}")
         return redirect('service_detail', service_id=service_id)
+
+
+@login_required
+def provider_agenda(request):
+    """
+    Vista de agenda para proveedores.
+    Muestra los servicios aceptados futuros ordenados cronológicamente.
+    """
+    if not request.user.is_provider:
+        messages.error(request, "Acceso no autorizado.")
+        return redirect('home')
+
+    today = timezone.now().date()
+    
+    # Obtener contratos aceptados desde hoy en adelante
+    upcoming_contracts = Contract.objects.filter(
+        service__provider=request.user,
+        status='accepted',
+        start_date__gte=today
+    ).select_related('user', 'service').order_by('start_date', 'start_time')
+
+    context = {
+        'upcoming_contracts': upcoming_contracts,
+    }
+    return render(request, 'provider_agenda.html', context)

@@ -31,6 +31,7 @@ urlpatterns = [
     path("service/<int:service_id>/request/", views.request_service, name="request_service"),
 
     path("my_orders/", views.my_orders, name='my_orders'),
+    path("agenda/", views.provider_agenda, name='provider_agenda'),
     path("order/<int:contract_id>/chat/", views.start_chat_order, name='start_chat_order'),
     path("favourites/", views.favourites, name='favourites'),
     path("service/<int:service_id>/toggle-favorite/", views.toggle_favorite, name='toggle_favorite'),
