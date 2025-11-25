@@ -20,9 +20,8 @@
                 class="block h-[220px] relative rounded-t-lg overflow-hidden">
 
                 {% if request.user.is_authenticated %}
-                <div role="button" tabindex="0" class="flex align-items favorite-btn absolute top-2 right-2 z-10 p-2 bg-white/80 rounded-full cursor-pointer backdrop-blur-sm
-                                        transition-colors duration-200 hover:bg-white"
-                    data-service-id="{{ service.id }}" title="{% t 'favourites.remove_favorite' %}"
+                <div role="button" tabindex="0" class="flex align-items favorite-btn absolute top-2 right-2 z-10 p-2 bg-white/80 rounded-full cursor-pointer backdrop-blur-sm transition-colors duration-200 hover:bg-white"
+                    data-service-id="{{ service.id }}" title="{% t 'favourites.remove_title' %}"
                     style="outline: none !important; box-shadow: none !important;">
                     <i class="fa-solid text-red-500 hover:text-gray-700 fa-heart text-xl" aria-hidden="true"></i>
                 </div>
@@ -110,9 +109,10 @@
     {% endif %}
 </div>
 
+{% include "includes/confirmation_modal.html" with modal_id="deleteModal" title="favourites.remove_title" description="favourites.remove_confirmation_text" confirm_text="favourites.confirm_remove" cancel_text="favourites.cancel" confirm_id="confirmDelete" cancel_id="cancelDelete" %}
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Initialize Swipers
         document.querySelectorAll('.swiper').forEach((el) => {
             new Swiper(el, {
                 navigation: {
@@ -123,48 +123,65 @@
             });
         });
 
-        // Handle favorite button clicks
         const favoriteButtons = document.querySelectorAll('.favorite-btn');
+        const deleteModal = document.getElementById('deleteModal');
+        const confirmDeleteBtn = document.getElementById('confirmDelete');
+        const cancelDeleteBtn = document.getElementById('cancelDelete');
+        let serviceIdToDelete = null;
+        let buttonToDelete = null;
 
         favoriteButtons.forEach(buttonDiv => {
-            buttonDiv.addEventListener('click', async function (e) {
+            buttonDiv.addEventListener('click', function (e) {
                 e.preventDefault();
                 e.stopPropagation();
-
-                const serviceId = this.dataset.serviceId;
-
-                try {
-                    const response = await fetch(`/service/${serviceId}/toggle-favorite/`, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRFToken': getCookie('csrftoken'),
-                            'Content-Type': 'application/json'
-                        }
-                    });
-
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (data.action === 'removed') {
-                            // Remove the card from the page
-                            const article = this.closest('article');
-                            article.style.transition = 'opacity 0.3s ease-out';
-                            article.style.opacity = '0';
-                            setTimeout(() => {
-                                article.remove();
-                                // Check if there are no more favorites
-                                const remainingCards = document.querySelectorAll('article').length;
-                                if (remainingCards === 0) {
-                                    location.reload();
-                                }
-                            }, 300);
-                        }
-                    } else {
-                        console.error('Error:', response.status);
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                }
+                serviceIdToDelete = this.dataset.serviceId;
+                buttonToDelete = this;
+                deleteModal.classList.remove('hidden');
             });
+        });
+
+        const hideModal = () => {
+            deleteModal.classList.add('hidden');
+            serviceIdToDelete = null;
+            buttonToDelete = null;
+        };
+
+        cancelDeleteBtn.addEventListener('click', hideModal);
+
+        confirmDeleteBtn.addEventListener('click', async function () {
+            if (!serviceIdToDelete || !buttonToDelete) return;
+
+            try {
+                const response = await fetch(`/service/${serviceIdToDelete}/toggle-favorite/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.action === 'removed') {
+                        const article = buttonToDelete.closest('article');
+                        article.style.transition = 'opacity 0.3s ease-out';
+                        article.style.opacity = '0';
+                        setTimeout(() => {
+                            article.remove();
+                            const remainingCards = document.querySelectorAll('article').length;
+                            if (remainingCards === 0) {
+                                location.reload();
+                            }
+                        }, 300);
+                    }
+                } else {
+                    console.error('Error:', response.status);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+
+            hideModal();
         });
     });
 

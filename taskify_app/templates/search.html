@@ -154,11 +154,14 @@
     </main>
 </div>
 
+{% include "includes/confirmation_modal.html" with modal_id="removeFavoriteModal" title="favourites.remove_title" description="favourites.remove_confirmation_text" confirm_text="favourites.confirm_remove" cancel_text="favourites.cancel" confirm_id="confirmRemoveFavBtn" cancel_id="cancelRemoveFavBtn" %}
+
 <!-- Scripts -->
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const TR_ADD_FAV = "{% t 'search.add_favorite' %}";
         const TR_REMOVE_FAV = "{% t 'search.remove_favorite' %}";
+
         // 1. Activar Swipers
         document.querySelectorAll('.swiper').forEach((el) => {
             new Swiper(el, {
@@ -186,7 +189,7 @@
             });
         }
 
-        // 3. Favoritos
+        // 3. Favoritos con Modal
         function setupDivAsButton(divElement, callback) {
             if (divElement) {
                 divElement.addEventListener('click', callback);
@@ -201,6 +204,60 @@
 
         const userFavorites = JSON.parse('{{ user_favorites_json|default:"{}"|escapejs }}');
         const favoriteButtons = document.querySelectorAll('.favorite-btn');
+        const removeModal = document.getElementById('removeFavoriteModal');
+        const confirmRemoveBtn = document.getElementById('confirmRemoveFavBtn');
+        const cancelRemoveBtn = document.getElementById('cancelRemoveFavBtn');
+
+        let pendingServiceId = null;
+        let pendingButtonDiv = null;
+
+        const closeRemoveModal = () => {
+            removeModal.classList.add('hidden');
+            pendingServiceId = null;
+            pendingButtonDiv = null;
+        };
+
+        if (cancelRemoveBtn) {
+            cancelRemoveBtn.addEventListener('click', closeRemoveModal);
+        }
+
+        if (confirmRemoveBtn) {
+            confirmRemoveBtn.addEventListener('click', async () => {
+                if (pendingServiceId && pendingButtonDiv) {
+                    await toggleFavorite(pendingServiceId, pendingButtonDiv);
+                }
+                closeRemoveModal();
+            });
+        }
+
+        async function toggleFavorite(serviceId, buttonDiv) {
+            const icon = buttonDiv.querySelector('i');
+            try {
+                const response = await fetch(`/service/${serviceId}/toggle-favorite/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.action === 'added') {
+                        icon.classList.remove('fa-regular', 'text-gray-400', 'text-gray-700');
+                        icon.classList.add('fa-solid', 'text-red-500');
+                        buttonDiv.setAttribute('title', TR_REMOVE_FAV);
+                        userFavorites[serviceId] = data.favorite_id;
+                    } else if (data.action === 'removed') {
+                        icon.classList.remove('fa-solid', 'text-red-500');
+                        icon.classList.add('fa-regular', 'text-gray-700');
+                        buttonDiv.setAttribute('title', TR_ADD_FAV);
+                        delete userFavorites[serviceId];
+                    }
+                }
+            } catch (error) {
+                console.error('Error al gestionar favorito:', error);
+            }
+        }
 
         favoriteButtons.forEach(buttonDiv => {
             const serviceId = parseInt(buttonDiv.dataset.serviceId);
@@ -209,36 +266,21 @@
             if (serviceId in userFavorites) {
                 icon.classList.remove('fa-regular', 'text-gray-400');
                 icon.classList.add('fa-solid', 'text-red-500');
-                buttonDiv.setAttribute('title', 'Quitar de favoritos');
+                buttonDiv.setAttribute('title', TR_REMOVE_FAV);
             }
 
             setupDivAsButton(buttonDiv, async (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                try {
-                    const response = await fetch(`/service/${serviceId}/toggle-favorite/`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': getCookie('csrftoken')
-                        }
-                    });
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (data.action === 'added') {
-                            icon.classList.remove('fa-regular', 'text-gray-400');
-                            icon.classList.add('fa-solid', 'text-red-500');
-                            buttonDiv.setAttribute('title', 'Quitar de favoritos');
-                            userFavorites[serviceId] = data.favorite_id;
-                        } else if (data.action === 'removed') {
-                            icon.classList.remove('fa-solid', 'text-red-500');
-                            icon.classList.add('fa-regular', 'text-gray-400');
-                            buttonDiv.setAttribute('title', 'Añadir a favoritos');
-                            delete userFavorites[serviceId];
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error al gestionar favorito:', error);
+
+                if (serviceId in userFavorites) {
+                    // Mostrar modal de confirmación
+                    pendingServiceId = serviceId;
+                    pendingButtonDiv = buttonDiv;
+                    removeModal.classList.remove('hidden');
+                } else {
+                    // Agregar inmediatamente
+                    await toggleFavorite(serviceId, buttonDiv);
                 }
             });
         });

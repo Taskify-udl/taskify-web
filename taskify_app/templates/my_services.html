@@ -22,6 +22,7 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {% for service in services %}
         <div class="rounded-xl border border-gray-200 group shadow-sm bg-white overflow-hidden">
+            <!-- Service Card Content -->
             <div class="h-[220px] relative rounded-t-lg overflow-hidden cursor-pointer service-link"
                 data-url="{% url 'service_detail' service.id %}">
                 <div class="swiper service-swiper-{{ service.id }} h-full">
@@ -140,29 +141,25 @@
 
             <div class="p-3 md:p-5 space-y-4 overflow-y-auto !max-h-[500px]">
                 <div>
-                    <label for="serviceName" class="block mb-2 text-sm font-medium text-gray-900">{% t
-                        "services.label_title" %}</label>
+                    <label for="serviceName" class="block mb-2 text-sm font-medium text-gray-900">{% t "services.label_title" %}</label>
                     <input id="serviceName" name="name" type="text" required
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full !py-1.5 !p-2.5" />
                 </div>
 
                 <div>
-                    <label for="serviceDescription" class="block mt-2 mb-2 text-sm font-medium text-gray-900">{% t
-                        "services.label_description" %}</label>
+                    <label for="serviceDescription" class="block mt-2 mb-2 text-sm font-medium text-gray-900">{% t "services.label_description" %}</label>
                     <textarea id="serviceDescription" name="description" rows="3"
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full !py-1.5 !p-2.5"></textarea>
                 </div>
 
                 <div>
-                    <label for="servicePrice" class="block mt-2 mb-2 text-sm font-medium text-gray-900">{% t
-                        "services.label_price" %}</label>
+                    <label for="servicePrice" class="block mt-2 mb-2 text-sm font-medium text-gray-900">{% t "services.label_price" %}</label>
                     <input id="servicePrice" name="price" type="number" step="0.01" min="0" required
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full !py-1.5 !p-2.5" />
                 </div>
 
                 <div>
-                    <label for="serviceCategory" class="block mt-2 mb-2 text-sm font-medium text-gray-900">{% t
-                        "services.label_category" %}</label>
+                    <label for="serviceCategory" class="block mt-2 mb-2 text-sm font-medium text-gray-900">{% t "services.label_category" %}</label>
                     <select id="serviceCategory" name="categories" required
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full !py-2 !p-2.5">
                         <option value="">{% t "services.select_category" %}</option>
@@ -185,10 +182,9 @@
                                 xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
                                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
                                     stroke-width="2"
-                                    d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L7 9m3-2 3 2" />
+                                    d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.017 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L7 9m3-2 3 2" />
                             </svg>
-                            <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">{% t
-                                    "services.dropzone_click" %}</span> {% t "services.dropzone_or" %}
+                            <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">{% t "services.dropzone_click" %}</span> {% t "services.dropzone_or" %}
                             </p>
                             <p class="text-xs text-gray-500">{% t "services.dropzone_formats" %}</p>
                         </div>
@@ -213,6 +209,12 @@
         </form>
     </div>
 </div>
+
+<!-- Delete Service Confirmation Modal -->
+{% include "includes/confirmation_modal.html" with modal_id="deleteServiceModal" title="services.delete_title" description="services.confirm_delete" confirm_text="services.delete" cancel_text="services.cancel" confirm_id="confirmDeleteServiceBtn" cancel_id="cancelDeleteServiceBtn" %}
+
+<!-- Discard Changes Confirmation Modal -->
+{% include "includes/confirmation_modal.html" with modal_id="discardChangesModal" title="services.discard_title" description="services.discard_confirm" confirm_text="services.discard" cancel_text="services.cancel" confirm_id="confirmDiscardBtn" cancel_id="cancelDiscardBtn" %}
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -254,20 +256,46 @@
             });
         });
 
-        // Handle delete forms
+        // --- DELETE SERVICE LOGIC ---
+        const deleteServiceModal = document.getElementById('deleteServiceModal');
+        const confirmDeleteServiceBtn = document.getElementById('confirmDeleteServiceBtn');
+        const cancelDeleteServiceBtn = document.getElementById('cancelDeleteServiceBtn');
+        let formToDelete = null;
+
         document.querySelectorAll('.delete-form').forEach(form => {
             form.addEventListener('submit', function (e) {
-                if (!confirm('{% t "services.confirm_delete" %}')) {
-                    e.preventDefault();
-                }
+                e.preventDefault(); // Stop submission
+                formToDelete = this;
+                deleteServiceModal.classList.remove('hidden');
             });
         });
+
+        if (cancelDeleteServiceBtn) {
+            cancelDeleteServiceBtn.addEventListener('click', () => {
+                deleteServiceModal.classList.add('hidden');
+                formToDelete = null;
+            });
+        }
+
+        if (confirmDeleteServiceBtn) {
+            confirmDeleteServiceBtn.addEventListener('click', () => {
+                if (formToDelete) {
+                    formToDelete.submit();
+                }
+                deleteServiceModal.classList.add('hidden');
+            });
+        }
+
+        // --- DISCARD CHANGES LOGIC ---
+        const discardChangesModal = document.getElementById('discardChangesModal');
+        const confirmDiscardBtn = document.getElementById('confirmDiscardBtn');
+        const cancelDiscardBtn = document.getElementById('cancelDiscardBtn');
 
         // Modal elements
         const modal = document.getElementById('serviceModal');
         const btnCreate = document.getElementById('btnCreateService');
         const btnClose = document.getElementById('modalClose');
-        const btnCancel = document.getElementById('modalCancel');
+        const btnCancel = document.getElementById('modalCancel'); // The "Cancel" button in the edit modal
         const form = document.getElementById('serviceForm');
         const idField = document.getElementById('serviceIdField');
         const nameField = document.getElementById('serviceName');
@@ -289,14 +317,34 @@
             modal.classList.remove('hidden');
         });
 
-        // Close modal
-        function closeModal() {
+        // Close modal function (hides the service modal)
+        function closeServiceModal() {
             modal.classList.add('hidden');
         }
 
-        btnClose.addEventListener('click', closeModal);
-        btnCancel.addEventListener('click', closeModal);
-        document.getElementById('modalOverlay').addEventListener('click', closeModal);
+        // Intercept Close/Cancel to show Discard Modal
+        function requestClose() {
+            discardChangesModal.classList.remove('hidden');
+        }
+
+        // Bind "X" and "Cancel" to requestClose
+        btnClose.addEventListener('click', requestClose);
+        btnCancel.addEventListener('click', requestClose);
+        document.getElementById('modalOverlay').addEventListener('click', requestClose);
+
+        // Handle Discard Modal Actions
+        if (cancelDiscardBtn) {
+            cancelDiscardBtn.addEventListener('click', () => {
+                discardChangesModal.classList.add('hidden');
+            });
+        }
+
+        if (confirmDiscardBtn) {
+            confirmDiscardBtn.addEventListener('click', () => {
+                discardChangesModal.classList.add('hidden');
+                closeServiceModal(); // Actually close the service modal
+            });
+        }
 
         // Open edit modal
         function openEditModal(btn) {

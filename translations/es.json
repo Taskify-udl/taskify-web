@@ -90,7 +90,10 @@
     "no_favorites_desc": "Marca servicios con el corazón para guardarlos aquí.",
     "explore_services": "Explorar servicios",
     "category_none": "Sin categoría",
-    "empty_heart_icon_alt": "corazón roto"
+    "empty_heart_icon_alt": "corazón roto",
+    "remove_confirmation_text": "¿Estás seguro de que quieres eliminar este servicio de tus favoritos?",
+    "confirm_remove": "Eliminar",
+    "cancel": "Cancelar"
   },
   "home": {
     "page_title": "Inicio - Taskify",
@@ -163,7 +166,11 @@
     "saving": "Guardando...",
     "err_save": "Error al guardar. Inténtalo de nuevo.",
     "err_network": "Error de red. Inténtalo de nuevo.",
-    "no_category": "Sin categoría"
+    "no_category": "Sin categoría",
+    "delete_title": "Eliminar Servicio",
+    "discard_title": "Descartar Cambios",
+    "discard_confirm": "¿Estás seguro de que quieres descartar los cambios?",
+    "discard": "Descartar"
   },
   "public_profile": {
     "services_label": "Servicios",

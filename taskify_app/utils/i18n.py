@@ -9,7 +9,7 @@ TRANSLATIONS_DIR = Path(settings.BASE_DIR) / "translations"
 DEFAULT_LANG = "es"
 
 
-@lru_cache(maxsize=None)
+# @lru_cache(maxsize=None)
 def load_lang(lang: str) -> dict:
     path = TRANSLATIONS_DIR / f"{lang}.json"
     try:
