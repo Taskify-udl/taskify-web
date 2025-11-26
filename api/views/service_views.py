@@ -5,6 +5,7 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
+from sqlparse.sql import Case
 
 from api.serializers import ServiceSerializer
 from taskify_app.models import Service, Category

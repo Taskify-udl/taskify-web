@@ -51,20 +51,13 @@ def register(request):
 
     user = serializer.save()
 
-    raw_password = request.data.get('password')
-    if raw_password:
-        user.set_password(raw_password)
-        user.save()
-
-    # Token
     token = Token.objects.create(user=user)
 
-    user_data = UserSerializer(user).data
-    user_data.pop('password', None)
-    user_data['role'] = user.role
-
     return Response(
-        {"token": token.key, "user": user_data},
+        {
+            "token": token.key,
+            "user": serializer.data
+        },
         status=status.HTTP_201_CREATED
     )
 
