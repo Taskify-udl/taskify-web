@@ -268,26 +268,47 @@ def my_orders(request):
         }.get(action)
 
         if contract_id and next_status:
-            contract = get_object_or_404(
-                Contract, pk=contract_id, service__provider=user
-            )
-            if contract.status != next_status:
-                contract.status = next_status
-                if next_status == 'rejected':
-                    contract.rejection_reason = request.POST.get('rejection_reason', '')
-                    contract.save(update_fields=['status', 'rejection_reason'])
-                else:
-                    contract.save(update_fields=['status'])
-                if next_status == 'accepted':
-                    messages.success(
-                        request,
-                        'Has aceptado la solicitud. El cliente será notificado.',
-                    )
-                else:
-                    messages.info(
-                        request,
-                        'Has rechazado la solicitud. El cliente será notificado.',
-                    )
+            try:
+                contract = get_object_or_404(
+                    Contract, pk=contract_id
+                )
+                
+                # Validación de permisos usando el método del modelo
+                if not contract.can_be_accepted_by(user):
+                    messages.error(request, 'No tienes permiso para modificar este contrato.')
+                    return redirect('my_orders')
+                
+                if contract.status != next_status:
+                    contract.status = next_status
+                    if next_status == 'rejected':
+                        contract.rejection_reason = request.POST.get('rejection_reason', '')
+                        contract.save(update_fields=['status', 'rejection_reason'])
+                        
+                        # Crear notificación de rechazo
+                        create_notification(
+                            user=contract.user,
+                            title="Solicitud rechazada",
+                            message=f"Tu solicitud para '{contract.service.name}' ha sido rechazada. Motivo: {contract.rejection_reason}",
+                            notification_type='contract_rejected',
+                            contract=contract
+                        )
+                        messages.info(request, 'Has rechazado la solicitud. El cliente será notificado.')
+                    else:
+                        contract.save(update_fields=['status'])
+                        
+                        # Crear notificación de aceptación
+                        create_notification(
+                            user=contract.user,
+                            title="¡Solicitud aceptada!",
+                            message=f"Tu solicitud para '{contract.service.name}' ha sido   aceptada para el {contract.start_date.strftime('%d/%m/%Y')} a las {contract.start_time.strftime('%H:%M')}.",
+                            notification_type='contract_accepted',
+                            contract=contract
+                        )
+                        messages.success(request, 'Has aceptado la solicitud. El cliente será notificado.')
+                        
+            except Exception as e:
+                messages.error(request, f'Error al procesar la solicitud: {str(e)}')
+                
         return redirect('my_orders')
 
     if user.is_provider:
@@ -311,8 +332,8 @@ def my_orders(request):
             'group': 'pending',
         },
         'accepted': {
-            'badge_classes': 'bg-blue-100 text-blue-700',
-            'dot_classes': 'bg-blue-500',
+            'badge_classes': 'bg-green-100 text-green-700',
+            'dot_classes': 'bg-green-500',
             'label': 'Aceptado',
             'group': 'accepted',
         },
@@ -1147,6 +1168,47 @@ def request_service(request, service_id):
         return redirect('service_detail', service_id=service_id)
 
 
+
+@login_required
+def cancel_contract(request, contract_id):
+    """
+    Permite a un cliente cancelar un contrato pendiente o aceptado.
+    Notifica al proveedor de la cancelación.
+    """
+    if request.method != 'POST':
+        return redirect('my_orders')
+    
+    contract = get_object_or_404(Contract, id=contract_id)
+    
+    # Validar permisos usando el método del modelo
+    if not contract.can_be_cancelled_by(request.user):
+        messages.error(request, 'No puedes cancelar este contrato. Solo se pueden cancelar contratos pendientes o aceptados.')
+        return redirect('my_orders')
+    
+    cancellation_reason = request.POST.get('cancellation_reason', '')
+    
+    try:
+        contract.status = 'cancelled'
+        contract.cancellation_reason = cancellation_reason
+        contract.save(update_fields=['status', 'cancellation_reason'])
+        
+        # Crear notificación para el proveedor
+        create_notification(
+            user=contract.service.provider,
+            title="Contrato cancelado",
+            message=f"El cliente {request.user.get_full_name() or request.user.username} ha cancelado su solicitud para '{contract.service.name}'. Motivo: {cancellation_reason}",
+            notification_type='contract_cancelled',
+            contract=contract
+        )
+        
+        messages.success(request, 'Has cancelado el contrato correctamente. El profesional será notificado.')
+        
+    except Exception as e:
+        messages.error(request, f'Error al cancelar el contrato: {str(e)}')
+    
+    return redirect('my_orders')
+
+
 @login_required
 def provider_agenda(request):
     """
@@ -1170,3 +1232,4 @@ def provider_agenda(request):
         'upcoming_contracts': upcoming_contracts,
     }
     return render(request, 'provider_agenda.html', context)
+
