@@ -145,6 +145,10 @@
                                 {% if not is_provider and order.status in 'pending,accepted' %}
                                     <button type="button" onclick="openCancelModal('{{ order.id }}')" class="px-4 py-2 text-sm font-medium bg-red-600 text-white !rounded-xl hover:bg-amber-700 transition cursor-pointer">Cancelar Pedido</button>
                                 {% endif %}
+
+                                {% if is_provider and order.status == 'accepted' %}
+                                    <button type="button" onclick="openCancelModal('{{ order.id }}')" class="px-4 py-2 text-sm font-medium bg-red-600 text-white !rounded-xl hover:bg-red-700 transition cursor-pointer">Cancelar Servicio</button>
+                                {% endif %}
                             </div>
                         </div>
                     </article>
@@ -207,6 +211,12 @@
                             </button>
                         </div>
                         
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Cancel Modal -->
     <div id="cancelModal" class="relative z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity"></div>
@@ -251,11 +261,7 @@
                                 Cancelar Pedido
                             </button>
                         </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
+
                     </form>
                 </div>
             </div>

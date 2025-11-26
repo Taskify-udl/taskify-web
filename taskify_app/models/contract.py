@@ -41,10 +41,11 @@ class Contract(models.Model):
         Verifica si un usuario puede cancelar este contrato.
         Solo el cliente puede cancelar, y solo si está en estado pending o accepted.
         """
-        return (
-            self.user == user and
-            self.status in ['pending', 'accepted']
-        )
+        if self.user == user:
+            return self.status in ['pending', 'accepted']
+        elif self.service.provider == user:
+            return self.status == 'accepted'
+        return False
 
     def can_be_accepted_by(self, user):
         """

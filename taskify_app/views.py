@@ -1192,16 +1192,27 @@ def cancel_contract(request, contract_id):
         contract.cancellation_reason = cancellation_reason
         contract.save(update_fields=['status', 'cancellation_reason'])
         
-        # Crear notificación para el proveedor
+        # Determinar a quién notificar
+        if request.user == contract.user:
+            # El cliente canceló, notificar al proveedor
+            notify_user = contract.service.provider
+            title = "Contrato cancelado por cliente"
+            message = f"El cliente {request.user.get_full_name() or request.user.username} ha cancelado su solicitud para '{contract.service.name}'. Motivo: {cancellation_reason}"
+        else:
+            # El proveedor canceló, notificar al cliente
+            notify_user = contract.user
+            title = "Contrato cancelado por profesional"
+            message = f"El profesional {request.user.get_full_name() or request.user.username} ha cancelado el servicio '{contract.service.name}'. Motivo: {cancellation_reason}"
+
         create_notification(
-            user=contract.service.provider,
-            title="Contrato cancelado",
-            message=f"El cliente {request.user.get_full_name() or request.user.username} ha cancelado su solicitud para '{contract.service.name}'. Motivo: {cancellation_reason}",
+            user=notify_user,
+            title=title,
+            message=message,
             notification_type='contract_cancelled',
             contract=contract
         )
         
-        messages.success(request, 'Has cancelado el contrato correctamente. El profesional será notificado.')
+        messages.success(request, 'Has cancelado el contrato correctamente. La otra parte será notificada.')
         
     except Exception as e:
         messages.error(request, f'Error al cancelar el contrato: {str(e)}')
