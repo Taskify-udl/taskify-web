@@ -268,26 +268,47 @@ def my_orders(request):
         }.get(action)
 
         if contract_id and next_status:
-            contract = get_object_or_404(
-                Contract, pk=contract_id, service__provider=user
-            )
-            if contract.status != next_status:
-                contract.status = next_status
-                if next_status == 'rejected':
-                    contract.rejection_reason = request.POST.get('rejection_reason', '')
-                    contract.save(update_fields=['status', 'rejection_reason'])
-                else:
-                    contract.save(update_fields=['status'])
-                if next_status == 'accepted':
-                    messages.success(
-                        request,
-                        'Has aceptado la solicitud. El cliente será notificado.',
-                    )
-                else:
-                    messages.info(
-                        request,
-                        'Has rechazado la solicitud. El cliente será notificado.',
-                    )
+            try:
+                contract = get_object_or_404(
+                    Contract, pk=contract_id
+                )
+                
+                # Validación de permisos usando el método del modelo
+                if not contract.can_be_accepted_by(user):
+                    messages.error(request, 'No tienes permiso para modificar este contrato.')
+                    return redirect('my_orders')
+                
+                if contract.status != next_status:
+                    contract.status = next_status
+                    if next_status == 'rejected':
+                        contract.rejection_reason = request.POST.get('rejection_reason', '')
+                        contract.save(update_fields=['status', 'rejection_reason'])
+                        
+                        # Crear notificación de rechazo
+                        create_notification(
+                            user=contract.user,
+                            title="Solicitud rechazada",
+                            message=f"Tu solicitud para '{contract.service.name}' ha sido rechazada. Motivo: {contract.rejection_reason}",
+                            notification_type='contract_rejected',
+                            contract=contract
+                        )
+                        messages.info(request, 'Has rechazado la solicitud. El cliente será notificado.')
+                    else:
+                        contract.save(update_fields=['status'])
+                        
+                        # Crear notificación de aceptación
+                        create_notification(
+                            user=contract.user,
+                            title="¡Solicitud aceptada!",
+                            message=f"Tu solicitud para '{contract.service.name}' ha sido   aceptada para el {contract.start_date.strftime('%d/%m/%Y')} a las {contract.start_time.strftime('%H:%M')}.",
+                            notification_type='contract_accepted',
+                            contract=contract
+                        )
+                        messages.success(request, 'Has aceptado la solicitud. El cliente será notificado.')
+                        
+            except Exception as e:
+                messages.error(request, f'Error al procesar la solicitud: {str(e)}')
+                
         return redirect('my_orders')
 
     if user.is_provider:
@@ -311,8 +332,8 @@ def my_orders(request):
             'group': 'pending',
         },
         'accepted': {
-            'badge_classes': 'bg-blue-100 text-blue-700',
-            'dot_classes': 'bg-blue-500',
+            'badge_classes': 'bg-green-100 text-green-700',
+            'dot_classes': 'bg-green-500',
             'label': 'Aceptado',
             'group': 'accepted',
         },
@@ -945,7 +966,7 @@ def public_profile(request, username):
     services = paginator.get_page(page_number)
 
     # 3. Obtener las reseñas recibidas por este usuario (en cualquiera de sus servicios)
-    reviews = Review.objects.filter(service__provider=user).select_related('user', 'user__profile').order_by(
+    reviews = Review.objects.filter(service__provider=user).select_related('user').order_by(
         '-created_at')
 
     # 4. Calcular estadísticas
@@ -979,13 +1000,13 @@ def service_detail(request, service_id):
     Muestra la página de detalle de un servicio.
     """
     service = get_object_or_404(
-        Service.objects.select_related('provider', 'provider__profile')
+        Service.objects.select_related('provider')
         .prefetch_related('images', 'categories'),
         id=service_id
     )
 
     # Obtener reviews y estadísticas
-    reviews = Review.objects.filter(service=service).select_related('user', 'user__profile').order_by('-created_at')
+    reviews = Review.objects.filter(service=service).select_related('user').order_by('-created_at')
 
     stats = reviews.aggregate(
         average_rating=Avg('rating'),
@@ -1005,6 +1026,15 @@ def service_detail(request, service_id):
     provider_avg_rating = provider_stats.get('total_avg_rating') or 0
     provider_reviews_count = provider_stats.get('total_reviews_count') or 0
 
+    # Verificar si el usuario ya tiene un contrato activo/pendiente para este servicio
+    existing_contract = None
+    if request.user.is_authenticated:
+        existing_contract = Contract.objects.filter(
+            user=request.user,
+            service=service,
+            status__in=['pending', 'accepted', 'active']
+        ).first()
+
     context = {
         'service': service,
         'reviews': reviews,
@@ -1012,6 +1042,7 @@ def service_detail(request, service_id):
         'reviews_count': reviews_count,
         'provider_avg_rating': provider_avg_rating,
         'provider_reviews_count': provider_reviews_count,
+        'existing_contract': existing_contract,
     }
     return render(request, 'service_detail.html', context)
 
@@ -1091,6 +1122,17 @@ def request_service(request, service_id):
         messages.error(request, "No puedes contratar tu propio servicio.")
         return redirect('service_detail', service_id=service_id)
 
+    # Verificar duplicados
+    existing = Contract.objects.filter(
+        user=request.user,
+        service=service,
+        status__in=['pending', 'accepted', 'active']
+    ).exists()
+
+    if existing:
+        messages.warning(request, "Ya tienes una solicitud activa para este servicio.")
+        return redirect('service_detail', service_id=service_id)
+
     start_date = request.POST.get('start_date')
     start_time = request.POST.get('start_time')
     description = request.POST.get('description')
@@ -1124,3 +1166,81 @@ def request_service(request, service_id):
     except Exception as e:
         messages.error(request, f"Error al procesar la solicitud: {str(e)}")
         return redirect('service_detail', service_id=service_id)
+
+
+
+@login_required
+def cancel_contract(request, contract_id):
+    """
+    Permite a un cliente cancelar un contrato pendiente o aceptado.
+    Notifica al proveedor de la cancelación.
+    """
+    if request.method != 'POST':
+        return redirect('my_orders')
+    
+    contract = get_object_or_404(Contract, id=contract_id)
+    
+    # Validar permisos usando el método del modelo
+    if not contract.can_be_cancelled_by(request.user):
+        messages.error(request, 'No puedes cancelar este contrato. Solo se pueden cancelar contratos pendientes o aceptados.')
+        return redirect('my_orders')
+    
+    cancellation_reason = request.POST.get('cancellation_reason', '')
+    
+    try:
+        contract.status = 'cancelled'
+        contract.cancellation_reason = cancellation_reason
+        contract.save(update_fields=['status', 'cancellation_reason'])
+        
+        # Determinar a quién notificar
+        if request.user == contract.user:
+            # El cliente canceló, notificar al proveedor
+            notify_user = contract.service.provider
+            title = "Contrato cancelado por cliente"
+            message = f"El cliente {request.user.get_full_name() or request.user.username} ha cancelado su solicitud para '{contract.service.name}'. Motivo: {cancellation_reason}"
+        else:
+            # El proveedor canceló, notificar al cliente
+            notify_user = contract.user
+            title = "Contrato cancelado por profesional"
+            message = f"El profesional {request.user.get_full_name() or request.user.username} ha cancelado el servicio '{contract.service.name}'. Motivo: {cancellation_reason}"
+
+        create_notification(
+            user=notify_user,
+            title=title,
+            message=message,
+            notification_type='contract_cancelled',
+            contract=contract
+        )
+        
+        messages.success(request, 'Has cancelado el contrato correctamente. La otra parte será notificada.')
+        
+    except Exception as e:
+        messages.error(request, f'Error al cancelar el contrato: {str(e)}')
+    
+    return redirect('my_orders')
+
+
+@login_required
+def provider_agenda(request):
+    """
+    Vista de agenda para proveedores.
+    Muestra los servicios aceptados futuros ordenados cronológicamente.
+    """
+    if not request.user.is_provider:
+        messages.error(request, "Acceso no autorizado.")
+        return redirect('home')
+
+    today = timezone.now().date()
+    
+    # Obtener contratos aceptados desde hoy en adelante
+    upcoming_contracts = Contract.objects.filter(
+        service__provider=request.user,
+        status='accepted',
+        start_date__gte=today
+    ).select_related('user', 'service').order_by('start_date', 'start_time')
+
+    context = {
+        'upcoming_contracts': upcoming_contracts,
+    }
+    return render(request, 'provider_agenda.html', context)
+
