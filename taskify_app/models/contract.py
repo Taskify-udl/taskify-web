@@ -18,10 +18,11 @@ class Contract(models.Model):
     start_time = models.TimeField(null=True, blank=True)
     description = models.TextField(blank=True)
     rejection_reason = models.TextField(blank=True, null=True)
+    cancellation_reason = models.TextField(blank=True, null=True)
     status = models.CharField(
         max_length=30,
         default="active",
-        help_text="active, paused, cancelled, finished",
+        help_text="pending, accepted, active, finished, rejected, cancelled",
     )
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -34,3 +35,24 @@ class Contract(models.Model):
 
     def __str__(self):
         return f"{self.code} ({self.user})"
+
+    def can_be_cancelled_by(self, user):
+        """
+        Verifica si un usuario puede cancelar este contrato.
+        Solo el cliente puede cancelar, y solo si está en estado pending o accepted.
+        """
+        if self.user == user:
+            return self.status in ['pending', 'accepted']
+        elif self.service.provider == user:
+            return self.status == 'accepted'
+        return False
+
+    def can_be_accepted_by(self, user):
+        """
+        Verifica si un usuario puede aceptar/rechazar este contrato.
+        Solo el proveedor del servicio puede hacerlo, y solo si está pendiente.
+        """
+        return (
+            self.service.provider == user and
+            self.status == 'pending'
+        )
