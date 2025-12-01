@@ -49,12 +49,11 @@
         </div>
 
         <!-- Tabs Navigation -->
-<div class="mb-6">
-    <nav class="grid grid-cols-3 bg-gray-100 p-1.5 rounded-2xl w-full" aria-label="Tabs">
-        <button
-            onclick="switchTab('upcoming')"
-            id="tab-upcoming"
-            class="tab-btn w-full bg-white text-[#1c1b2b] shadow-sm py-3 px-2 rounded-xl font-semibold text-sm text-center transition-all"
+        <div class="flex flex-row justify-between bg-gray-100 p-1.5 rounded-2xl w-full mb-6">
+                <button
+                    onclick="switchTab('upcoming')"
+                    id="tab-upcoming"
+            class="tab-btn w-[33%] bg-white text-[#1c1b2b] shadow-sm py-3 px-2 !rounded-xl font-semibold text-sm text-center transition-all focus:outline-none"
         >
             Próximos
             {% if upcoming_orders %}
@@ -67,7 +66,7 @@
         <button
             onclick="switchTab('pending')"
             id="tab-pending"
-            class="tab-btn w-full bg-transparent text-gray-600 hover:text-gray-900 py-3 px-2 rounded-xl font-semibold text-sm text-center transition-all"
+            class="tab-btn w-[33%] bg-transparent text-gray-600 hover:text-gray-900 py-3 px-2 border-none !rounded-xl font-semibold text-sm text-center transition-all focus:outline-none"
         >
             Solicitudes
             {% if pending_orders %}
@@ -80,13 +79,11 @@
         <button
             onclick="switchTab('history')"
             id="tab-history"
-            class="tab-btn w-full bg-transparent text-gray-600 hover:text-gray-900 py-3 px-2 rounded-xl font-semibold text-sm text-center transition-all"
+            class="tab-btn w-[33%] bg-transparent text-gray-600 hover:text-gray-900 py-3 px-2 !rounded-xl font-semibold text-sm text-center transition-all focus:outline-none"
         >
             Historial
         </button>
-    </nav>
 </div>
-
 <!-- Tab Contents -->
 <div id="content-upcoming" class="tab-content space-y-4 mb-12">
     {% if upcoming_orders %}
