@@ -376,7 +376,10 @@ def my_orders(request):
         if group in status_totals:
             status_totals[group] += bucket['total']
 
-    orders = []
+    upcoming_orders = []
+    pending_orders = []
+    past_orders = []
+
     for contract in contracts_qs:
         status_config = status_styles.get(
             contract.status,
@@ -398,31 +401,38 @@ def my_orders(request):
             counterpart_label = 'Profesional'
             counterpart_name = counterpart.get_full_name() or counterpart.username
 
-        orders.append(
-            {
-                'id': contract.id,
-                'service_id': contract.service.id,
-                'service_name': contract.service.name,
-                'counterpart_label': counterpart_label,
-                'counterpart_name': counterpart_name,
-                'counterpart_id': counterpart.id,
-                'status': contract.status,
-                'status_label': status_config['label'],
-                'badge_classes': status_config['badge_classes'],
-                'dot_classes': status_config['dot_classes'],
-                'start_date': contract.start_date,
-                'created_at': contract.created_at,
-                'price': price_value,
-                'has_price': price_value is not None,
-                'detail_url': reverse('service_detail', args=[contract.service.id]),
-                'service_description': contract.service.description,
-                'code': contract.code,
-                'can_manage': user.is_provider and contract.status == 'pending',
-            }
-        )
+        order_data = {
+            'id': contract.id,
+            'service_id': contract.service.id,
+            'service_name': contract.service.name,
+            'counterpart_label': counterpart_label,
+            'counterpart_name': counterpart_name,
+            'counterpart_id': counterpart.id,
+            'status': contract.status,
+            'status_label': status_config['label'],
+            'badge_classes': status_config['badge_classes'],
+            'dot_classes': status_config['dot_classes'],
+            'start_date': contract.start_date,
+            'created_at': contract.created_at,
+            'price': price_value,
+            'has_price': price_value is not None,
+            'detail_url': reverse('service_detail', args=[contract.service.id]),
+            'service_description': contract.service.description,
+            'code': contract.code,
+            'can_manage': user.is_provider and contract.status == 'pending',
+        }
+
+        if contract.status in ['accepted', 'active']:
+            upcoming_orders.append(order_data)
+        elif contract.status in ['pending', 'paused']:
+            pending_orders.append(order_data)
+        else:  # rejected, cancelled, finished
+            past_orders.append(order_data)
 
     context = {
-        'orders': orders,
+        'upcoming_orders': upcoming_orders,
+        'pending_orders': pending_orders,
+        'past_orders': past_orders,
         'is_provider': user.is_provider,
         'pending_orders_count': status_totals['pending'],
         'accepted_orders_count': status_totals['accepted'],
