@@ -9,6 +9,9 @@ load_dotenv(BASE_DIR / ".env")
 
 NPM_BIN_PATH = os.getenv("NPM_BIN_PATH", default=r"C:\Program Files\nodejs\npm.cmd")
 
+# Google OAuth credentials
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
 
 # ⚠️ En producción, mueve la SECRET_KEY a variables de entorno
 SECRET_KEY = 'django-insecure-6g^(^%@g&e6o3ey2w=0d&b+ju&dg)awfs0gfpnp8^+-1+reez$'
@@ -141,8 +144,8 @@ SOCIALACCOUNT_PROVIDERS = {
             'access_type': 'online',
         },
         'APP': {
-            'client_id': '1068949837616-debbakqnq4iud029u3ijn56grjkpseck.apps.googleusercontent.com',
-            'secret': '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',
+            'client_id': GOOGLE_CLIENT_ID,
+            'secret': GOOGLE_CLIENT_SECRET,
             'key': ''
         }
     }
