@@ -6,7 +6,7 @@ from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.db.models import Count, Avg, Q
 from django.core.mail import send_mail
-from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie, csrf_protect
 from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth import logout
@@ -174,6 +174,13 @@ def signup(request):
         username = request.POST.get('username')
         email = request.POST.get('email')
         password = request.POST.get('password')
+        full_name = request.POST.get('full_name', '')
+        
+        # Role information from the form
+        role = request.POST.get('role')  # 'client' or 'provider'
+        provider_sub_role = request.POST.get('provider_sub_role', '')  # 'freelancer' or 'company'
+        company_name = request.POST.get('company_name', '')
+        company_tax_id = request.POST.get('company_tax_id', '')
 
         if CustomUser.objects.filter(username__iexact=username, is_active=True).exists():
             messages.error(request, f"El nombre de usuario '{username}' ya está en uso. Por favor, elige otro.")
@@ -192,18 +199,40 @@ def signup(request):
 
             user.username = username
             user.set_password(password)
-            user.save()
-
         else:
             user = CustomUser.objects.filter(username__iexact=username, is_active=False).first()
             if user:
                 user.email = email
                 user.set_password(password)
-                user.save()
             else:
                 user = CustomUser.objects.create_user(username=username, email=email, password=password)
                 user.is_active = False
-                user.save()
+        
+        # Parse and save full name
+        if full_name:
+            name_parts = full_name.strip().split(' ', 1)
+            user.first_name = name_parts[0] if len(name_parts) > 0 else ''
+            user.last_name = name_parts[1] if len(name_parts) > 1 else ''
+        
+        # Map frontend role to database role
+        if role == 'client':
+            user.role = CustomUser.Roles.CUSTOMER
+        elif role == 'provider':
+            if provider_sub_role == 'freelancer':
+                user.role = CustomUser.Roles.FREELANCER
+            elif provider_sub_role == 'company':
+                user.role = CustomUser.Roles.COMPANY_ADMIN
+                # Save company info for company admins
+                if hasattr(user, 'company_name') and company_name:
+                    user.company_name = company_name
+                if hasattr(user, 'tax_id') and company_tax_id:
+                    user.tax_id = company_tax_id
+            else:
+                user.role = CustomUser.Roles.PROVIDER
+        else:
+            user.role = CustomUser.Roles.CUSTOMER  # Default
+        
+        user.save()
 
         verification, _ = EmailVerification.objects.get_or_create(user=user)
         verification.generate_code()
@@ -666,6 +695,7 @@ def verify_email(request):
                 verification.delete()
                 del request.session['pending_email']
 
+                user.backend = 'django.contrib.auth.backends.ModelBackend'
                 login(request, user)
                 messages.success(request, '¡Cuenta verificada exitosamente! Bienvenido.')
                 return redirect('home')
@@ -1253,4 +1283,16 @@ def provider_agenda(request):
         'upcoming_contracts': upcoming_contracts,
     }
     return render(request, 'provider_agenda.html', context)
+
+@require_POST
+@csrf_protect
+def save_signup_data_session(request):
+    """Guarda los datos del formulario en la sesión antes de ir a Google"""
+    try:
+        data = json.loads(request.body)
+        # Guardamos todo el diccionario en la sesión bajo una clave específica
+        request.session['signup_context'] = data
+        return JsonResponse({'status': 'ok'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 

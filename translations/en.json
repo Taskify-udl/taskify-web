@@ -170,7 +170,8 @@
     "delete_title": "Delete Service",
     "discard_title": "Discard Changes",
     "discard_confirm": "Are you sure you want to discard your changes?",
-    "discard": "Discard"
+    "discard": "Discard",
+    "no_services": "You don't have any published services yet. Create your first service!"
   },
   "public_profile": {
     "services_label": "Services",

@@ -11,6 +11,8 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include("api.urls")),
     path("api/validate-signup/", views.validate_signup, name='validate_signup'),
+    path('accounts/', include('allauth.urls')),
+    path('api/save-signup-session/', views.save_signup_data_session, name='save_signup_session'),
 
     path("", views.home, name='home'),
 
