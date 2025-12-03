@@ -18,4 +18,5 @@ urlpatterns = [
     path('favorite', favorite_views.favorites),  # GET y POST
     path('favorite/<int:pk>', favorite_views.favorite_detail),  # DELETE
     path('chat/<int:conversation_id>/new-messages/', views.get_new_messages, name='get_new_messages'),
+    path('change-password', user_views.change_password),
 ]
