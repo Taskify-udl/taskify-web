@@ -170,7 +170,8 @@
     "delete_title": "Eliminar Servicio",
     "discard_title": "Descartar Cambios",
     "discard_confirm": "¿Estás seguro de que quieres descartar los cambios?",
-    "discard": "Descartar"
+    "discard": "Descartar",
+    "no_services": "No tienes servicios publicados todavía. ¡Crea tu primer servicio!"
   },
   "public_profile": {
     "services_label": "Servicios",

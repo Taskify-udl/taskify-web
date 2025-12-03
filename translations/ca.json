@@ -140,6 +140,7 @@
     "page_title": "Els Meus Serveis",
     "create_service": "Crear Servei",
     "no_image": "Sense imatge",
+    "no_services": "Encara no tens serveis publicats. Crea el teu primer servei!",
     "no_services_title": "Encara no has creat cap servei.",
     "no_services_desc": "Fes clic a \"Crear Servei\" per començar.",
     "edit": "Editar",
