@@ -49,6 +49,9 @@ urlpatterns = [
 
     path("verify-email/", views.verify_email, name="verify_email"),
     path("resend-verification-code/", views.resend_verification_code, name="resend_verification_code"),
+    path("order/<int:contract_id>/qr/<str:type>/", views.contract_qr_code, name="contract_qr_code"),
+    path('order/<int:contract_id>/verify/', views.verify_service_code, name='verify_service_code'),
+    path('order/<int:contract_id>/toggle-pause/', views.toggle_pause_service, name='toggle_pause_service'),
 ]
 
 # Servir MEDIA en desarrollo
