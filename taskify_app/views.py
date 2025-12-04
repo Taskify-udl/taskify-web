@@ -17,14 +17,14 @@ import random
 from django.utils.dateparse import parse_datetime
 from django.views.decorators.http import require_POST
 
+import qrcode
+from django.http import HttpResponse
+
 from core.decorators import allowed_roles
 from .forms import RegisterForm
 from django.templatetags.static import static
-from .models import Service, ServiceImage, Contract, Review, Notification, CustomUser, EmailVerification, \
-    Category, Conversation, Message, Favorite
+from .models import Service, ServiceImage, Contract, Review, Notification, CustomUser, EmailVerification, Category, Conversation, Message, Favorite, ServiceSession
 
-
-@ensure_csrf_cookie
 @ensure_csrf_cookie
 def home(request):
     # Seleccionar hasta 6 categorías aleatorias
@@ -449,6 +449,12 @@ def my_orders(request):
             'service_description': contract.service.description,
             'code': contract.code,
             'can_manage': user.is_provider and contract.status == 'pending',
+            'start_code_alpha': contract.start_code_alpha,
+            'end_code_alpha': contract.end_code_alpha,
+            'actual_start': contract.actual_start,
+            'actual_end': contract.actual_end,
+            'total_duration': contract.get_formatted_duration(),
+            'is_paused': contract.status == 'paused',
         }
 
         if contract.status in ['accepted', 'active']:
@@ -1296,3 +1302,111 @@ def save_signup_data_session(request):
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
+
+@login_required
+def contract_qr_code(request, contract_id, type):
+    contract = get_object_or_404(Contract, id=contract_id)
+    
+    # Security check: only the client or provider can view the codes
+    if request.user != contract.user and request.user != contract.service.provider:
+        return HttpResponse("Unauthorized", status=403)
+    if type == 'start':
+        data = contract.start_token
+    elif type == 'end':
+        data = contract.end_token
+    else:
+        return HttpResponse("Invalid type", status=400)
+    # Generate QR code
+    img = qrcode.make(data)
+    response = HttpResponse(content_type="image/png")
+    img.save(response, "PNG")
+    return response
+
+
+@login_required
+def verify_service_code(request, contract_id):
+    if request.method != 'POST':
+        return redirect('my_orders')
+        
+    contract = get_object_or_404(Contract, id=contract_id)
+    
+    # Only the client can verify codes (Provider generates them)
+    if request.user != contract.user:
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'message': "Solo el cliente puede verificar los códigos."})
+        messages.error(request, "Solo el cliente puede verificar los códigos.")
+        return redirect('my_orders')
+        
+    code = request.POST.get('code', '').strip().upper()
+    verification_type = request.POST.get('type') # 'start' or 'end'
+    
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
+
+    if verification_type == 'start':
+        if contract.start_code_alpha == code:
+            contract.actual_start = timezone.now()
+            contract.status = 'active'
+            contract.save()
+            # Create first session
+            ServiceSession.objects.create(contract=contract)
+            
+            if is_ajax:
+                return JsonResponse({'success': True, 'message': "¡Servicio iniciado correctamente!"})
+            messages.success(request, "¡Servicio iniciado correctamente!")
+        else:
+            if is_ajax:
+                return JsonResponse({'success': False, 'message': "Código de inicio incorrecto."})
+            messages.error(request, "Código de inicio incorrecto.")
+            
+    elif verification_type == 'end':
+        if contract.end_code_alpha == code:
+            contract.actual_end = timezone.now()
+            contract.status = 'finished'
+            contract.save()
+            # Close active session
+            active_session = contract.sessions.filter(end_time__isnull=True).last()
+            if active_session:
+                active_session.end_time = timezone.now()
+                active_session.save()
+            
+            if is_ajax:
+                return JsonResponse({'success': True, 'message': "¡Servicio finalizado correctamente!"})
+            messages.success(request, "¡Servicio finalizado correctamente!")
+        else:
+            if is_ajax:
+                return JsonResponse({'success': False, 'message': "Código de finalización incorrecto."})
+            messages.error(request, "Código de finalización incorrecto.")
+            
+    return redirect('my_orders')
+
+
+@login_required
+def toggle_pause_service(request, contract_id):
+    if request.method != 'POST':
+        return redirect('my_orders')
+        
+    contract = get_object_or_404(Contract, id=contract_id)
+    
+    if request.user != contract.user:
+        messages.error(request, "Solo el cliente puede pausar/reanudar.")
+        return redirect('my_orders')
+    if contract.status == 'active':
+        # PAUSE
+        contract.status = 'paused'
+        contract.save()
+        # Close session
+        active_session = contract.sessions.filter(end_time__isnull=True).last()
+        if active_session:
+            active_session.end_time = timezone.now()
+            active_session.save()
+        messages.info(request, "Servicio pausado.")
+        
+    elif contract.status == 'paused':
+        # RESUME
+        contract.status = 'active'
+        contract.save()
+        # Start new session
+        ServiceSession.objects.create(contract=contract)
+        messages.success(request, "Servicio reanudado.")
+        
+    return redirect('my_orders')
