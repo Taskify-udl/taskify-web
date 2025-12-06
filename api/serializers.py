@@ -91,6 +91,7 @@ class ServiceSerializer(serializers.ModelSerializer):
             "provider",
             "categories",
             "category_names",
+            "price",
             "created_at",
             "updated_at",
         )
