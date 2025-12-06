@@ -91,6 +91,7 @@ class ServiceSerializer(serializers.ModelSerializer):
             "provider",
             "categories",
             "category_names",
+            "price",
             "created_at",
             "updated_at",
         )
@@ -185,44 +186,6 @@ class ContractSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
-class CategorySerializer(serializers.ModelSerializer):
-    # lectura extra: cuántos servicios usan la categoría (anotado en la vista)
-    service_count = serializers.IntegerField(read_only=True)
-
-    class Meta:
-        model = Category
-        fields = (
-            "id",
-            "name",
-            "slug",
-            "description",
-            "service_count",
-            "created_at",
-            "updated_at",
-        )
-        read_only_fields = ("created_at", "updated_at")
-
-    def _ensure_slug(self, name, slug):
-        # Genera slug si viene vacío; si viene, lo respeta
-        base = slug or slugify(name or "")
-        return base
-
-    def validate(self, attrs):
-        # Normaliza slug si no viene
-        name = attrs.get("name", getattr(self.instance, "name", None))
-        slug = attrs.get("slug", getattr(self.instance, "slug", ""))
-        attrs["slug"] = self._ensure_slug(name, slug)
-        return attrs
-
-    def create(self, validated_data):
-        return super().create(validated_data)
-
-    def update(self, instance, validated_data):
-        # Si cambian name y no mandan slug, regeneramos automáticamente
-        if "name" in validated_data and "slug" not in validated_data:
-            validated_data["slug"] = self._ensure_slug(validated_data["name"], instance.slug)
-        return super().update(instance, validated_data)
-
 
 class FavoriteSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(read_only=True)
@@ -243,3 +206,8 @@ class FavoriteSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         raise serializers.ValidationError("Editar favoritos no está permitido.")
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
