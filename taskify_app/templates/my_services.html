@@ -11,9 +11,9 @@
         <span class="text-2xl font-semibold text-gray-900">{% t "services.page_title" %}</span>
 
         <button
-            class="flex flex-row gap-x-[5px] text-lg !px-2.5 !py-1.5 items-center bg-[#1c1b2b] text-white !rounded-xl hover:shadow-[0_2px_8px_rgba(0,0,0,0.3)] transition-shadow"
+            class="flex flex-row gap-x-2 text-base px-4 py-2.5 items-center bg-[#1c1b2b] text-white !rounded-xl hover:bg-[#2d2c3f] hover:shadow-lg transition-all duration-200 font-medium"
             id="btnCreateService">
-            <i class="fa fa-plus !text-sm"></i>
+            <i class="fa fa-plus text-sm"></i>
             {% t "services.create_service" %}
         </button>
     </div>
@@ -74,14 +74,14 @@
 
                 <div class="grid grid-cols-2 gap-2">
                     <button
-                        class="edit-btn flex flex-row justify-center items-center gap-1.5 p-2 border border-gray-300 hover:bg-gray-100 !rounded-xl transition-colors duration-200"
+                        class="edit-btn flex flex-row justify-center items-center gap-1.5 px-3 py-2 border border-gray-300 bg-white hover:bg-gray-50 hover:border-gray-400 !rounded-xl transition-all duration-200 font-medium shadow-sm"
                         data-id="{{ service.id }}" data-name="{{ service.name|escapejs }}"
                         data-description="{{ service.description|escapejs }}"
                         data-price="{{ service.price|stringformat:'.2f' }}"
                         data-categories="{% for cat in service.categories.all %}{{ cat.id }}{% if not forloop.last %},{% endif %}{% endfor %}"
                         data-images-json='[{% for img in service.images.all %}{"id": {{ img.id }}, "url": "{{ img.image.url }}"}{% if not forloop.last %},{% endif %}{% endfor %}]'>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                            stroke="currentColor" class="!size-4">
+                            stroke="currentColor" class="w-4 h-4">
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                         </svg>
@@ -91,10 +91,10 @@
                     <form action="{% url 'delete_service' service.id %}" method="POST" class="delete-form">
                         {% csrf_token %}
                         <button
-                            class="w-full flex flex-row justify-center items-center gap-1.5 p-2 border border-red-500 bg-red-500 text-white hover:bg-red-600 hover:border-red-600 !rounded-xl transition-colors duration-200"
+                            class="w-full flex flex-row justify-center items-center gap-1.5 px-3 py-2 bg-red-600 text-white hover:bg-red-700 !rounded-xl transition-all duration-200 font-medium shadow-sm hover:shadow-md"
                             type="submit">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                                stroke="currentColor" class="!size-4">
+                                stroke="currentColor" class="w-4 h-4">
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                     d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                             </svg>
@@ -142,29 +142,25 @@
             <div class="p-3 md:p-5 space-y-4 overflow-y-auto !max-h-[500px]">
                 <div>
                     <label for="serviceName" class="block mb-2 text-sm font-medium text-gray-900">{% t "services.label_title" %}</label>
-                    <input id="serviceName" name="name" type="text" required
-                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full !py-1.5 !p-2.5" />
+                    <input id="serviceName" name="name" type="text" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full !py-1.5 !p-2.5" />
                 </div>
 
                 <div>
                     <label for="serviceDescription" class="block mt-2 mb-2 text-sm font-medium text-gray-900">{% t "services.label_description" %}</label>
-                    <textarea id="serviceDescription" name="description" rows="3"
-                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full !py-1.5 !p-2.5"></textarea>
+                    <textarea id="serviceDescription" name="description" rows="3" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full !py-1.5 !p-2.5"></textarea>
                 </div>
 
                 <div>
                     <label for="servicePrice" class="block mt-2 mb-2 text-sm font-medium text-gray-900">{% t "services.label_price" %}</label>
-                    <input id="servicePrice" name="price" type="number" step="0.01" min="0" required
-                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full !py-1.5 !p-2.5" />
+                    <input id="servicePrice" name="price" type="number" step="0.01" min="0" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full !py-1.5 !p-2.5" />
                 </div>
 
                 <div>
                     <label for="serviceCategory" class="block mt-2 mb-2 text-sm font-medium text-gray-900">{% t "services.label_category" %}</label>
-                    <select id="serviceCategory" name="categories" required
-                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full !py-2 !p-2.5">
+                    <select id="serviceCategory" name="categories" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full !py-2 !p-2.5">
                         <option value="">{% t "services.select_category" %}</option>
                         {% for category in categories %}
-                        <option value="{{ category.id }}">{{ category.name }}</option>
+                        <option value="{{ category.id }}">{% t category.name %}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -184,8 +180,7 @@
                                     stroke-width="2"
                                     d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.017 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L7 9m3-2 3 2" />
                             </svg>
-                            <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">{% t "services.dropzone_click" %}</span> {% t "services.dropzone_or" %}
-                            </p>
+                            <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">{% t "services.dropzone_click" %}</span> {% t "services.dropzone_or" %}</p>
                             <p class="text-xs text-gray-500">{% t "services.dropzone_formats" %}</p>
                         </div>
                     </label>
@@ -198,11 +193,11 @@
 
             <div class="flex items-center justify-end gap-3 p-3 md:p-5 border-t border-gray-200 rounded-b">
                 <button type="button" id="modalCancel"
-                    class="py-1 !px-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 !rounded-xl shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    class="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 !rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm">
                     {% t "services.cancel" %}
                 </button>
                 <button type="submit" id="modalSave"
-                    class="py-1 !px-2.5 text-sm font-medium text-white bg-[#1c1b2b] border border-transparent !rounded-xl shadow-sm hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-[#1c1b2b] focus:ring-offset-2">
+                    class="px-4 py-2.5 text-sm font-medium text-white bg-[#1c1b2b] !rounded-xl hover:bg-[#2d2c3f] hover:shadow-md transition-all duration-200 shadow-sm">
                     {% t "services.save_changes" %}
                 </button>
             </div>
@@ -396,8 +391,35 @@
         // Handle image upload preview
         imageInput.addEventListener('change', function (e) {
             const files = e.target.files;
-            // You can add preview logic here if needed
+            if (files.length > 0) {
+                // Clear existing previews of new uploads (not saved images)
+                const existingPreviews = currentWrapper.querySelectorAll('.preview-image');
+                existingPreviews.forEach(el => el.remove());
+
+                // Add previews for newly selected files
+                Array.from(files).forEach((file, index) => {
+                    const reader = new FileReader();
+                    reader.onload = function (event) {
+                        const div = document.createElement('div');
+                        div.className = 'relative preview-image';
+                        div.innerHTML = `
+                            <img src="${event.target.result}" class="w-full h-20 object-cover rounded">
+                            <button type="button" class="absolute top-0 right-0 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+                                onclick="removePreview(this.parentElement, ${index})">×</button>
+                        `;
+                        currentWrapper.appendChild(div);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
         });
+
+        // Remove preview function (for new uploads)
+        window.removePreview = function (element, fileIndex) {
+            element.remove();
+            // Note: We can't actually remove files from FileList, so user will need to reselect
+            // For production, you might want to track which files to keep
+        };
     });
 </script>
 {% endblock %}

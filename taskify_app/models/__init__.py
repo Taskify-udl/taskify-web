@@ -1,7 +1,7 @@
 from .category import Category
 from .service import Service
 from .service_category import ServiceCategory
-from .contract import Contract
+from .contract import Contract, ServiceSession
 from .review import Review
 from .favorite import Favorite
 from .notification import Notification

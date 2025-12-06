@@ -6,7 +6,7 @@ from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.db.models import Count, Avg, Q
 from django.core.mail import send_mail
-from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie, csrf_protect
 from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth import logout
@@ -17,14 +17,14 @@ import random
 from django.utils.dateparse import parse_datetime
 from django.views.decorators.http import require_POST
 
+import qrcode
+from django.http import HttpResponse
+
 from core.decorators import allowed_roles
 from .forms import RegisterForm
 from django.templatetags.static import static
-from .models import Service, ServiceImage, Contract, Review, Notification, CustomUser, EmailVerification, \
-    Category, Conversation, Message, Favorite
+from .models import Service, ServiceImage, Contract, Review, Notification, CustomUser, EmailVerification, Category, Conversation, Message, Favorite, ServiceSession
 
-
-@ensure_csrf_cookie
 @ensure_csrf_cookie
 def home(request):
     # Seleccionar hasta 6 categorías aleatorias
@@ -174,6 +174,13 @@ def signup(request):
         username = request.POST.get('username')
         email = request.POST.get('email')
         password = request.POST.get('password')
+        full_name = request.POST.get('full_name', '')
+        
+        # Role information from the form
+        role = request.POST.get('role')  # 'client' or 'provider'
+        provider_sub_role = request.POST.get('provider_sub_role', '')  # 'freelancer' or 'company'
+        company_name = request.POST.get('company_name', '')
+        company_tax_id = request.POST.get('company_tax_id', '')
 
         if CustomUser.objects.filter(username__iexact=username, is_active=True).exists():
             messages.error(request, f"El nombre de usuario '{username}' ya está en uso. Por favor, elige otro.")
@@ -192,18 +199,40 @@ def signup(request):
 
             user.username = username
             user.set_password(password)
-            user.save()
-
         else:
             user = CustomUser.objects.filter(username__iexact=username, is_active=False).first()
             if user:
                 user.email = email
                 user.set_password(password)
-                user.save()
             else:
                 user = CustomUser.objects.create_user(username=username, email=email, password=password)
                 user.is_active = False
-                user.save()
+        
+        # Parse and save full name
+        if full_name:
+            name_parts = full_name.strip().split(' ', 1)
+            user.first_name = name_parts[0] if len(name_parts) > 0 else ''
+            user.last_name = name_parts[1] if len(name_parts) > 1 else ''
+        
+        # Map frontend role to database role
+        if role == 'client':
+            user.role = CustomUser.Roles.CUSTOMER
+        elif role == 'provider':
+            if provider_sub_role == 'freelancer':
+                user.role = CustomUser.Roles.FREELANCER
+            elif provider_sub_role == 'company':
+                user.role = CustomUser.Roles.COMPANY_ADMIN
+                # Save company info for company admins
+                if hasattr(user, 'company_name') and company_name:
+                    user.company_name = company_name
+                if hasattr(user, 'tax_id') and company_tax_id:
+                    user.tax_id = company_tax_id
+            else:
+                user.role = CustomUser.Roles.PROVIDER
+        else:
+            user.role = CustomUser.Roles.CUSTOMER  # Default
+        
+        user.save()
 
         verification, _ = EmailVerification.objects.get_or_create(user=user)
         verification.generate_code()
@@ -268,26 +297,47 @@ def my_orders(request):
         }.get(action)
 
         if contract_id and next_status:
-            contract = get_object_or_404(
-                Contract, pk=contract_id, service__provider=user
-            )
-            if contract.status != next_status:
-                contract.status = next_status
-                if next_status == 'rejected':
-                    contract.rejection_reason = request.POST.get('rejection_reason', '')
-                    contract.save(update_fields=['status', 'rejection_reason'])
-                else:
-                    contract.save(update_fields=['status'])
-                if next_status == 'accepted':
-                    messages.success(
-                        request,
-                        'Has aceptado la solicitud. El cliente será notificado.',
-                    )
-                else:
-                    messages.info(
-                        request,
-                        'Has rechazado la solicitud. El cliente será notificado.',
-                    )
+            try:
+                contract = get_object_or_404(
+                    Contract, pk=contract_id
+                )
+                
+                # Validación de permisos usando el método del modelo
+                if not contract.can_be_accepted_by(user):
+                    messages.error(request, 'No tienes permiso para modificar este contrato.')
+                    return redirect('my_orders')
+                
+                if contract.status != next_status:
+                    contract.status = next_status
+                    if next_status == 'rejected':
+                        contract.rejection_reason = request.POST.get('rejection_reason', '')
+                        contract.save(update_fields=['status', 'rejection_reason'])
+                        
+                        # Crear notificación de rechazo
+                        create_notification(
+                            user=contract.user,
+                            title="Solicitud rechazada",
+                            message=f"Tu solicitud para '{contract.service.name}' ha sido rechazada. Motivo: {contract.rejection_reason}",
+                            notification_type='contract_rejected',
+                            contract=contract
+                        )
+                        messages.info(request, 'Has rechazado la solicitud. El cliente será notificado.')
+                    else:
+                        contract.save(update_fields=['status'])
+                        
+                        # Crear notificación de aceptación
+                        create_notification(
+                            user=contract.user,
+                            title="¡Solicitud aceptada!",
+                            message=f"Tu solicitud para '{contract.service.name}' ha sido   aceptada para el {contract.start_date.strftime('%d/%m/%Y')} a las {contract.start_time.strftime('%H:%M')}.",
+                            notification_type='contract_accepted',
+                            contract=contract
+                        )
+                        messages.success(request, 'Has aceptado la solicitud. El cliente será notificado.')
+                        
+            except Exception as e:
+                messages.error(request, f'Error al procesar la solicitud: {str(e)}')
+                
         return redirect('my_orders')
 
     if user.is_provider:
@@ -311,8 +361,8 @@ def my_orders(request):
             'group': 'pending',
         },
         'accepted': {
-            'badge_classes': 'bg-blue-100 text-blue-700',
-            'dot_classes': 'bg-blue-500',
+            'badge_classes': 'bg-green-100 text-green-700',
+            'dot_classes': 'bg-green-500',
             'label': 'Aceptado',
             'group': 'accepted',
         },
@@ -355,7 +405,10 @@ def my_orders(request):
         if group in status_totals:
             status_totals[group] += bucket['total']
 
-    orders = []
+    upcoming_orders = []
+    pending_orders = []
+    past_orders = []
+
     for contract in contracts_qs:
         status_config = status_styles.get(
             contract.status,
@@ -377,31 +430,44 @@ def my_orders(request):
             counterpart_label = 'Profesional'
             counterpart_name = counterpart.get_full_name() or counterpart.username
 
-        orders.append(
-            {
-                'id': contract.id,
-                'service_id': contract.service.id,
-                'service_name': contract.service.name,
-                'counterpart_label': counterpart_label,
-                'counterpart_name': counterpart_name,
-                'counterpart_id': counterpart.id,
-                'status': contract.status,
-                'status_label': status_config['label'],
-                'badge_classes': status_config['badge_classes'],
-                'dot_classes': status_config['dot_classes'],
-                'start_date': contract.start_date,
-                'created_at': contract.created_at,
-                'price': price_value,
-                'has_price': price_value is not None,
-                'detail_url': reverse('service_detail', args=[contract.service.id]),
-                'service_description': contract.service.description,
-                'code': contract.code,
-                'can_manage': user.is_provider and contract.status == 'pending',
-            }
-        )
+        order_data = {
+            'id': contract.id,
+            'service_id': contract.service.id,
+            'service_name': contract.service.name,
+            'counterpart_label': counterpart_label,
+            'counterpart_name': counterpart_name,
+            'counterpart_id': counterpart.id,
+            'status': contract.status,
+            'status_label': status_config['label'],
+            'badge_classes': status_config['badge_classes'],
+            'dot_classes': status_config['dot_classes'],
+            'start_date': contract.start_date,
+            'created_at': contract.created_at,
+            'price': price_value,
+            'has_price': price_value is not None,
+            'detail_url': reverse('service_detail', args=[contract.service.id]),
+            'service_description': contract.service.description,
+            'code': contract.code,
+            'can_manage': user.is_provider and contract.status == 'pending',
+            'start_code_alpha': contract.start_code_alpha,
+            'end_code_alpha': contract.end_code_alpha,
+            'actual_start': contract.actual_start,
+            'actual_end': contract.actual_end,
+            'total_duration': contract.get_formatted_duration(),
+            'is_paused': contract.status == 'paused',
+        }
+
+        if contract.status in ['accepted', 'active']:
+            upcoming_orders.append(order_data)
+        elif contract.status in ['pending', 'paused']:
+            pending_orders.append(order_data)
+        else:  # rejected, cancelled, finished
+            past_orders.append(order_data)
 
     context = {
-        'orders': orders,
+        'upcoming_orders': upcoming_orders,
+        'pending_orders': pending_orders,
+        'past_orders': past_orders,
         'is_provider': user.is_provider,
         'pending_orders_count': status_totals['pending'],
         'accepted_orders_count': status_totals['accepted'],
@@ -635,6 +701,7 @@ def verify_email(request):
                 verification.delete()
                 del request.session['pending_email']
 
+                user.backend = 'django.contrib.auth.backends.ModelBackend'
                 login(request, user)
                 messages.success(request, '¡Cuenta verificada exitosamente! Bienvenido.')
                 return redirect('home')
@@ -945,7 +1012,7 @@ def public_profile(request, username):
     services = paginator.get_page(page_number)
 
     # 3. Obtener las reseñas recibidas por este usuario (en cualquiera de sus servicios)
-    reviews = Review.objects.filter(service__provider=user).select_related('user', 'user__profile').order_by(
+    reviews = Review.objects.filter(service__provider=user).select_related('user').order_by(
         '-created_at')
 
     # 4. Calcular estadísticas
@@ -979,13 +1046,13 @@ def service_detail(request, service_id):
     Muestra la página de detalle de un servicio.
     """
     service = get_object_or_404(
-        Service.objects.select_related('provider', 'provider__profile')
+        Service.objects.select_related('provider')
         .prefetch_related('images', 'categories'),
         id=service_id
     )
 
     # Obtener reviews y estadísticas
-    reviews = Review.objects.filter(service=service).select_related('user', 'user__profile').order_by('-created_at')
+    reviews = Review.objects.filter(service=service).select_related('user').order_by('-created_at')
 
     stats = reviews.aggregate(
         average_rating=Avg('rating'),
@@ -1005,6 +1072,15 @@ def service_detail(request, service_id):
     provider_avg_rating = provider_stats.get('total_avg_rating') or 0
     provider_reviews_count = provider_stats.get('total_reviews_count') or 0
 
+    # Verificar si el usuario ya tiene un contrato activo/pendiente para este servicio
+    existing_contract = None
+    if request.user.is_authenticated:
+        existing_contract = Contract.objects.filter(
+            user=request.user,
+            service=service,
+            status__in=['pending', 'accepted', 'active']
+        ).first()
+
     context = {
         'service': service,
         'reviews': reviews,
@@ -1012,6 +1088,7 @@ def service_detail(request, service_id):
         'reviews_count': reviews_count,
         'provider_avg_rating': provider_avg_rating,
         'provider_reviews_count': provider_reviews_count,
+        'existing_contract': existing_contract,
     }
     return render(request, 'service_detail.html', context)
 
@@ -1091,6 +1168,17 @@ def request_service(request, service_id):
         messages.error(request, "No puedes contratar tu propio servicio.")
         return redirect('service_detail', service_id=service_id)
 
+    # Verificar duplicados
+    existing = Contract.objects.filter(
+        user=request.user,
+        service=service,
+        status__in=['pending', 'accepted', 'active']
+    ).exists()
+
+    if existing:
+        messages.warning(request, "Ya tienes una solicitud activa para este servicio.")
+        return redirect('service_detail', service_id=service_id)
+
     start_date = request.POST.get('start_date')
     start_time = request.POST.get('start_time')
     description = request.POST.get('description')
@@ -1124,3 +1212,201 @@ def request_service(request, service_id):
     except Exception as e:
         messages.error(request, f"Error al procesar la solicitud: {str(e)}")
         return redirect('service_detail', service_id=service_id)
+
+
+
+@login_required
+def cancel_contract(request, contract_id):
+    """
+    Permite a un cliente cancelar un contrato pendiente o aceptado.
+    Notifica al proveedor de la cancelación.
+    """
+    if request.method != 'POST':
+        return redirect('my_orders')
+    
+    contract = get_object_or_404(Contract, id=contract_id)
+    
+    # Validar permisos usando el método del modelo
+    if not contract.can_be_cancelled_by(request.user):
+        messages.error(request, 'No puedes cancelar este contrato. Solo se pueden cancelar contratos pendientes o aceptados.')
+        return redirect('my_orders')
+    
+    cancellation_reason = request.POST.get('cancellation_reason', '')
+    
+    try:
+        contract.status = 'cancelled'
+        contract.cancellation_reason = cancellation_reason
+        contract.save(update_fields=['status', 'cancellation_reason'])
+        
+        # Determinar a quién notificar
+        if request.user == contract.user:
+            # El cliente canceló, notificar al proveedor
+            notify_user = contract.service.provider
+            title = "Contrato cancelado por cliente"
+            message = f"El cliente {request.user.get_full_name() or request.user.username} ha cancelado su solicitud para '{contract.service.name}'. Motivo: {cancellation_reason}"
+        else:
+            # El proveedor canceló, notificar al cliente
+            notify_user = contract.user
+            title = "Contrato cancelado por profesional"
+            message = f"El profesional {request.user.get_full_name() or request.user.username} ha cancelado el servicio '{contract.service.name}'. Motivo: {cancellation_reason}"
+
+        create_notification(
+            user=notify_user,
+            title=title,
+            message=message,
+            notification_type='contract_cancelled',
+            contract=contract
+        )
+        
+        messages.success(request, 'Has cancelado el contrato correctamente. La otra parte será notificada.')
+        
+    except Exception as e:
+        messages.error(request, f'Error al cancelar el contrato: {str(e)}')
+    
+    return redirect('my_orders')
+
+
+@login_required
+def provider_agenda(request):
+    """
+    Vista de agenda para proveedores.
+    Muestra los servicios aceptados futuros ordenados cronológicamente.
+    """
+    if not request.user.is_provider:
+        messages.error(request, "Acceso no autorizado.")
+        return redirect('home')
+
+    today = timezone.now().date()
+    
+    # Obtener contratos aceptados desde hoy en adelante
+    upcoming_contracts = Contract.objects.filter(
+        service__provider=request.user,
+        status='accepted',
+        start_date__gte=today
+    ).select_related('user', 'service').order_by('start_date', 'start_time')
+
+    context = {
+        'upcoming_contracts': upcoming_contracts,
+    }
+    return render(request, 'provider_agenda.html', context)
+
+@require_POST
+@csrf_protect
+def save_signup_data_session(request):
+    """Guarda los datos del formulario en la sesión antes de ir a Google"""
+    try:
+        data = json.loads(request.body)
+        # Guardamos todo el diccionario en la sesión bajo una clave específica
+        request.session['signup_context'] = data
+        return JsonResponse({'status': 'ok'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+
+@login_required
+def contract_qr_code(request, contract_id, type):
+    contract = get_object_or_404(Contract, id=contract_id)
+    
+    # Security check: only the client or provider can view the codes
+    if request.user != contract.user and request.user != contract.service.provider:
+        return HttpResponse("Unauthorized", status=403)
+    if type == 'start':
+        data = contract.start_token
+    elif type == 'end':
+        data = contract.end_token
+    else:
+        return HttpResponse("Invalid type", status=400)
+    # Generate QR code
+    img = qrcode.make(data)
+    response = HttpResponse(content_type="image/png")
+    img.save(response, "PNG")
+    return response
+
+
+@login_required
+def verify_service_code(request, contract_id):
+    if request.method != 'POST':
+        return redirect('my_orders')
+        
+    contract = get_object_or_404(Contract, id=contract_id)
+    
+    # Only the client can verify codes (Provider generates them)
+    if request.user != contract.user:
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'message': "Solo el cliente puede verificar los códigos."})
+        messages.error(request, "Solo el cliente puede verificar los códigos.")
+        return redirect('my_orders')
+        
+    code = request.POST.get('code', '').strip().upper()
+    verification_type = request.POST.get('type') # 'start' or 'end'
+    
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
+
+    if verification_type == 'start':
+        if contract.start_code_alpha == code:
+            contract.actual_start = timezone.now()
+            contract.status = 'active'
+            contract.save()
+            # Create first session
+            ServiceSession.objects.create(contract=contract)
+            
+            if is_ajax:
+                return JsonResponse({'success': True, 'message': "¡Servicio iniciado correctamente!"})
+            messages.success(request, "¡Servicio iniciado correctamente!")
+        else:
+            if is_ajax:
+                return JsonResponse({'success': False, 'message': "Código de inicio incorrecto."})
+            messages.error(request, "Código de inicio incorrecto.")
+            
+    elif verification_type == 'end':
+        if contract.end_code_alpha == code:
+            contract.actual_end = timezone.now()
+            contract.status = 'finished'
+            contract.save()
+            # Close active session
+            active_session = contract.sessions.filter(end_time__isnull=True).last()
+            if active_session:
+                active_session.end_time = timezone.now()
+                active_session.save()
+            
+            if is_ajax:
+                return JsonResponse({'success': True, 'message': "¡Servicio finalizado correctamente!"})
+            messages.success(request, "¡Servicio finalizado correctamente!")
+        else:
+            if is_ajax:
+                return JsonResponse({'success': False, 'message': "Código de finalización incorrecto."})
+            messages.error(request, "Código de finalización incorrecto.")
+            
+    return redirect('my_orders')
+
+
+@login_required
+def toggle_pause_service(request, contract_id):
+    if request.method != 'POST':
+        return redirect('my_orders')
+        
+    contract = get_object_or_404(Contract, id=contract_id)
+    
+    if request.user != contract.user:
+        messages.error(request, "Solo el cliente puede pausar/reanudar.")
+        return redirect('my_orders')
+    if contract.status == 'active':
+        # PAUSE
+        contract.status = 'paused'
+        contract.save()
+        # Close session
+        active_session = contract.sessions.filter(end_time__isnull=True).last()
+        if active_session:
+            active_session.end_time = timezone.now()
+            active_session.save()
+        messages.info(request, "Servicio pausado.")
+        
+    elif contract.status == 'paused':
+        # RESUME
+        contract.status = 'active'
+        contract.save()
+        # Start new session
+        ServiceSession.objects.create(contract=contract)
+        messages.success(request, "Servicio reanudado.")
+        
+    return redirect('my_orders')

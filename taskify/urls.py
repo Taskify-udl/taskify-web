@@ -11,6 +11,8 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include("api.urls")),
     path("api/validate-signup/", views.validate_signup, name='validate_signup'),
+    path('accounts/', include('allauth.urls')),
+    path('api/save-signup-session/', views.save_signup_data_session, name='save_signup_session'),
 
     path("", views.home, name='home'),
 
@@ -31,6 +33,8 @@ urlpatterns = [
     path("service/<int:service_id>/request/", views.request_service, name="request_service"),
 
     path("my_orders/", views.my_orders, name='my_orders'),
+    path("order/<int:contract_id>/cancel/", views.cancel_contract, name='cancel_contract'),
+    path("agenda/", views.provider_agenda, name='provider_agenda'),
     path("order/<int:contract_id>/chat/", views.start_chat_order, name='start_chat_order'),
     path("favourites/", views.favourites, name='favourites'),
     path("service/<int:service_id>/toggle-favorite/", views.toggle_favorite, name='toggle_favorite'),
@@ -45,6 +49,9 @@ urlpatterns = [
 
     path("verify-email/", views.verify_email, name="verify_email"),
     path("resend-verification-code/", views.resend_verification_code, name="resend_verification_code"),
+    path("order/<int:contract_id>/qr/<str:type>/", views.contract_qr_code, name="contract_qr_code"),
+    path('order/<int:contract_id>/verify/', views.verify_service_code, name='verify_service_code'),
+    path('order/<int:contract_id>/toggle-pause/', views.toggle_pause_service, name='toggle_pause_service'),
 ]
 
 # Servir MEDIA en desarrollo
