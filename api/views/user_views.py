@@ -6,11 +6,12 @@ from rest_framework.decorators import (
 )
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 from rest_framework.response import Response
 
-from api.serializers import UserProfileSerializer, ChangePasswordSerializer
+from api.serializers import UserProfileSerializer, ChangePasswordSerializer, PublicUserProfileSerializer
+from taskify_app.models import CustomUser
 
 
 @api_view(["GET", "PUT", "PATCH"])
@@ -35,6 +36,21 @@ def profile_detail(request):
 
     obj = serializer.save()
     return Response(UserProfileSerializer(obj, context={"request": request}).data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def public_profile_detail(request, pk):
+    try:
+        user = CustomUser.objects.get(pk=pk)
+    except CustomUser.DoesNotExist:
+        return Response(
+            {"error": "Usuario no encontrado."},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    serializer = PublicUserProfileSerializer(user)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
