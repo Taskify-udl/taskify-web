@@ -6,6 +6,7 @@ urlpatterns = [
     path('register', auth_views.register),
     path('login', auth_views.login),
     path('profile', auth_views.profile),
+    path('profile/<int:pk>', user_views.public_profile_detail),
     path('profile_detail', user_views.profile_detail),
     path('service', service_views.services),
     path('service/<int:pk>', service_views.service_detail),

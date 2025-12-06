@@ -70,6 +70,24 @@ class UserProfileSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+class PublicUserProfileSerializer(serializers.ModelSerializer):
+    avatar = serializers.ImageField(required=False, allow_null=True)
+
+    class Meta:
+        model = CustomUser
+        fields = [
+            "id",
+            "first_name",
+            "last_name",
+            "phone",
+            "role",
+            "bio",
+            "location",
+            "website",
+            "avatar",
+        ]
+
+
 
 class ServiceSerializer(serializers.ModelSerializer):
     provider = serializers.PrimaryKeyRelatedField(read_only=True)
