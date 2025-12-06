@@ -4,6 +4,9 @@ from django.conf import settings
 class Notification(models.Model):
     NOTIFICATION_TYPES = [
         ('contract_created', 'Nuevo contrato creado'),
+        ('contract_accepted', 'Contrato aceptado'),
+        ('contract_rejected', 'Contrato rechazado'),
+        ('contract_cancelled', 'Contrato cancelado'),
         ('contract_status_changed', 'Estado de contrato cambiado'),
         ('review_received', 'Nueva reseña recibida'),
         ('service_featured', 'Servicio destacado'),

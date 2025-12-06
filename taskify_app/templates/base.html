@@ -152,6 +152,15 @@
                                     </span>
                                 </a>
                             </li>
+                            
+                            <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'provider_agenda' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
+                                <a href="{% url 'provider_agenda' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'provider_agenda' %}text-white{% else %}text-black{% endif %}">
+                                    <i class="fa-solid fa-calendar-days text-lg {% if current == 'provider_agenda' %}text-white{% else %}text-black{% endif %}"></i>
+                                    <span class="{% if current == 'provider_agenda' %}text-white{% else %}text-black{% endif %}">
+                                        Mi Agenda
+                                    </span>
+                                </a>
+                            </li>
                         {% endif %}
                     {% endif %}
                 </ul>
@@ -250,6 +259,15 @@
                                     <i class="fa-solid fa-briefcase text-lg {% if current == 'my_services' %}text-white{% else %}text-black{% endif %}"></i>
                                     <span class="{% if current == 'my_services' %}text-white{% else %}text-black{% endif %}">
                                         {% t "navbar.nav_my_services" %}
+                                    </span>
+                                </a>
+                            </li>
+                            
+                            <li class="w-full rounded-xl transition-colors duration-300 ease-in-out motion-reduce:transition-none {% if current == 'provider_agenda' %} bg-black {% else %} hover:bg-gray-200 {% endif %}">
+                                <a href="{% url 'provider_agenda' %}" class=" flex w-full items-center gap-3 rounded-xl p-2 bg-transparent !no-underline {% if current == 'provider_agenda' %}text-white{% else %}text-black{% endif %}">
+                                    <i class="fa-solid fa-calendar-days text-lg {% if current == 'provider_agenda' %}text-white{% else %}text-black{% endif %}"></i>
+                                    <span class="{% if current == 'provider_agenda' %}text-white{% else %}text-black{% endif %}">
+                                        Mi Agenda
                                     </span>
                                 </a>
                             </li>

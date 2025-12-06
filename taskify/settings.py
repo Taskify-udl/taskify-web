@@ -9,6 +9,9 @@ load_dotenv(BASE_DIR / ".env")
 
 NPM_BIN_PATH = os.getenv("NPM_BIN_PATH", default=r"C:\Program Files\nodejs\npm.cmd")
 
+# Google OAuth credentials
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
 
 # ⚠️ En producción, mueve la SECRET_KEY a variables de entorno
 SECRET_KEY = 'django-insecure-6g^(^%@g&e6o3ey2w=0d&b+ju&dg)awfs0gfpnp8^+-1+reez$'
@@ -30,6 +33,11 @@ INSTALLED_APPS = [
     'taskify_app',
     'tailwind',
     'theme',
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
 ]
 
 TAILWIND_APP_NAME = "theme"
@@ -42,6 +50,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "allauth.account.middleware.AccountMiddleware",
 ]
 
 ROOT_URLCONF = 'taskify.urls'
@@ -118,3 +127,36 @@ REST_FRAMEWORK = {
 AUTH_USER_MODEL = 'taskify_app.CustomUser'
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+SOCIALACCOUNT_AUTO_SIGNUP = True 
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+SOCIALACCOUNT_ADAPTER = 'taskify_app.adapters.CustomSocialAccountAdapter'
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        },
+        'APP': {
+            'client_id': GOOGLE_CLIENT_ID,
+            'secret': GOOGLE_CLIENT_SECRET,
+            'key': ''
+        }
+    }
+}
+
+SITE_ID = 1
+
+LOGIN_REDIRECT_URL = '/' 
+LOGOUT_REDIRECT_URL = '/'
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]

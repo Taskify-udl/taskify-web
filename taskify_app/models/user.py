@@ -44,5 +44,10 @@ class CustomUser(AbstractUser):
     # Helpers cómodos
     @property
     def is_provider(self) -> bool:
-        return self.role == self.Roles.PROVIDER
+        return self.role in [
+            self.Roles.PROVIDER,
+            self.Roles.FREELANCER,
+            self.Roles.COMPANY_ADMIN,
+            self.Roles.COMPANY_WORKER
+        ]
 

@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import review_views, contract_views, category_views, service_views, favorite_views, auth_views, user_views
+from .views import review_views, contract_views, category_views, service_views, favorite_views, auth_views, user_views, email_verification_views
 from taskify_app import views
 
 urlpatterns = [
@@ -16,8 +16,9 @@ urlpatterns = [
     path('contract/<int:pk>', contract_views.contract_detail),
     path('category', category_views.categories),
     path('category/<int:pk>', category_views.category_detail),
-    path('favorite', favorite_views.favorites),  # GET y POST
-    path('favorite/<int:pk>', favorite_views.favorite_detail),  # DELETE
+    path('favorite', favorite_views.favorites), 
+    path('favorite/<int:pk>', favorite_views.favorite_detail),  
     path('chat/<int:conversation_id>/new-messages/', views.get_new_messages, name='get_new_messages'),
     path('change-password', user_views.change_password),
+    path('verification-code', email_verification_views.get_verification_code),
 ]
