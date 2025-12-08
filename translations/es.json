@@ -206,7 +206,20 @@
     "discard_title": "Descartar Cambios",
     "discard_confirm": "¿Estás seguro de que quieres descartar los cambios?",
     "discard": "Descartar",
-    "no_services": "No tienes servicios publicados todavía. ¡Crea tu primer servicio!"
+    "no_services": "No tienes servicios publicados todavía. ¡Crea tu primer servicio!",
+    "promoted_badge": "Promocionado",
+    "promote_button": "Promo",
+    "promote_modal_title": "Promocionar Servicio",
+    "promote_modal_desc": "Aumenta la visibilidad de <span id=\"promoteServiceName\" class=\"font-semibold text-gray-900\"></span> destacándolo en los resultados de búsqueda.",
+    "duration_24h": "24h",
+    "duration_3d": "3 Días",
+    "duration_7d": "7 Días",
+    "best_value": "Mejor Valor",
+    "pay_promote_button": "Pagar y Promocionar",
+    "expired": "Expirado",
+    "days_short": "d",
+    "hours_short": "h",
+    "minutes_short": "m"
   },
   "public_profile": {
     "services_label": "Servicios",
