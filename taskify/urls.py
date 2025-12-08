@@ -52,6 +52,7 @@ urlpatterns = [
     path("order/<int:contract_id>/qr/<str:type>/", views.contract_qr_code, name="contract_qr_code"),
     path('order/<int:contract_id>/verify/', views.verify_service_code, name='verify_service_code'),
     path('order/<int:contract_id>/toggle-pause/', views.toggle_pause_service, name='toggle_pause_service'),
+    path('promote-service/', views.promote_service, name='promote_service'),
 ]
 
 # Servir MEDIA en desarrollo

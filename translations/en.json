@@ -201,7 +201,20 @@
     "discard_title": "Discard Changes",
     "discard_confirm": "Are you sure you want to discard your changes?",
     "discard": "Discard",
-    "no_services": "You don't have any published services yet. Create your first service!"
+    "no_services": "You don't have any published services yet. Create your first service!",
+    "promoted_badge": "Promoted",
+    "promote_button": "Promo",
+    "promote_modal_title": "Promote Service",
+    "promote_modal_desc": "Increase the visibility of <span id=\"promoteServiceName\" class=\"font-semibold text-gray-900\"></span> by highlighting it in search results.",
+    "duration_24h": "24h",
+    "duration_3d": "3 Days",
+    "duration_7d": "7 Days",
+    "best_value": "Best Value",
+    "pay_promote_button": "Pay and Promote",
+    "expired": "Expired",
+    "days_short": "d",
+    "hours_short": "h",
+    "minutes_short": "m"
   },
   "public_profile": {
     "services_label": "Services",
@@ -268,17 +281,4 @@
     "page_label": "Page",
     "page_of": "of"
   }
-}
-    "mark_all_read": "Mark all as read",
-"contract_label": "Contract:",
-"review_label": "Review in:",
-"service_label": "Service:",
-"mark_read_button": "Mark as read",
-"no_notifications_title": "You have no notifications.",
-"no_notifications_desc": "When you have activity on your account, it will appear here.",
-"pagination_prev": "« Previous",
-"pagination_next": "Next »",
-"page_label": "Page",
-"page_of": "of"
-}
 }

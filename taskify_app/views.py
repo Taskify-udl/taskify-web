@@ -4,7 +4,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.http import JsonResponse
-from django.db.models import Count, Avg, Q
+from django.db.models import Count, Avg, Q, Case, When, Value, BooleanField
 from django.core.mail import send_mail
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie, csrf_protect
 from django.utils import timezone
@@ -36,8 +36,13 @@ def home(request):
 
     # Servicios destacados paginados (ordenados por rating o fecha)
     featured_services_list = Service.objects.annotate(
-        avg_rating=Avg('reviews__rating')
-    ).order_by('-avg_rating', '-created_at')
+        avg_rating=Avg('reviews__rating'),
+        promoted_status=Case(
+            When(promoted_until__gt=timezone.now(), then=Value(True)),
+            default=Value(False),
+            output_field=BooleanField(),
+        )
+    ).order_by('-promoted_status', '-avg_rating', '-created_at')
     
     paginator = Paginator(featured_services_list, 12)
     page_number = request.GET.get('page')
@@ -86,7 +91,7 @@ def search(request):
 
     # Empezamos con todos los servicios y optimizamos la consulta
     results = Service.objects.all().select_related(
-        'provider__profile'
+        'provider'
     ).prefetch_related(
         'images', 'categories', 'reviews'
     )
@@ -105,8 +110,13 @@ def search(request):
     # Añadimos anotaciones para la media de estrellas (para mostrar en las tarjetas)
     results = results.annotate(
         average_rating=Avg('reviews__rating'),
-        review_count=Count('reviews')
-    ).distinct()
+        review_count=Count('reviews'),
+        promoted_status=Case(
+            When(promoted_until__gt=timezone.now(), then=Value(True)),
+            default=Value(False),
+            output_field=BooleanField(),
+        )
+    ).distinct().order_by('-promoted_status', '-average_rating', '-created_at')
 
     # Paginación
     paginator = Paginator(results, 12)
@@ -1410,3 +1420,26 @@ def toggle_pause_service(request, contract_id):
         messages.success(request, "Servicio reanudado.")
         
     return redirect('my_orders')
+
+
+@login_required
+@require_POST
+def promote_service(request):
+    service_id = request.POST.get('service_id')
+    duration_days = int(request.POST.get('duration', 1))
+    
+    service = get_object_or_404(Service, id=service_id, provider=request.user)
+    
+    # Calculate new promotion end date
+    # If already promoted, extend the time? For now, let's just set from now.
+    # Or if we want to stack: start = max(timezone.now(), service.promoted_until or timezone.now())
+    
+    start_time = timezone.now()
+    if service.promoted_until and service.promoted_until > start_time:
+        start_time = service.promoted_until
+        
+    service.promoted_until = start_time + timedelta(days=duration_days)
+    service.save()
+    
+    messages.success(request, f'¡Servicio promocionado por {duration_days} días!')
+    return redirect('my_services')
