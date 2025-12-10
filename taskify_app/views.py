@@ -1437,7 +1437,12 @@ def verify_service_code(request, contract_id):
                 active_session.save()
             
             if is_ajax:
-                return JsonResponse({'success': True, 'message': "¡Servicio finalizado correctamente!"})
+                return JsonResponse({
+                    'success': True, 
+                    'message': "¡Servicio finalizado correctamente!",
+                    'show_review_modal': True,
+                    'contract_id': contract.id
+                })
             messages.success(request, "¡Servicio finalizado correctamente!")
         else:
             if is_ajax:
@@ -1445,6 +1450,46 @@ def verify_service_code(request, contract_id):
             messages.error(request, "Código de finalización incorrecto.")
             
     return redirect('my_orders')
+
+
+@login_required
+def create_review(request, contract_id):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Método no permitido'})
+        
+    contract = get_object_or_404(Contract, id=contract_id)
+    
+    # Verificar que el usuario es el cliente
+    if request.user != contract.user:
+        return JsonResponse({'success': False, 'message': 'No tienes permiso para valorar este servicio.'})
+        
+    # Verificar que el contrato está finalizado
+    if contract.status != 'finished':
+        return JsonResponse({'success': False, 'message': 'El contrato debe estar finalizado para dejar una reseña.'})
+        
+    # Verificar si ya existe reseña
+    if Review.objects.filter(user=request.user, service=contract.service).exists():
+        return JsonResponse({'success': False, 'message': 'Ya has valorado este servicio.'})
+        
+    try:
+        rating = int(request.POST.get('rating'))
+        comment = request.POST.get('comment', '').strip()
+        
+        if not (1 <= rating <= 5):
+            return JsonResponse({'success': False, 'message': 'La valoración debe estar entre 1 y 5.'})
+            
+        Review.objects.create(
+            user=request.user,
+            service=contract.service,
+            rating=rating,
+            comment=comment
+        )
+        
+        return JsonResponse({'success': True, 'message': '¡Reseña guardada correctamente!'})
+    except ValueError:
+        return JsonResponse({'success': False, 'message': 'Valoración inválida.'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
 
 
 @login_required

@@ -21,4 +21,5 @@ urlpatterns = [
     path('chat/<int:conversation_id>/new-messages/', views.get_new_messages, name='get_new_messages'),
     path('change-password', user_views.change_password),
     path('verification-code', email_verification_views.get_verification_code),
+    path('contract/<int:contract_id>/review/', views.create_review, name='create_review'),
 ]
