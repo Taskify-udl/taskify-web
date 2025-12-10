@@ -273,6 +273,28 @@
             const hiddenInput = document.getElementById('cancellation_reason_input');
             hiddenInput.value = textarea.value;
         });
+        // Auto-scroll to highlighted order on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const hash = window.location.hash;
+            if (hash && hash.startsWith('#order-')) {
+                const orderId = hash.replace('#order-', '');
+                const orderElement = document.getElementById(`order-${orderId}`);
+        
+        if (orderElement) {
+            // Find which tab contains this order
+            const parentTab = orderElement.closest('.tab-content');
+            if (parentTab) {
+                const tabId = parentTab.id.replace('content-', '');
+                switchTab(tabId);
+            }
+            
+            // Scroll to the element with smooth behavior
+            setTimeout(() => {
+                orderElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+            }
+        }
+    });
     </script>
 
 {% endblock %}

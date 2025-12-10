@@ -11,6 +11,9 @@ class Notification(models.Model):
         ('review_received', 'Nueva reseña recibida'),
         ('service_featured', 'Servicio destacado'),
         ('payment_received', 'Pago recibido'),
+        ('service_reminder_1day', 'Recordatorio de servicio (1 día antes)'),
+        ('review_reminder', 'Recordatorio para dejar reseña'),
+        ('new_message', 'Nuevo mensaje en chat'),
         ('system', 'Notificación del sistema'),
     ]
 
@@ -46,6 +49,15 @@ class Notification(models.Model):
     )
     service = models.ForeignKey(
         'taskify_app.Service',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='notifications'
+    )
+    message_count = models.IntegerField(default=1)
+    
+    conversation = models.ForeignKey(
+        'taskify_app.Conversation',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
