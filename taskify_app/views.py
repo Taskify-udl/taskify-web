@@ -25,6 +25,9 @@ from .forms import RegisterForm
 from django.templatetags.static import static
 from .models import Service, ServiceImage, Contract, Review, Notification, CustomUser, EmailVerification, Category, Conversation, Message, Favorite, ServiceSession
 
+# --- IMPORTACIÓN DE LA IA DE SEGURIDAD ---
+from .utils.nsfw_check import analizar_contenido_peligroso, es_contenido_seguro
+
 @ensure_csrf_cookie
 def home(request):
     # Seleccionar hasta 6 categorías aleatorias
@@ -555,9 +558,26 @@ def edit_profile(request):
         profile.website = request.POST.get('website', '')
         profile.profession = request.POST.get('profession', '')
 
-        # Handle avatar upload
+        # Handle avatar upload with AI Check
         if request.FILES.get('avatar'):
-            profile.avatar = request.FILES['avatar']
+            avatar_file = request.FILES['avatar']
+            
+            # --- AI SECURITY CHECK ---
+            print(f"Analizando avatar: {avatar_file.name}")
+            analisis = analizar_contenido_peligroso(avatar_file)
+            is_safe = es_contenido_seguro(analisis)
+
+            if not is_safe:
+                # Opcional: ver detalles del rechazo en consola
+                print(f"AVATAR RECHAZADO: {analisis}")
+                messages.error(request, 'Tu imagen de perfil contiene contenido inapropiado (violencia, drogas, desnudos) y ha sido rechazada.')
+                return redirect('edit_profile')
+            
+            # ¡IMPORTANTE! Rebobinar el archivo después de que la IA lo lea
+            avatar_file.seek(0)
+            # -------------------------
+
+            profile.avatar = avatar_file
 
         profile.save()
 
@@ -923,6 +943,22 @@ def my_services(request):
         category_ids = request.POST.getlist('categories')
         service_id = request.POST.get('service_id')
 
+        # --- AI SECURITY CHECK PARA IMÁGENES DE SERVICIO ---
+        if cover_images:
+            for i, img in enumerate(cover_images):
+                print(f"Analizando imagen de servicio: {img.name}")
+                analisis = analizar_contenido_peligroso(img)
+                is_safe = es_contenido_seguro(analisis)
+                
+                if not is_safe:
+                    print(f"IMAGEN RECHAZADA: {analisis}")
+                    messages.error(request, f'La imagen "{img.name}" contiene contenido inapropiado y ha sido rechazada. No se ha guardado el servicio.')
+                    return redirect('my_services')
+                
+                # ¡IMPORTANTE! Rebobinar el archivo para que Django pueda guardarlo después
+                img.seek(0)
+        # ---------------------------------------------------
+
         if not name or not price_str:
             messages.error(request, 'El nombre y el precio son obligatorios.')
             return redirect('my_services')
@@ -946,7 +982,7 @@ def my_services(request):
                 if images_to_delete_ids:
                     ServiceImage.objects.filter(id__in=images_to_delete_ids, service=service).delete()
 
-                # Agregar nuevas imágenes
+                # Agregar nuevas imágenes (ya validadas arriba)
                 for f in cover_images:
                     ServiceImage.objects.create(service=service, image=f)
 
@@ -980,7 +1016,7 @@ def my_services(request):
                 price=price
             )
 
-            # Agregar imágenes
+            # Agregar imágenes (ya validadas arriba)
             for f in cover_images:
                 ServiceImage.objects.create(service=new_service, image=f)
 
