@@ -12,6 +12,13 @@ class Review(models.Model):
         on_delete=models.CASCADE,
         related_name="reviews",
     )
+    contract = models.ForeignKey(
+        "taskify_app.Contract",
+        on_delete=models.CASCADE,
+        related_name="reviews",
+        null=True,
+        blank=True
+    )
     rating = models.IntegerField()
     comment = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -21,7 +28,7 @@ class Review(models.Model):
         indexes = [
             models.Index(fields=["user", "service"]),
         ]
-        unique_together = (("user", "service"),)
+        unique_together = (("contract",),)
         ordering = ["-created_at"]
 
     def __str__(self):

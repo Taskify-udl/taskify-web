@@ -4,7 +4,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.http import JsonResponse
-from django.db.models import Count, Avg, Q, Case, When, Value, BooleanField
+from django.db.models import Count, Avg, Q, Case, When, Value, BooleanField, Sum
 from django.core.mail import send_mail
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie, csrf_protect
 from django.utils import timezone
@@ -465,6 +465,7 @@ def my_orders(request):
             'actual_end': contract.actual_end,
             'total_duration': contract.get_formatted_duration(),
             'is_paused': contract.status == 'paused',
+            'has_review': Review.objects.filter(contract=contract).exists(),
         }
 
         if contract.status in ['accepted', 'active']:
@@ -575,13 +576,42 @@ def advanced_stats(request):
     contracts_count = Contract.objects.filter(user=user).count()
     reviews_count = Review.objects.filter(service__provider=user).count()
 
+    # --- New Dashboard Data ---
+    from django.db.models import Sum, Q
+
+    # 1. Total Earnings
+    earnings_aggregate = Contract.objects.filter(
+        service__provider=user,
+        status='finished'
+    ).aggregate(total=Sum('price'))
+    total_earnings = earnings_aggregate['total'] or 0
+
+    # 2. Upcoming Appointments
+    upcoming_contracts = Contract.objects.filter(
+        Q(user=user) | Q(service__provider=user),
+        status__in=['accepted', 'active'],
+        start_date__gte=timezone.now().date()
+    ).order_by('start_date', 'start_time')[:3]
+
+    # 3. Pending Requests Count
+    if user.is_provider:
+        pending_count = Contract.objects.filter(service__provider=user, status='pending').count()
+    else:
+        pending_count = 0
+
     # Monthly statistics (last 12 months)
     from django.db.models.functions import TruncMonth
-    from django.utils import timezone
     from dateutil.relativedelta import relativedelta
 
+    # Calculate last 12 months range
+    today = timezone.now().date()
+    last_12_months = []
+    for i in range(11, -1, -1):
+        d = today.replace(day=1) - relativedelta(months=i)
+        last_12_months.append(d)
+
     # Services created by month
-    services_by_month = Service.objects.filter(
+    services_by_month_qs = Service.objects.filter(
         provider=user,
         created_at__gte=timezone.now() - relativedelta(months=12)
     ).annotate(
@@ -591,14 +621,28 @@ def advanced_stats(request):
     ).order_by('month')
 
     # Contracts by month
-    contracts_by_month = Contract.objects.filter(
-        user=user,
-        created_at__gte=timezone.now() - relativedelta(months=12)
+    contracts_by_month_qs = Contract.objects.filter(
+        service__provider=user,
+        status='finished',
+        actual_end__gte=timezone.now() - relativedelta(months=12)
     ).annotate(
-        month=TruncMonth('created_at')
+        month=TruncMonth('actual_end')
     ).values('month').annotate(
         count=Count('id')
     ).order_by('month')
+
+    # Helper to format data for Chart.js
+    def get_monthly_counts(queryset):
+        data_map = {}
+        for item in queryset:
+            # item['month'] is datetime
+            month_key = item['month'].strftime('%Y-%m')
+            data_map[month_key] = item['count']
+        
+        return [data_map.get(d.strftime('%Y-%m'), 0) for d in last_12_months]
+
+    services_counts = get_monthly_counts(services_by_month_qs)
+    contracts_counts = get_monthly_counts(contracts_by_month_qs)
 
     # Reviews by month
     reviews_by_month = Review.objects.filter(
@@ -611,11 +655,17 @@ def advanced_stats(request):
     ).order_by('month')
 
     # Rating distribution
-    rating_distribution = Review.objects.filter(
+    rating_distribution_qs = Review.objects.filter(
         service__provider=user
     ).values('rating').annotate(
         count=Count('rating')
     ).order_by('rating')
+
+    rating_counts = [0] * 5
+    for item in rating_distribution_qs:
+        r = item['rating']
+        if 1 <= r <= 5:
+            rating_counts[r-1] = item['count']
 
     # Top performing services
     top_services = Service.objects.filter(provider=user).annotate(
@@ -624,20 +674,28 @@ def advanced_stats(request):
     ).filter(review_count__gt=0).order_by('-avg_rating')[:5]
 
     # Recent activity
-    recent_contracts = Contract.objects.filter(user=user).order_by('-created_at')[:10]
+    recent_contracts = Contract.objects.filter(
+        Q(user=user) | Q(service__provider=user)
+    ).order_by('-created_at')[:10]
     recent_reviews = Review.objects.filter(service__provider=user).order_by('-created_at')[:10]
 
     context = {
         'services_count': services_count,
         'contracts_count': contracts_count,
         'reviews_count': reviews_count,
-        'services_by_month': list(services_by_month),
-        'contracts_by_month': list(contracts_by_month),
+        'services_by_month': list(services_by_month_qs),
+        'contracts_by_month': list(contracts_by_month_qs),
         'reviews_by_month': list(reviews_by_month),
-        'rating_distribution': list(rating_distribution),
+        'rating_distribution': list(rating_distribution_qs),
+        'services_counts_json': json.dumps(services_counts),
+        'contracts_counts_json': json.dumps(contracts_counts),
+        'rating_counts_json': json.dumps(rating_counts),
         'top_services': top_services,
         'recent_contracts': recent_contracts,
         'recent_reviews': recent_reviews,
+        'total_earnings': total_earnings,
+        'upcoming_contracts': upcoming_contracts,
+        'pending_count': pending_count,
     }
 
     return render(request, 'advanced_stats.html', context)
@@ -1380,7 +1438,12 @@ def verify_service_code(request, contract_id):
                 active_session.save()
             
             if is_ajax:
-                return JsonResponse({'success': True, 'message': "¡Servicio finalizado correctamente!"})
+                return JsonResponse({
+                    'success': True, 
+                    'message': "¡Servicio finalizado correctamente!",
+                    'show_review_modal': True,
+                    'contract_id': contract.id
+                })
             messages.success(request, "¡Servicio finalizado correctamente!")
         else:
             if is_ajax:
@@ -1388,6 +1451,46 @@ def verify_service_code(request, contract_id):
             messages.error(request, "Código de finalización incorrecto.")
             
     return redirect('my_orders')
+
+
+@login_required
+def create_review(request, contract_id):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Método no permitido'})
+        
+    contract = get_object_or_404(Contract, id=contract_id)
+    
+    # Verificar que el usuario es el cliente
+    if request.user != contract.user:
+        return JsonResponse({'success': False, 'message': 'No tienes permiso para valorar este servicio.'})
+        
+    # Verificar que el contrato está finalizado
+    if contract.status != 'finished':
+        return JsonResponse({'success': False, 'message': 'El contrato debe estar finalizado para dejar una reseña.'})
+        
+    if Review.objects.filter(contract=contract).exists():
+        return JsonResponse({'success': False, 'message': 'Ya has valorado este servicio.'})
+    
+    try:
+        rating = int(request.POST.get('rating'))
+        comment = request.POST.get('comment', '').strip()
+        
+        if not (1 <= rating <= 5):
+            return JsonResponse({'success': False, 'message': 'La valoración debe estar entre 1 y 5.'})
+            
+        Review.objects.create(
+            user=request.user,
+            service=contract.service,
+            contract=contract,
+            rating=rating,
+            comment=comment
+        )
+        
+        return JsonResponse({'success': True, 'message': '¡Reseña guardada correctamente!'})
+    except ValueError:
+        return JsonResponse({'success': False, 'message': 'Valoración inválida.'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
 
 
 @login_required
@@ -1441,5 +1544,5 @@ def promote_service(request):
     service.promoted_until = start_time + timedelta(days=duration_days)
     service.save()
     
-    messages.success(request, f'¡Servicio promocionado por {duration_days} días!')
+    messages.success(request, f"Servicio promocionado por {duration_days} días.")
     return redirect('my_services')
