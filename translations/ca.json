@@ -305,6 +305,24 @@
     "pagination_prev": "« Anterior",
     "pagination_next": "Següent »",
     "page_label": "Pàgina",
-    "page_of": "de"
+    "page_of": "de",
+    "types": {
+      "contract_created_title": "Nova sol·licitud de servei",
+      "contract_created_message_provider": "Has rebut una nova sol·licitud per al teu servei \"{service_name}\".",
+      "contract_status_accepted_title": "Sol·licitud acceptada",
+      "contract_status_accepted_message_client": "La teva sol·licitud per al servei \"{service_name}\" ha estat acceptada.",
+      "contract_status_rejected_title": "Sol·licitud rebutjada",
+      "contract_status_rejected_message_client": "La teva sol·licitud per al servei \"{service_name}\" ha estat rebutjada.",
+      "contract_status_rejected_with_reason": "Motiu: {reason}",
+      "review_received_title": "Nova ressenya rebuda",
+      "review_received_message_provider": "Has rebut una ressenya de {rating} estrella(es) al teu servei \"{service_name}\".",
+      "service_reminder_title": "Recordatori: Servei proper",
+      "service_reminder_message_client": "Demà comença el teu servei \"{service_name}\" a les {start_time}. No oblidis estar preparat!",
+      "service_reminder_message_provider": "Demà tens programat el servei \"{service_name}\" a les {start_time} amb {client_name}.",
+      "review_reminder_title": "Com ha estat la teva experiència?",
+      "review_reminder_message_client": "Has completat el servei \"{service_name}\". T'agradaria deixar una ressenya?",
+      "new_message_title": "Nou missatge",
+      "new_message_message": "{sender_name} t'ha enviat un missatge."
+    }
   }
 }
