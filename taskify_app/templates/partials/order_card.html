@@ -159,6 +159,12 @@
             {% endif %}
             {% endif %}
             {% endif %}
+            {% if not is_provider and order.status == 'finished' and not order.has_review %}
+            <button type="button" onclick="document.getElementById('reviewModal-{{ order.id }}').classList.remove('hidden')"
+                class="px-4 py-2 text-sm font-medium bg-[#1c1b2b] text-white !rounded-xl hover:bg-gray-800 transition cursor-pointer">
+                {% t "orders.rate_service" %}
+            </button>
+            {% endif %}
         </div>
     </div>
 </article>
@@ -450,7 +456,7 @@
 
                     <div class="mb-4">
                         <label for="comment" class="block text-sm font-medium text-gray-700 mb-1">Comentario (opcional)</label>
-                        <textarea name="comment" rows="3" class="block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm resize-none" placeholder="Cuéntanos tu experiencia..."></textarea>
+                        <textarea name="comment" rows="3" class="block py-1 px-2 w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm resize-none" placeholder="Cuéntanos tu experiencia..."></textarea>
                     </div>
 
                     <div id="review-error-{{ order.id }}" class="hidden mb-4 p-3 bg-red-100 text-red-700 rounded-xl text-sm font-bold text-center"></div>

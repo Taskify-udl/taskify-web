@@ -118,6 +118,7 @@
     "counts_accepted": "Accepted",
     "counts_rejected": "Rejected",
     "search_placeholder": "Search orders",
+    "rate_service": "Rate Service",
     "filter_status": "Status",
     "status_pending": "Pending",
     "status_accepted": "Accepted",

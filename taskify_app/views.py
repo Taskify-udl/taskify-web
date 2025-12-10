@@ -465,6 +465,7 @@ def my_orders(request):
             'actual_end': contract.actual_end,
             'total_duration': contract.get_formatted_duration(),
             'is_paused': contract.status == 'paused',
+            'has_review': Review.objects.filter(contract=contract).exists(),
         }
 
         if contract.status in ['accepted', 'active']:
@@ -1467,10 +1468,9 @@ def create_review(request, contract_id):
     if contract.status != 'finished':
         return JsonResponse({'success': False, 'message': 'El contrato debe estar finalizado para dejar una reseña.'})
         
-    # Verificar si ya existe reseña
-    if Review.objects.filter(user=request.user, service=contract.service).exists():
+    if Review.objects.filter(contract=contract).exists():
         return JsonResponse({'success': False, 'message': 'Ya has valorado este servicio.'})
-        
+    
     try:
         rating = int(request.POST.get('rating'))
         comment = request.POST.get('comment', '').strip()
@@ -1481,6 +1481,7 @@ def create_review(request, contract_id):
         Review.objects.create(
             user=request.user,
             service=contract.service,
+            contract=contract,
             rating=rating,
             comment=comment
         )
