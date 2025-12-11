@@ -978,7 +978,7 @@ def my_services(request):
                 service.price = price
 
                 # Eliminar imágenes marcadas
-                images_to_delete_ids = request.POST.getlist('delete_images')
+                images_to_delete_ids = request.POST.getlist('images_to_delete')
                 if images_to_delete_ids:
                     ServiceImage.objects.filter(id__in=images_to_delete_ids, service=service).delete()
 
