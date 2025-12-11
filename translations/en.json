@@ -280,6 +280,12 @@
     "pagination_prev": "« Previous",
     "pagination_next": "Next »",
     "page_label": "Page",
-    "page_of": "of"
+    "page_of": "of",
+    "success_title": "Success!",
+    "error_title": "Error",
+    "info_title": "Notification",
+    "understood": "Understood",
+    "accept": "Accept",
+    "close_sr": "Close"
   }
 }
