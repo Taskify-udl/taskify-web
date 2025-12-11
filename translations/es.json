@@ -282,12 +282,11 @@
     "contract_label": "Contrato:",
     "review_label": "Reseña en:",
     "service_label": "Servicio:",
-    "mark_read_button": "Marcar como leído",
-    "no_notifications_title": "No tienes notificaciones.",
-    "no_notifications_desc": "Cuando tengas actividad en tu cuenta, aparecerá aquí.",
-    "pagination_prev": "« Anterior",
-    "pagination_next": "Siguiente »",
-    "page_label": "Página",
-    "page_of": "de"
+    "success_title": "¡Éxito!",
+    "error_title": "Error",
+    "info_title": "Notificación",
+    "understood": "Entendido",
+    "accept": "Aceptar",
+    "close_sr": "Cerrar"
   }
 }

@@ -582,4 +582,157 @@
         setInterval(updateTimers, 60000);
     });
 </script>
+<!-- Notification Modal (Max width 400px & Text wrap) -->
+{% if messages %}
+<div id="notificationModal"
+    data-auto-dismiss="{% for message in messages %}{% if message.tags == 'success' %}true{% endif %}{% endfor %}"
+    class="fixed inset-0 z-[60] flex items-center justify-center p-4"
+    style="opacity: 0; pointer-events: none; transition: opacity 0.3s ease-out;">
+
+    <!-- Overlay -->
+    <div class="absolute inset-0 transition-opacity" style="background-color: rgba(0, 0, 0, 0.5);"
+        onclick="closeNotificationModal()">
+    </div>
+
+    <!-- Modal Panel -->
+    <div id="notificationContent"
+        class="relative w-full max-w-[400px] transform rounded-2xl bg-white shadow-xl transition-all p-6 scale-95 opacity-0"
+        style="transition: transform 0.3s ease-out, opacity 0.3s ease-out;">
+
+        <!-- Close Button -->
+        <div class="absolute top-3 right-3">
+            <button type="button" onclick="closeNotificationModal()"
+                class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center">
+                <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+                    viewBox="0 0 14 14">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+                </svg>
+                <span class="sr-only">{% t "notifications.close_sr" %}</span>
+            </button>
+        </div>
+
+        <div class="flex flex-col items-center text-center mt-2">
+            {% for message in messages %}
+            {% if message.tags == 'success' %}
+            <div
+                class="mx-auto flex h-16 w-16 flex items-center justify-center rounded-full bg-green-100 mb-4 animate-bounce-short">
+                <svg class="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+            </div>
+            <h3 class="text-xl font-bold leading-6 text-gray-900 mb-2">{% t "notifications.success_title" %}
+            </h3>
+            <div class="mt-2 w-full">
+                <p class="text-sm text-gray-500 break-words">{{ message }}</p>
+            </div>
+            <!-- Auto-close indicator -->
+            <div class="mt-6 w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
+                <div class="bg-green-500 h-1.5 rounded-full w-full animate-progress"></div>
+            </div>
+            {% elif message.tags == 'error' %}
+            <div class="mx-auto flex h-16 w-16 flex items-center justify-center rounded-full bg-red-100 mb-4">
+                <svg class="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+            </div>
+            <h3 class="text-xl font-bold leading-6 text-gray-900 mb-2">{% t "notifications.error_title" %}</h3>
+            <div class="mt-2 w-full">
+                <p class="text-sm text-gray-500 break-words">{{ message }}</p>
+            </div>
+            <div class="mt-6 w-full">
+                <button type="button" onclick="closeNotificationModal()"
+                    class="inline-flex w-full justify-center !rounded-xl bg-red-600 px-3 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-red-500 transition-all duration-200">
+                    {% t "notifications.understood" %}
+                </button>
+            </div>
+            {% else %}
+            <!-- Info/Warning default -->
+            <div class="mx-auto flex h-12 w-12 flex items-center justify-center rounded-full bg-blue-100 mb-4">
+                <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <h3 class="text-lg font-medium leading-6 text-gray-900 mb-2">{% t "notifications.info_title" %}</h3>
+            <div class="mt-2 w-full">
+                <p class="text-sm text-gray-500 break-words">{{ message }}</p>
+            </div>
+            <div class="mt-5 w-full">
+                <button type="button" onclick="closeNotificationModal()"
+                    class="inline-flex w-full justify-center !rounded-xl bg-[#1c1b2b] px-3 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#2d2c3f] transition-all duration-200">
+                    {% t "notifications.accept" %}
+                </button>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<style>
+    @keyframes progress {
+        from { width: 100%; }
+        to { width: 0%; }
+    }
+
+    .animate-progress {
+        animation: progress 3s linear forwards;
+    }
+
+    @keyframes bounce-short {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10%); }
+    }
+
+    .animate-bounce-short {
+        animation: bounce-short 0.5s ease-in-out 1;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const modal = document.getElementById('notificationModal');
+        const content = document.getElementById('notificationContent');
+
+        if (modal) {
+            // Show with animation
+            setTimeout(() => {
+                modal.style.opacity = '1';
+                modal.style.pointerEvents = 'auto';
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+
+            // Auto close for success messages
+            const autoDismiss = modal.getAttribute('data-auto-dismiss');
+            if (autoDismiss && autoDismiss.includes('true')) {
+                setTimeout(closeNotificationModal, 3000);
+            }
+        }
+    });
+
+    function closeNotificationModal() {
+        const modal = document.getElementById('notificationModal');
+        const content = document.getElementById('notificationContent');
+
+        if (modal && content) {
+            // Hide with animation
+            modal.style.opacity = '0';
+            modal.style.pointerEvents = 'none';
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+
+            // Remove from DOM after animation
+            setTimeout(() => {
+                modal.remove();
+            }, 300);
+        }
+    }
+</script>
+{% endif %}
 {% endblock %}
