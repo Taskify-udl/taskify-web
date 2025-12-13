@@ -8,7 +8,7 @@ from taskify_app.models import Category, Service, Review, Contract, Favorite, Cu
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ['name', 'slug', 'description', 'icon']
+        fields = ['id', 'name', 'slug', 'description', 'icon']
 
 
 # serializers.py
