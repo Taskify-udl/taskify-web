@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from slugify import slugify
 
-from taskify_app.models import Category, Service, Review, Contract, Favorite, CustomUser
+from taskify_app.models import Category, Service, Review, Contract, Favorite, CustomUser, ServiceImage
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -16,7 +16,6 @@ from rest_framework import serializers
 from taskify_app.models import CustomUser
 
 
-# Asegúrate de importar tu modelo de usuario correcto
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
@@ -59,7 +58,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "is_superuser", "is_staff", "username"]
 
     def update(self, instance, validated_data):
-        # Asegurar que username no se modifique aunque venga en los datos
         validated_data.pop("username", None)
         password = validated_data.pop("password", None)
         role = validated_data.pop("role", None)
@@ -88,14 +86,26 @@ class PublicUserProfileSerializer(serializers.ModelSerializer):
         ]
 
 
+# --- Nuevo Serializer para las imágenes ---
+class ServiceImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ServiceImage
+        fields = ['id', 'image']
 
+
+# --- Modificación del ServiceSerializer ---
 class ServiceSerializer(serializers.ModelSerializer):
     provider = serializers.PrimaryKeyRelatedField(read_only=True)
 
-    # lectura (mostrar nombres)
-    category_names = serializers.SerializerMethodField()
+    images = ServiceImageSerializer(many=True, read_only=True)
 
-    # escritura (seguir aceptando IDs)
+    uploaded_images = serializers.ListField(
+        child=serializers.ImageField(allow_empty_file=False, use_url=False),
+        write_only=True,
+        required=False
+    )
+
+    category_names = serializers.SerializerMethodField()
     categories = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Category.objects.all(), required=False
     )
@@ -110,6 +120,8 @@ class ServiceSerializer(serializers.ModelSerializer):
             "categories",
             "category_names",
             "price",
+            "images",
+            "uploaded_images",
             "created_at",
             "updated_at",
         )
@@ -118,18 +130,33 @@ class ServiceSerializer(serializers.ModelSerializer):
     def get_category_names(self, obj):
         return [c.name for c in obj.categories.all()]
 
+    # --- Lógica para CREAR servicio + imágenes ---
+    def create(self, validated_data):
+        uploaded_images = validated_data.pop("uploaded_images", [])
+
+        service = Service.objects.create(**validated_data)
+
+        for image in uploaded_images:
+            ServiceImage.objects.create(service=service, image=image)
+
+        return service
+
+    # --- Lógica para ACTUALIZAR servicio + agregar nuevas imágenes ---
     def update(self, instance, validated_data):
         validated_data.pop("provider", None)
+
+        uploaded_images = validated_data.pop("uploaded_images", [])
+        for image in uploaded_images:
+            ServiceImage.objects.create(service=instance, image=image)
+
         return super().update(instance, validated_data)
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    # Solo lectura
     user = serializers.PrimaryKeyRelatedField(read_only=True)
     user_username = serializers.SerializerMethodField()
     service_name = serializers.SerializerMethodField()
 
-    # Escritura por ID
     service = serializers.PrimaryKeyRelatedField(
         queryset=Service.objects.all(),
         required=True
@@ -159,7 +186,6 @@ class ReviewSerializer(serializers.ModelSerializer):
         return getattr(obj.service, 'name', None)
 
     def update(self, instance, validated_data):
-        # proteger campos inmutables
         validated_data.pop("user", None)
         validated_data.pop("service", None)
         return super().update(instance, validated_data)
