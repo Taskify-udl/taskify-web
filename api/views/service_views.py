@@ -1,7 +1,8 @@
-from django.db.models import Case, When, Value, IntegerField, Q  # <--- Importaciones corregidas
+from django.db.models import Case, When, Value, IntegerField, Q
 from django.shortcuts import get_object_or_404
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.decorators import api_view, authentication_classes, permission_classes, parser_classes
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
@@ -11,9 +12,10 @@ from api.serializers import ServiceSerializer
 from taskify_app.models import Service, Category
 
 
-@api_view(['GET', 'POST'])  # Es más limpio dejar PUT/DELETE para el service_detail
+@api_view(['GET', 'POST'])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
+@parser_classes([MultiPartParser, FormParser])
 def services(request):
     if request.method == 'GET':
         # --- 1. Obtener parámetros ---
@@ -63,18 +65,14 @@ def services(request):
 
         return Response(serializer.data)
 
-    # --- Lógica del POST (Creación) se mantiene igual ---
     elif request.method == 'POST':
-        data = request.data.copy()
-        data.pop('id', None)
+        serializer = ServiceSerializer(data=request.data, context={'request': request})
 
-        serializer = ServiceSerializer(data=data, context={'request': request})
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         obj = serializer.save(provider=request.user)
         return Response(ServiceSerializer(obj).data, status=status.HTTP_201_CREATED)
-
 
 @api_view(['GET', 'PUT', 'PATCH', 'DELETE'])
 @authentication_classes([TokenAuthentication])

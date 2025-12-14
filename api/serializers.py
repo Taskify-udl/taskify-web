@@ -16,7 +16,6 @@ from rest_framework import serializers
 from taskify_app.models import CustomUser
 
 
-
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
 
@@ -67,6 +66,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             instance.set_password(password)
         instance.save()
         return instance
+
 
 class PublicUserProfileSerializer(serializers.ModelSerializer):
     avatar = serializers.ImageField(required=False, allow_null=True)
@@ -132,10 +132,20 @@ class ServiceSerializer(serializers.ModelSerializer):
 
     # --- Lógica para CREAR servicio + imágenes ---
     def create(self, validated_data):
+        # 1. Sacamos las imágenes (esto ya lo tenías)
         uploaded_images = validated_data.pop("uploaded_images", [])
 
+        # 2. SACAR LAS CATEGORÍAS (¡ESTA ES LA CLAVE!)
+        # Si no hacemos esto, Django intenta guardarlas en el .create() y explota
+        categories = validated_data.pop("categories", [])
+
+        # 3. Creamos el servicio LIMPIO (sin imágenes ni categorías, solo campos simples)
         service = Service.objects.create(**validated_data)
 
+        # 4. AHORA que el servicio tiene ID, asignamos las categorías
+        service.categories.set(categories)
+
+        # 5. Creamos las imágenes asociadas
         for image in uploaded_images:
             ServiceImage.objects.create(service=service, image=image)
 
@@ -228,7 +238,6 @@ class ContractSerializer(serializers.ModelSerializer):
         validated_data.pop("code", None)
         validated_data.pop("service", None)
         return super().update(instance, validated_data)
-
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
