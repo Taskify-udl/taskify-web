@@ -182,12 +182,56 @@
     {% include "includes/confirmation_modal.html" with modal_id="removeFavoriteModal" title="favourites.remove_title" description="favourites.remove_confirmation_text" confirm_text="favourites.confirm_remove" cancel_text="favourites.cancel" confirm_id="confirmRemoveFavBtn" cancel_id="cancelRemoveFavBtn" %}
 
     <script>
+        // ==========================================
+        // 1. FUNCIONES GLOBALES (OUTER SPACE)
+        // Se definen aquí para satisfacer a SonarQube
+        // ==========================================
+
+        /**
+         * Configura un DIV para comportarse como botón (Click + Teclado)
+         */
+        function setupDivAsButton(divElement, callback) {
+            if (divElement) {
+                divElement.addEventListener('click', callback);
+                divElement.addEventListener('keydown', (event) => {
+                    // Permitimos Enter o Espacio para activar
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault(); // Evita el scroll de página al usar espacio
+                        callback(event);
+                    }
+                });
+            }
+        }
+
+        /**
+         * Obtiene el valor de una cookie (Versión optimizada)
+         */
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (const element of cookies) {
+                    const cookie = element.trim();
+                    // Usamos startsWith que es más limpio y moderno
+                    if (cookie.startsWith(name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // ==========================================
+        // 2. LÓGICA DEL DOM (CUANDO CARGA LA PÁGINA)
+        // ==========================================
         document.addEventListener('DOMContentLoaded', function () {
+            // Variables inyectadas por Django (Scope Local)
             const TR_ADD_FAV = "{% t 'public_profile.add_favorite' %}";
             const TR_REMOVE_FAV = "{% t 'public_profile.remove_favorite' %}";
             const userFavorites = JSON.parse('{{ user_favorites_json|default:"{}"|escapejs }}');
 
-            // Initialize Swipers
+            // --- 1. Swipers ---
             document.querySelectorAll('.swiper').forEach((el) => {
                 new Swiper(el, {
                     navigation: {
@@ -198,46 +242,31 @@
                 });
             });
 
-            // Tab Logic
+            // --- 2. Tab Logic ---
             const btnServices = document.getElementById('btnServices');
             const btnReviews = document.getElementById('btnReviews');
             const contentServices = document.getElementById('contentServices');
             const contentReviews = document.getElementById('contentReviews');
 
             if (btnServices && btnReviews && contentServices && contentReviews) {
-                btnServices.addEventListener('click', () => {
-                    btnServices.classList.add('border', 'bg-white', 'text-black');
-                    btnServices.classList.remove('text-gray-500', 'hover:bg-gray-100');
-                    btnReviews.classList.add('text-gray-500', 'hover:bg-gray-100');
-                    btnReviews.classList.remove('border', 'bg-white', 'text-black');
-                    contentServices.classList.remove('hidden');
-                    contentReviews.classList.add('hidden');
-                });
+                // Función helper local para cambiar tabs (opcional, para limpiar código)
+                const switchTab = (activeBtn, inactiveBtn, showContent, hideContent) => {
+                    activeBtn.classList.add('border', 'bg-white', 'text-black');
+                    activeBtn.classList.remove('text-gray-500', 'hover:bg-gray-100');
+                    inactiveBtn.classList.add('text-gray-500', 'hover:bg-gray-100');
+                    inactiveBtn.classList.remove('border', 'bg-white', 'text-black');
+                    showContent.classList.remove('hidden');
+                    hideContent.classList.add('hidden');
+                };
 
-                btnReviews.addEventListener('click', () => {
-                    btnReviews.classList.add('border', 'bg-white', 'text-black');
-                    btnReviews.classList.remove('text-gray-500', 'hover:bg-gray-100');
-                    btnServices.classList.add('text-gray-500', 'hover:bg-gray-100');
-                    btnServices.classList.remove('border', 'bg-white', 'text-black');
-                    contentReviews.classList.remove('hidden');
-                    contentServices.classList.add('hidden');
-                });
+                btnServices.addEventListener('click', () =>
+                    switchTab(btnServices, btnReviews, contentServices, contentReviews));
+
+                btnReviews.addEventListener('click', () =>
+                    switchTab(btnReviews, btnServices, contentReviews, contentServices));
             }
 
-            // Helper para DIVs como botones
-            function setupDivAsButton(divElement, callback) {
-                if (divElement) {
-                    divElement.addEventListener('click', callback);
-                    divElement.addEventListener('keydown', (event) => {
-                        if (event.key === 'Enter' || event.key === ' ') {
-                            event.preventDefault();
-                            callback(event);
-                        }
-                    });
-                }
-            }
-
-            // Lógica de Favoritos con Modal
+            // --- 3. Favoritos Logic ---
             const favoriteButtons = document.querySelectorAll('.favorite-btn');
             const removeModal = document.getElementById('removeFavoriteModal');
             const confirmRemoveBtn = document.getElementById('confirmRemoveFavBtn');
@@ -252,22 +281,15 @@
                 pendingButtonDiv = null;
             };
 
-            if (cancelRemoveBtn) {
-                cancelRemoveBtn.addEventListener('click', closeRemoveModal);
-            }
+            // Si los botones del modal son DIVs, usamos setupDivAsButton, si son <button>, addEventListener está bien.
+            // Asumiendo que pueden ser divs por consistencia:
+            setupDivAsButton(cancelRemoveBtn, closeRemoveModal);
 
-            if (confirmRemoveBtn) {
-                confirmRemoveBtn.addEventListener('click', async () => {
-                    if (pendingServiceId && pendingButtonDiv) {
-                        await toggleFavorite(pendingServiceId, pendingButtonDiv);
-                    }
-                    closeRemoveModal();
-                });
-            }
-
+            // Esta función se queda DENTRO porque usa variables locales (TR_*, userFavorites)
             async function toggleFavorite(serviceId, buttonDiv) {
                 const icon = buttonDiv.querySelector('i');
                 try {
+                    // Llama a la función global getCookie
                     const response = await fetch(`/service/${serviceId}/toggle-favorite/`, {
                         method: 'POST',
                         headers: {
@@ -296,49 +318,41 @@
                 }
             }
 
+            if (confirmRemoveBtn) {
+                setupDivAsButton(confirmRemoveBtn, async () => {
+                    if (pendingServiceId && pendingButtonDiv) {
+                        await toggleFavorite(pendingServiceId, pendingButtonDiv);
+                    }
+                    closeRemoveModal();
+                });
+            }
+
             favoriteButtons.forEach(buttonDiv => {
                 const serviceId = Number.parseInt(buttonDiv.dataset.serviceId);
                 const icon = buttonDiv.querySelector('i');
 
-                // Establecer estado inicial
+                // Estado inicial
                 if (serviceId in userFavorites) {
                     icon.classList.remove('fa-regular', 'text-gray-400', 'text-gray-700');
                     icon.classList.add('fa-solid', 'text-red-500');
                     buttonDiv.setAttribute('title', TR_REMOVE_FAV);
                 }
 
-                // Manejar click
+                // Manejo de eventos con la función global
                 setupDivAsButton(buttonDiv, (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
+                    e.stopPropagation(); // Importante para evitar bubbling no deseado
 
                     if (serviceId in userFavorites) {
-                        // Mostrar modal de confirmación
+                        // Modal
                         pendingServiceId = serviceId;
                         pendingButtonDiv = buttonDiv;
                         removeModal.classList.remove('hidden');
                     } else {
-                        // Agregar inmediatamente
+                        // Acción directa
                         toggleFavorite(serviceId, buttonDiv);
                     }
                 });
             });
-
-            function getCookie(name) {
-                let cookieValue = null;
-                if (document.cookie && document.cookie !== '') {
-                    const cookies = document.cookie.split(';');
-                    for (const element of cookies) {
-                        const cookie = element.trim();
-
-                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                            break;
-                        }
-                    }
-                }
-                return cookieValue;
-            }
         });
     </script>
 {% endblock %}

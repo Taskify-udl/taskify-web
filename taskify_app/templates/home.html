@@ -2,132 +2,135 @@
 {% load json_i18n %}
 
 {% block content %}
-<link href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" rel="stylesheet"/>
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
-<div class="min-h-screen bg-gray-50">
-    <div class="text-white py-12 px-4 pb-20" style="background: linear-gradient(135deg, #030214 0%, #155af4 100%);">
-        <div class="max-w-2xl mx-auto">
-            <div class="text-center mb-8">
-                <h1 class="mb-3 text-3xl font-bold text-white">{% t "home.hero_title" %}</h1>
-                <p class="text-base text-white/90">
-                    {% t "home.hero_sub" %}
-                </p>
+    <div class="min-h-screen bg-gray-50">
+        <div class="text-white py-12 px-4 pb-20" style="background: linear-gradient(135deg, #030214 0%, #155af4 100%);">
+            <div class="max-w-2xl mx-auto">
+                <div class="text-center mb-8">
+                    <h1 class="mb-3 text-3xl font-bold text-white">{% t "home.hero_title" %}</h1>
+                    <p class="text-base text-white/90">
+                        {% t "home.hero_sub" %}
+                    </p>
+                </div>
+
+                <form action="{% url 'search' %}" method="get" class="!my-4 w-[500px] justify-self-center"
+                      id="searchForm">
+                    <div class="relative">
+                        <input type="text" name="q" value="{{ query|default:'' }}"
+                               placeholder="{% t 'home.search_placeholder' %}"
+                               class="w-full pl-3 pr-5 py-2 text-base text-gray-900 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
+
+                        <div id="searchButton" role="button" tabindex="0"
+                             class="absolute right-2 top-1/2 -translate-y-1/2 !p-1.5 text-black rounded-xl cursor-pointer hover:bg-gray-200 focus:ring-2 focus:ring-blue-500 transition-colors"
+                             title="{% t 'home.search_button_title' %}">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                 stroke="currentColor" class="w-5 h-5">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </form>
             </div>
+        </div>
 
-            <form action="{% url 'search' %}" method="get" class="!my-4 w-[500px] justify-self-center" id="searchForm">
-                <div class="relative">
-                    <input type="text" name="q" value="{{ query|default:'' }}"
-                        placeholder="{% t 'home.search_placeholder' %}"
-                        class="w-full pl-3 pr-5 py-2 text-base text-gray-900 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 pt-12">
+            <section class="mb-12">
+                <h2 class="mb-6 text-2xl font-semibold text-gray-900">{% t "home.categories_header" %}</h2>
+                <div class="pb-4">
+                    <div
+                            class="overflow-x-auto whitespace-nowrap py-2 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent">
+                        {% if categories %}
+                            {% for category in categories %}
+                                <a href="{% url 'search' %}?category={{ category.id }}"
+                                   class="inline-flex flex-col items-center justify-center p-3 bg-white rounded-xl shadow-sm hover:shadow-md transform hover:scale-105 hover:-translate-y-1 transition-transform duration-200 ease-out text-center !no-underline hover:!no-underline focus:!no-underline active:!no-underline !text-black hover:!text-black visited:!text-black focus:!text-black active:!text-black min-w-[140px] mx-2 focus:outline-none focus:ring-0">
+                                    <i class="{{ category.icon }} text-2xl"></i>
+                                    <span class="mt-1 text-sm !text-black truncate block">{{ category.name }}</span>
+                                </a>
+                            {% endfor %}
+                        {% else %}
+                            <p class="inline-block align-middle text-gray-500 ml-2">{% t "home.no_categories" %}</p>
 
-                    <div id="searchButton" role="button" tabindex="0"
-                        class="absolute right-2 top-1/2 -translate-y-1/2 !p-1.5 text-black rounded-xl cursor-pointer hover:bg-gray-200 focus:ring-2 focus:ring-blue-500 transition-colors"
-                        title="{% t 'home.search_button_title' %}">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                            stroke="currentColor" class="w-5 h-5">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-                        </svg>
+                        {% endif %}
                     </div>
                 </div>
-            </form>
-        </div>
-    </div>
+            </section>
 
-    <div class="max-w-7xl mx-auto px-4 pt-12">
-        <section class="mb-12">
-            <h2 class="mb-6 text-2xl font-semibold text-gray-900">{% t "home.categories_header" %}</h2>
-            <div class="pb-4">
-                <div
-                    class="overflow-x-auto whitespace-nowrap py-2 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-transparent">
-                    {% if categories %}
-                    {% for category in categories %}
-                    <a href="{% url 'search' %}?category={{ category.id }}"
-                        class="inline-flex flex-col items-center justify-center p-3 bg-white rounded-xl shadow-sm hover:shadow-md transform hover:scale-105 hover:-translate-y-1 transition-transform duration-200 ease-out text-center !no-underline hover:!no-underline focus:!no-underline active:!no-underline !text-black hover:!text-black visited:!text-black focus:!text-black active:!text-black min-w-[140px] mx-2 focus:outline-none focus:ring-0">
-                        <i class="{{ category.icon }} text-2xl"></i>
-                        <span class="mt-1 text-sm !text-black truncate block">{{ category.name }}</span>
-                    </a>
-                    {% endfor %}
-                    {% else %}
-                    <p class="inline-block align-middle text-gray-500 ml-2">{% t "home.no_categories" %}</p>
+            <section>
+                <h2 class="mb-6 text-2xl font-semibold text-gray-900">{% t "home.featured_header" %}</h2>
+                {% if featured_services %}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {% for service in featured_services %}
+                            <article class="rounded-xl border border-gray-200 group shadow-sm bg-white overflow-hidden">
 
-                    {% endif %}
-                </div>
-            </div>
-        </section>
+                                <a href="{% url 'service_detail' service.id %}"
+                                   class="block h-[220px] relative rounded-t-lg overflow-hidden">
 
-        <section>
-            <h2 class="mb-6 text-2xl font-semibold text-gray-900">{% t "home.featured_header" %}</h2>
-            {% if featured_services %}
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {% for service in featured_services %}
-                <article class="rounded-xl border border-gray-200 group shadow-sm bg-white overflow-hidden">
-
-                    <a href="{% url 'service_detail' service.id %}"
-                        class="block h-[220px] relative rounded-t-lg overflow-hidden">
-
-                        {% if request.user.is_authenticated %}
-                        <div role="button" tabindex="0" class="flex align-items favorite-btn absolute top-2 right-2 z-10 p-2 bg-white/80 rounded-full cursor-pointer backdrop-blur-sm
+                                    {% if request.user.is_authenticated %}
+                                        <div role="button" tabindex="0" class="flex align-items favorite-btn absolute top-2 right-2 z-10 p-2 bg-white/80 rounded-full cursor-pointer backdrop-blur-sm
                                                transition-colors duration-200 hover:bg-white"
-                            data-service-id="{{ service.id }}" title="{% t 'home.add_favorite' %}"
-                            style="outline: none !important; box-shadow: none !important;">
-                            <i class="fa-regular text-gray-700 hover:text-red-500 fa-heart text-xl"
-                                aria-hidden="true"></i>
-                        </div>
-                        {% endif %}
+                                             data-service-id="{{ service.id }}" title="{% t 'home.add_favorite' %}"
+                                             style="outline: none !important; box-shadow: none !important;">
+                                            <i class="fa-regular text-gray-700 hover:text-red-500 fa-heart text-xl"
+                                               aria-hidden="true"></i>
+                                        </div>
+                                    {% endif %}
 
-                        <div class="swiper service-swiper-{{ service.id }} h-full">
-                            <div class="swiper-wrapper">
-                                {% for img in service.images.all %}
-                                <div class="swiper-slide h-full bg-cover bg-center"
-                                    style="background-image: url('{{ img.image.url }}');"></div>
-                                {% empty %}
-                                <div
-                                    class="swiper-slide h-full bg-cover bg-center flex items-center justify-center bg-gray-100">
-                                    <span class="text-gray-500">{% t "home.no_image" %}</span>
-                                </div>
-                                {% endfor %}
-                            </div>
+                                    <div class="swiper service-swiper-{{ service.id }} h-full">
+                                        <div class="swiper-wrapper">
+                                            {% for img in service.images.all %}
+                                                <div class="swiper-slide h-full bg-cover bg-center"
+                                                     style="background-image: url('{{ img.image.url }}');"></div>
+                                            {% empty %}
+                                                <div
+                                                        class="swiper-slide h-full bg-cover bg-center flex items-center justify-center bg-gray-100">
+                                                    <span class="text-gray-500">{% t "home.no_image" %}</span>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
 
-                            {% if service.images.count > 1 %}
-                            <div class="swiper-button-prev opacity-0 group-hover:opacity-100 transition-opacity duration-300 !left-2 !text-white"
-                                style="filter: drop-shadow(0 0 3px rgba(0,0,0,0.7)); --swiper-navigation-size: 24px;">
-                            </div>
-                            <div class="swiper-button-next opacity-0 group-hover:opacity-100 transition-opacity duration-300 !right-2 !text-white"
-                                style="filter: drop-shadow(0 0 3px rgba(0,0,0,0.7)); --swiper-navigation-size: 24px;">
-                            </div>
-                            {% endif %}
-                        </div>
-                    </a>
+                                        {% if service.images.count > 1 %}
+                                            <div class="swiper-button-prev opacity-0 group-hover:opacity-100 transition-opacity duration-300 !left-2 !text-white"
+                                                 style="filter: drop-shadow(0 0 3px rgba(0,0,0,0.7)); --swiper-navigation-size: 24px;">
+                                            </div>
+                                            <div class="swiper-button-next opacity-0 group-hover:opacity-100 transition-opacity duration-300 !right-2 !text-white"
+                                                 style="filter: drop-shadow(0 0 3px rgba(0,0,0,0.7)); --swiper-navigation-size: 24px;">
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </a>
 
-                    <div class="p-3">
-                        <a href="{% url 'service_detail' service.id %}"
-                            class="!ml-[1px] text-lg font-medium text-gray-800 line-clamp-1 group-hover:text-blue-600 transition-colors block no-underline hover:no-underline overflow-hidden text-ellipsis whitespace-nowrap">
-                            {{ service.name }}
-                        </a>
+                                <div class="p-3">
+                                    <a href="{% url 'service_detail' service.id %}"
+                                       class="!ml-[1px] text-lg font-medium text-gray-800 line-clamp-1 group-hover:text-blue-600 transition-colors block no-underline hover:no-underline overflow-hidden text-ellipsis whitespace-nowrap">
+                                        {{ service.name }}
+                                    </a>
 
-                        <span class="text-xs px-2 py-1 mr-1 mb-1 border border-gray-300 bg-gray-50 rounded-full">
+                                    <span class="text-xs px-2 py-1 mr-1 mb-1 border border-gray-300 bg-gray-50 rounded-full">
                             {% if service.categories.all %}
-                            {{ service.categories.first.name }}
+                                {{ service.categories.first.name }}
                             {% else %}
-                            {% t "home.no_category" %}
+                                {% t "home.no_category" %}
                             {% endif %}
                         </span>
 
-                        <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <img class="w-6 h-6 rounded-full object-cover"
-                                        src="{{ service.provider.avatar_url }}" alt="{{ service.provider.username }}">
-                                    <span class="text-sm font-medium text-gray-700 truncate">
+                                    <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center gap-2 mb-1">
+                                                <img class="w-6 h-6 rounded-full object-cover"
+                                                     src="{{ service.provider.avatar_url }}"
+                                                     alt="{{ service.provider.username }}">
+                                                <span class="text-sm font-medium text-gray-700 truncate">
                                         {{ service.provider.first_name }}</span>
-                                </div>
-                                <div class="flex items-center gap-1 text-sm text-gray-600">
-                                    <svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg"
-                                        xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-                                        viewBox="0 0 47.94 47.94" style="enable-background:new 0 0 47.94 47.94;"
-                                        xml:space="preserve" class="!h-[15px] !w-[15px]">
+                                            </div>
+                                            <div class="flex items-center gap-1 text-sm text-gray-600">
+                                                <svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg"
+                                                     xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                                                     viewBox="0 0 47.94 47.94"
+                                                     style="enable-background:new 0 0 47.94 47.94;"
+                                                     xml:space="preserve" class="!h-[15px] !w-[15px]">
                                         <path style="fill:#ED8A19;" d="M26.285,2.486l5.407,10.956c0.376,0.762,1.103,1.29,1.944,1.412l12.091,1.757
                                                 c2.118,0.308,2.963,2.91,1.431,4.403l-8.749,8.528c-0.608,0.593-0.886,1.448-0.742,2.285l2.065,12.042
                                                 c0.362,2.109-1.852,3.717-3.746,2.722l-10.814-5.685c-0.752-0.395-1.651-0.395-2.403,0l-10.814,5.685
@@ -135,70 +138,30 @@
                                                 c-1.532-1.494-0.687-4.096,1.431-4.403l12.091-1.757c0.841-0.122,1.568-0.65,1.944-1.412l5.407-10.956
                                                 C22.602,0.567,25.338,0.567,26.285,2.486z"></path>
                                     </svg>
-                                    <span class="font-semibold text-gray-800">
+                                                <span class="font-semibold text-gray-800">
                                         {{ service.average_rating|default:0|floatformat:1 }}</span>
-                                    <span>({{ service.review_count|default:0 }})</span>
+                                                <span>({{ service.review_count|default:0 }})</span>
+                                            </div>
+                                        </div>
+                                        <div class="flex-shrink-0">
+                                            <span class="text-xl font-bold text-gray-800">€{{ service.price|floatformat:0 }}</span>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="flex-shrink-0">
-                                <span class="text-xl font-bold text-gray-800">€{{ service.price|floatformat:0 }}</span>
-                            </div>
-                        </div>
+                            </article>
+                        {% endfor %}
                     </div>
-                </article>
-                {% endfor %}
-            </div>
-            {% include 'includes/pagination.html' %}
-            {% else %}
-            <p class="text-gray-500">{% t "home.no_featured_services" %}</p>
-            {% endif %}
-        </section>
+                    {% include 'includes/pagination.html' %}
+                {% else %}
+                    <p class="text-gray-500">{% t "home.no_featured_services" %}</p>
+                {% endif %}
+            </section>
+        </div>
     </div>
-</div>
 
-{% include "includes/confirmation_modal.html" with modal_id="removeFavoriteModal" title="favourites.remove_title" description="favourites.remove_confirmation_text" confirm_text="favourites.confirm_remove" cancel_text="favourites.cancel" confirm_id="confirmRemoveFavBtn" cancel_id="cancelRemoveFavBtn" %}
+    {% include "includes/confirmation_modal.html" with modal_id="removeFavoriteModal" title="favourites.remove_title" description="favourites.remove_confirmation_text" confirm_text="favourites.confirm_remove" cancel_text="favourites.cancel" confirm_id="confirmRemoveFavBtn" cancel_id="cancelRemoveFavBtn" %}
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const TR_ADD_FAV = "{% t 'home.add_favorite' %}";
-        const TR_REMOVE_FAV = "{% t 'home.remove_favorite' %}";
-        const userFavorites = JSON.parse('{{ user_favorites_json|default:"{}"|escapejs }}');
-
-        // --- Lógica de filtro de categorías (Existente) ---
-        const categoryButtons = document.querySelectorAll('[data-category]');
-        const serviceCards = document.querySelectorAll('[data-service-category]');
-
-        categoryButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
-                e.preventDefault();
-                const filterCategory = button.dataset.category;
-
-                categoryButtons.forEach(btn => btn.classList.remove('ring-2', 'ring-indigo-600'));
-                button.classList.add('ring-2', 'ring-indigo-600');
-
-                serviceCards.forEach(card => {
-                    const cardCategory = card.dataset.serviceCategory;
-                    if (filterCategory === 'all' || cardCategory === filterCategory) {
-                        card.classList.remove('hidden');
-                    } else {
-                        card.classList.add('hidden');
-                    }
-                });
-            });
-        });
-
-        // --- (AÑADIDO) Activar Swipers ---
-        document.querySelectorAll('.swiper').forEach((el) => {
-            new Swiper(el, {
-                navigation: {
-                    nextEl: el.querySelector('.swiper-button-next'),
-                    prevEl: el.querySelector('.swiper-button-prev'),
-                },
-                loop: true,
-            });
-        });
-
-
+    <script>
         // --- (AÑADIDO) Helper para DIVs como botones ---
         function setupDivAsButton(divElement, callback) {
             if (divElement) {
@@ -212,127 +175,168 @@
             }
         }
 
-        // --- (MODIFICADO) Lógica de Favoritos con Modal ---
-        const favoriteButtons = document.querySelectorAll('.favorite-btn');
-        const removeModal = document.getElementById('removeFavoriteModal');
-        const confirmRemoveBtn = document.getElementById('confirmRemoveFavBtn');
-        const cancelRemoveBtn = document.getElementById('cancelRemoveFavBtn');
+        document.addEventListener('DOMContentLoaded', function () {
+            const TR_ADD_FAV = "{% t 'home.add_favorite' %}";
+            const TR_REMOVE_FAV = "{% t 'home.remove_favorite' %}";
+            const userFavorites = JSON.parse('{{ user_favorites_json|default:"{}"|escapejs }}');
 
-        let pendingServiceId = null;
-        let pendingButtonDiv = null;
+            // --- Lógica de filtro de categorías (Existente) ---
+            const categoryButtons = document.querySelectorAll('[data-category]');
+            const serviceCards = document.querySelectorAll('[data-service-category]');
 
-        // Close modal helper
-        const closeRemoveModal = () => {
-            removeModal.classList.add('hidden');
-            pendingServiceId = null;
-            pendingButtonDiv = null;
-        };
+            categoryButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const filterCategory = button.dataset.category;
 
-        if (cancelRemoveBtn) {
-            cancelRemoveBtn.addEventListener('click', closeRemoveModal);
-        }
+                    categoryButtons.forEach(btn => btn.classList.remove('ring-2', 'ring-indigo-600'));
+                    button.classList.add('ring-2', 'ring-indigo-600');
 
-        // Handle Confirm Removal
-        if (confirmRemoveBtn) {
-            confirmRemoveBtn.addEventListener('click', async () => {
-                if (pendingServiceId && pendingButtonDiv) {
-                    await toggleFavorite(pendingServiceId, pendingButtonDiv);
-                }
-                closeRemoveModal();
+                    serviceCards.forEach(card => {
+                        const cardCategory = card.dataset.serviceCategory;
+                        if (filterCategory === 'all' || cardCategory === filterCategory) {
+                            card.classList.remove('hidden');
+                        } else {
+                            card.classList.add('hidden');
+                        }
+                    });
+                });
             });
-        }
 
-        async function toggleFavorite(serviceId, buttonDiv) {
-            const icon = buttonDiv.querySelector('i');
-            try {
-                const response = await fetch(`/service/${serviceId}/toggle-favorite/`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCookie('csrftoken')
+            // --- (AÑADIDO) Activar Swipers ---
+            document.querySelectorAll('.swiper').forEach((el) => {
+                new Swiper(el, {
+                    navigation: {
+                        nextEl: el.querySelector('.swiper-button-next'),
+                        prevEl: el.querySelector('.swiper-button-prev'),
+                    },
+                    loop: true,
+                });
+            });
+
+
+            // --- (MODIFICADO) Lógica de Favoritos con Modal ---
+            const favoriteButtons = document.querySelectorAll('.favorite-btn');
+            const removeModal = document.getElementById('removeFavoriteModal');
+            const confirmRemoveBtn = document.getElementById('confirmRemoveFavBtn');
+            const cancelRemoveBtn = document.getElementById('cancelRemoveFavBtn');
+
+            let pendingServiceId = null;
+            let pendingButtonDiv = null;
+
+            // Close modal helper
+            const closeRemoveModal = () => {
+                removeModal.classList.add('hidden');
+                pendingServiceId = null;
+                pendingButtonDiv = null;
+            };
+
+            if (cancelRemoveBtn) {
+                cancelRemoveBtn.addEventListener('click', closeRemoveModal);
+            }
+
+            // Handle Confirm Removal
+            if (confirmRemoveBtn) {
+                confirmRemoveBtn.addEventListener('click', async () => {
+                    if (pendingServiceId && pendingButtonDiv) {
+                        await toggleFavorite(pendingServiceId, pendingButtonDiv);
+                    }
+                    closeRemoveModal();
+                });
+            }
+
+            async function toggleFavorite(serviceId, buttonDiv) {
+                const icon = buttonDiv.querySelector('i');
+                try {
+                    const response = await fetch(`/service/${serviceId}/toggle-favorite/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        }
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+
+                        if (data.action === 'added') {
+                            icon.classList.remove('fa-regular', 'text-gray-400', 'text-gray-700');
+                            icon.classList.add('fa-solid', 'text-red-500');
+                            buttonDiv.setAttribute('title', TR_REMOVE_FAV);
+                            userFavorites[serviceId] = data.favorite_id;
+                        } else if (data.action === 'removed') {
+                            icon.classList.remove('fa-solid', 'text-red-500');
+                            icon.classList.add('fa-regular', 'text-gray-700'); // Clase base del icono nuevo
+                            buttonDiv.setAttribute('title', TR_ADD_FAV);
+                            delete userFavorites[serviceId];
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error al gestionar favorito:', error);
+                }
+            }
+
+            favoriteButtons.forEach(buttonDiv => {
+                const serviceId = Number.parseInt(buttonDiv.dataset.serviceId);
+                const icon = buttonDiv.querySelector('i');
+
+                // Establecer estado inicial
+                if (serviceId in userFavorites) {
+                    icon.classList.remove('fa-regular', 'text-gray-400', 'text-gray-700');
+                    icon.classList.add('fa-solid', 'text-red-500');
+                    buttonDiv.setAttribute('title', TR_REMOVE_FAV);
+                }
+
+                // Manejar click usando el helper
+                setupDivAsButton(buttonDiv, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation(); // Evita que el click se propague al enlace de la tarjeta
+
+                    // Check if currently favorite (to remove)
+                    if (serviceId in userFavorites) {
+                        // Show confirmation modal
+                        pendingServiceId = serviceId;
+                        pendingButtonDiv = buttonDiv;
+                        removeModal.classList.remove('hidden');
+                    } else {
+                        // Add immediately
+                        toggleFavorite(serviceId, buttonDiv);
                     }
                 });
+            });
 
-                if (response.ok) {
-                    const data = await response.json();
+            // --- Función para obtener el CSRF token (Existente) ---
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (const element of cookies) {
+                        const cookie = element.trim();
 
-                    if (data.action === 'added') {
-                        icon.classList.remove('fa-regular', 'text-gray-400', 'text-gray-700');
-                        icon.classList.add('fa-solid', 'text-red-500');
-                        buttonDiv.setAttribute('title', TR_REMOVE_FAV);
-                        userFavorites[serviceId] = data.favorite_id;
-                    } else if (data.action === 'removed') {
-                        icon.classList.remove('fa-solid', 'text-red-500');
-                        icon.classList.add('fa-regular', 'text-gray-700'); // Clase base del icono nuevo
-                        buttonDiv.setAttribute('title', TR_ADD_FAV);
-                        delete userFavorites[serviceId];
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
                     }
                 }
-            } catch (error) {
-                console.error('Error al gestionar favorito:', error);
-            }
-        }
-
-        favoriteButtons.forEach(buttonDiv => {
-            const serviceId = Number.parseInt(buttonDiv.dataset.serviceId);
-            const icon = buttonDiv.querySelector('i');
-
-            // Establecer estado inicial
-            if (serviceId in userFavorites) {
-                icon.classList.remove('fa-regular', 'text-gray-400', 'text-gray-700');
-                icon.classList.add('fa-solid', 'text-red-500');
-                buttonDiv.setAttribute('title', TR_REMOVE_FAV);
+                return cookieValue;
             }
 
-            // Manejar click usando el helper
-            setupDivAsButton(buttonDiv, (e) => {
-                e.preventDefault();
-                e.stopPropagation(); // Evita que el click se propague al enlace de la tarjeta
-
-                // Check if currently favorite (to remove)
-                if (serviceId in userFavorites) {
-                    // Show confirmation modal
-                    pendingServiceId = serviceId;
-                    pendingButtonDiv = buttonDiv;
-                    removeModal.classList.remove('hidden');
-                } else {
-                    // Add immediately
-                    toggleFavorite(serviceId, buttonDiv);
-                }
-            });
-        });
-
-        // --- Función para obtener el CSRF token (Existente) ---
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
-
-        // --- Lógica del formulario de búsqueda (Existente) ---
-        const searchButton = document.getElementById('searchButton');
-        const searchForm = document.getElementById('searchForm');
-        if (searchButton && searchForm) {
-            searchButton.addEventListener('click', (e) => {
-                e.preventDefault();
-                searchForm.submit();
-            });
-            searchButton.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
+            // --- Lógica del formulario de búsqueda (Existente) ---
+            const searchButton = document.getElementById('searchButton');
+            const searchForm = document.getElementById('searchForm');
+            if (searchButton && searchForm) {
+                searchButton.addEventListener('click', (e) => {
                     e.preventDefault();
                     searchForm.submit();
-                }
-            });
-        }
-    });
-</script>
+                });
+                searchButton.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        searchForm.submit();
+                    }
+                });
+            }
+        });
+    </script>
 {% endblock %}

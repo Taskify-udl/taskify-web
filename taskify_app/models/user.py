@@ -14,7 +14,7 @@ def avatar_upload_to(instance, filename):
 
 class CustomUser(AbstractUser):
     class Roles(models.TextChoices):
-        choices = None
+        # BORRA LA LÍNEA: choices = None
         CUSTOMER = "CUSTOMER", "Usuario base"
         PROVIDER = "PROVIDER", "Proveedor"
         FREELANCER = "FREELANCER", "Freelancer"
@@ -26,6 +26,7 @@ class CustomUser(AbstractUser):
     # Rol
     role = models.CharField(
         max_length=14,
+        # Django generará Roles.choices automáticamente basándose en las constantes de arriba
         choices=Roles.choices,
         default=Roles.CUSTOMER,
         db_index=True,
@@ -51,4 +52,3 @@ class CustomUser(AbstractUser):
             self.Roles.COMPANY_ADMIN,
             self.Roles.COMPANY_WORKER
         ]
-

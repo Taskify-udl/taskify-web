@@ -474,7 +474,7 @@ def create_default_services(image_dir=None, sender=None, **kwargs):
         print("[taskify_app] No se pudieron importar modelos Service/ServiceImage/Category:", e)
         return {"created_services": 0, "created_images": 0, "errors": 1}
 
-    User = get_user_model()
+    user_model = get_user_model()
 
     # Ruta por defecto si no se proporciona
     if not image_dir:
@@ -647,7 +647,7 @@ def create_default_services(image_dir=None, sender=None, **kwargs):
 
     for name, filename, description, category_name, role_value, price in items:
         try:
-            provider = User.objects.filter(role=role_value).first()
+            provider = user_model.objects.filter(role=role_value).first()
             if not provider:
                 print(f"[taskify_app] No se encontró usuario con rol {role_value} para asignar el servicio {name}.")
                 errors += 1
@@ -746,9 +746,9 @@ def create_sample_conversations_and_messages(sender=None, **kwargs):
         print("[taskify_app] No se pudieron importar Conversation/Message:", e)
         return {"created_conversations": 0, "created_messages": 0, "errors": 1}
 
-    User = get_user_model()
+    user_model = get_user_model()
 
-    users = list(User.objects.filter(is_active=True, is_superuser=False))
+    users = list(user_model.objects.filter(is_active=True, is_superuser=False))
     if len(users) < 2:
         print("[taskify_app] No hay suficientes usuarios para crear conversaciones.")
         return {"created_conversations": 0, "created_messages": 0, "errors": 0}
@@ -914,9 +914,9 @@ def create_random_favorites(sender=None, **kwargs):
         print("[taskify_app] No se pudieron importar Service/Favorite:", e)
         return {"created": 0, "errors": 1}
 
-    User = get_user_model()
+    user_model = get_user_model()
 
-    users = list(User.objects.filter(is_active=True, is_superuser=False))
+    users = list(user_model.objects.filter(is_active=True, is_superuser=False))
     services = list(Service.objects.all())
 
     if not users or not services:
@@ -967,7 +967,7 @@ def create_random_favorites(sender=None, **kwargs):
             chosen_services = random.sample(candidate_services, min(to_create, len(candidate_services)))
 
             for service in chosen_services:
-                fav, created_obj = Favorite.objects.get_or_create(
+                _, created_obj = Favorite.objects.get_or_create(
                     user=user,
                     service=service,
                 )

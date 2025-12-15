@@ -162,149 +162,168 @@
     {% include "includes/confirmation_modal.html" with modal_id="removeFavoriteModal" title="favourites.remove_title" description="favourites.remove_confirmation_text" confirm_text="favourites.confirm_remove" cancel_text="favourites.cancel" confirm_id="confirmRemoveFavBtn" cancel_id="cancelRemoveFavBtn" %}
 
     <!-- Scripts -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const TR_ADD_FAV = "{% t 'search.add_favorite' %}";
-            const TR_REMOVE_FAV = "{% t 'search.remove_favorite' %}";
+<script>
+    // ---------------------------------------------------------
+    // 1. FUNCIONES UTILITARIAS (OUTER SPACE)
+    // Definidas fuera para que sean reutilizables y SonarQube no se queje
+    // ---------------------------------------------------------
 
-            // 1. Activar Swipers
-            document.querySelectorAll('.swiper').forEach((el) => {
-                new Swiper(el, {
-                    navigation: {
-                        nextEl: el.querySelector('.swiper-button-next'),
-                        prevEl: el.querySelector('.swiper-button-prev'),
-                    },
-                    loop: true,
-                });
+    /**
+     * Convierte cualquier elemento (div, span) en un botón accesible.
+     * Maneja Click y Teclado (Enter/Espacio).
+     */
+    function setupDivAsButton(element, callback) {
+        if (element) {
+            element.addEventListener('click', callback);
+            element.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault(); // Evita scroll con espacio
+                    callback(event);
+                }
             });
+        }
+    }
 
-            // 2. Activar búsqueda con el DIV
-            const searchButton = document.getElementById('searchButton');
-            const searchForm = document.getElementById('searchForm');
-            if (searchButton && searchForm) {
-                searchButton.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    searchForm.submit();
-                });
-                searchButton.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        searchForm.submit();
-                    }
-                });
-            }
-
-            // 3. Favoritos con Modal
-            function setupDivAsButton(divElement, callback) {
-                if (divElement) {
-                    divElement.addEventListener('click', callback);
-                    divElement.addEventListener('keydown', (event) => {
-                        if (event.key === 'Enter' || event.key === ' ') {
-                            event.preventDefault();
-                            callback(event);
-                        }
-                    });
+    /**
+     * Obtiene una cookie de forma segura y moderna
+     */
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (const element of cookies) {
+                const cookie = element.trim();
+                // Usando startsWith para mayor limpieza
+                if (cookie.startsWith(name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
                 }
             }
+        }
+        return cookieValue;
+    }
 
-            const userFavorites = JSON.parse('{{ user_favorites_json|default:"{}"|escapejs }}');
-            const favoriteButtons = document.querySelectorAll('.favorite-btn');
-            const removeModal = document.getElementById('removeFavoriteModal');
-            const confirmRemoveBtn = document.getElementById('confirmRemoveFavBtn');
-            const cancelRemoveBtn = document.getElementById('cancelRemoveFavBtn');
+    // ---------------------------------------------------------
+    // 2. LÓGICA PRINCIPAL (DOM READY)
+    // ---------------------------------------------------------
+    document.addEventListener('DOMContentLoaded', function () {
+        // Variables de Django
+        const TR_ADD_FAV = "{% t 'search.add_favorite' %}";
+        const TR_REMOVE_FAV = "{% t 'search.remove_favorite' %}";
+        const userFavorites = JSON.parse('{{ user_favorites_json|default:"{}"|escapejs }}');
 
-            let pendingServiceId = null;
-            let pendingButtonDiv = null;
+        // --- 1. Activar Swipers ---
+        document.querySelectorAll('.swiper').forEach((el) => {
+            new Swiper(el, {
+                navigation: {
+                    nextEl: el.querySelector('.swiper-button-next'),
+                    prevEl: el.querySelector('.swiper-button-prev'),
+                },
+                loop: true,
+            });
+        });
 
-            const closeRemoveModal = () => {
-                removeModal.classList.add('hidden');
-                pendingServiceId = null;
-                pendingButtonDiv = null;
-            };
+        // --- 2. Activar búsqueda con el DIV (REFACTORIZADO) ---
+        // ¡Aquí reutilizamos setupDivAsButton en lugar de escribir el código de nuevo!
+        const searchButton = document.getElementById('searchButton');
+        const searchForm = document.getElementById('searchForm');
 
-            if (cancelRemoveBtn) {
-                cancelRemoveBtn.addEventListener('click', closeRemoveModal);
-            }
+        if (searchButton && searchForm) {
+            setupDivAsButton(searchButton, (e) => {
+                // e.preventDefault() ya se hace dentro de setupDivAsButton para teclas,
+                // pero lo ponemos aquí por si es un click en un <a> o form submit nativo
+                if (e.preventDefault) e.preventDefault();
+                searchForm.submit();
+            });
+        }
 
-            if (confirmRemoveBtn) {
-                confirmRemoveBtn.addEventListener('click', async () => {
-                    if (pendingServiceId && pendingButtonDiv) {
-                        await toggleFavorite(pendingServiceId, pendingButtonDiv);
+        // --- 3. Favoritos con Modal ---
+        const favoriteButtons = document.querySelectorAll('.favorite-btn');
+        const removeModal = document.getElementById('removeFavoriteModal');
+        const confirmRemoveBtn = document.getElementById('confirmRemoveFavBtn');
+        const cancelRemoveBtn = document.getElementById('cancelRemoveFavBtn');
+
+        let pendingServiceId = null;
+        let pendingButtonDiv = null;
+
+        const closeRemoveModal = () => {
+            removeModal.classList.add('hidden');
+            pendingServiceId = null;
+            pendingButtonDiv = null;
+        };
+
+        if (cancelRemoveBtn) {
+            setupDivAsButton(cancelRemoveBtn, closeRemoveModal);
+        }
+
+        // Función interna porque usa variables del scope local (TR_*, userFavorites)
+        async function toggleFavorite(serviceId, buttonDiv) {
+            const icon = buttonDiv.querySelector('i');
+            try {
+                // Usamos la función getCookie externa
+                const csrfToken = getCookie('csrftoken');
+
+                const response = await fetch(`/service/${serviceId}/toggle-favorite/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
                     }
-                    closeRemoveModal();
                 });
-            }
 
-            async function toggleFavorite(serviceId, buttonDiv) {
-                const icon = buttonDiv.querySelector('i');
-                try {
-                    const response = await fetch(`/service/${serviceId}/toggle-favorite/`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': getCookie('csrftoken')
-                        }
-                    });
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (data.action === 'added') {
-                            icon.classList.remove('fa-regular', 'text-gray-400', 'text-gray-700');
-                            icon.classList.add('fa-solid', 'text-red-500');
-                            buttonDiv.setAttribute('title', TR_REMOVE_FAV);
-                            userFavorites[serviceId] = data.favorite_id;
-                        } else if (data.action === 'removed') {
-                            icon.classList.remove('fa-solid', 'text-red-500');
-                            icon.classList.add('fa-regular', 'text-gray-700');
-                            buttonDiv.setAttribute('title', TR_ADD_FAV);
-                            delete userFavorites[serviceId];
-                        }
+                if (response.ok) {
+                    const data = await response.json();
+
+                    if (data.action === 'added') {
+                        icon.classList.remove('fa-regular', 'text-gray-400', 'text-gray-700');
+                        icon.classList.add('fa-solid', 'text-red-500');
+                        buttonDiv.setAttribute('title', TR_REMOVE_FAV);
+                        userFavorites[serviceId] = data.favorite_id;
+                    } else if (data.action === 'removed') {
+                        icon.classList.remove('fa-solid', 'text-red-500');
+                        icon.classList.add('fa-regular', 'text-gray-700');
+                        buttonDiv.setAttribute('title', TR_ADD_FAV);
+                        delete userFavorites[serviceId];
                     }
-                } catch (error) {
-                    console.error('Error al gestionar favorito:', error);
                 }
+            } catch (error) {
+                console.error('Error al gestionar favorito:', error);
+            }
+        }
+
+        if (confirmRemoveBtn) {
+             setupDivAsButton(confirmRemoveBtn, async () => {
+                if (pendingServiceId && pendingButtonDiv) {
+                    await toggleFavorite(pendingServiceId, pendingButtonDiv);
+                }
+                closeRemoveModal();
+            });
+        }
+
+        favoriteButtons.forEach(buttonDiv => {
+            const serviceId = Number.parseInt(buttonDiv.dataset.serviceId);
+            const icon = buttonDiv.querySelector('i');
+
+            if (serviceId in userFavorites) {
+                icon.classList.remove('fa-regular', 'text-gray-400');
+                icon.classList.add('fa-solid', 'text-red-500');
+                buttonDiv.setAttribute('title', TR_REMOVE_FAV);
             }
 
-            favoriteButtons.forEach(buttonDiv => {
-                const serviceId = Number.parseInt(buttonDiv.dataset.serviceId);
-                const icon = buttonDiv.querySelector('i');
+            setupDivAsButton(buttonDiv, async (e) => {
+                e.stopPropagation(); // Importante para que no active eventos padres
 
                 if (serviceId in userFavorites) {
-                    icon.classList.remove('fa-regular', 'text-gray-400');
-                    icon.classList.add('fa-solid', 'text-red-500');
-                    buttonDiv.setAttribute('title', TR_REMOVE_FAV);
+                    // Mostrar modal
+                    pendingServiceId = serviceId;
+                    pendingButtonDiv = buttonDiv;
+                    removeModal.classList.remove('hidden');
+                } else {
+                    // Agregar directo
+                    await toggleFavorite(serviceId, buttonDiv);
                 }
-
-                setupDivAsButton(buttonDiv, async (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-
-                    if (serviceId in userFavorites) {
-                        // Mostrar modal de confirmación
-                        pendingServiceId = serviceId;
-                        pendingButtonDiv = buttonDiv;
-                        removeModal.classList.remove('hidden');
-                    } else {
-                        // Agregar inmediatamente
-                        await toggleFavorite(serviceId, buttonDiv);
-                    }
-                });
             });
-
-            // 4. Obtener CSRF
-            function getCookie(name) {
-                let cookieValue = null;
-                if (document.cookie && document.cookie !== '') {
-                    const cookies = document.cookie.split(';');
-                    for (let i = 0; i < cookies.length; i++) {
-                        const cookie = cookies[i].trim();
-                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                            break;
-                        }
-                    }
-                }
-                return cookieValue;
-            }
         });
-    </script>
+    });
+</script>
 {% endblock %}
