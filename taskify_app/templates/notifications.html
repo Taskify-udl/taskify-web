@@ -159,7 +159,7 @@
                         // Actualizar la insignia de no leídas
                         const unreadBadge = document.querySelector('.unread-badge');
                         if (unreadBadge) {
-                            const currentCount = parseInt(unreadBadge.textContent) || 0;
+                            const currentCount = Number.parseInt(unreadBadge.textContent) || 0;
                             if (currentCount > 1) {
                                 unreadBadge.textContent = `${currentCount - 1} no leídas`;
                             } else {

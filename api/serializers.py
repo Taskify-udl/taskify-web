@@ -59,7 +59,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         validated_data.pop("username", None)
         password = validated_data.pop("password", None)
-        role = validated_data.pop("role", None)
+        validated_data.pop("role", None)
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         if password:
