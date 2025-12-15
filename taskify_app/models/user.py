@@ -14,6 +14,7 @@ def avatar_upload_to(instance, filename):
 
 class CustomUser(AbstractUser):
     class Roles(models.TextChoices):
+        choices = None
         CUSTOMER = "CUSTOMER", "Usuario base"
         PROVIDER = "PROVIDER", "Proveedor"
         FREELANCER = "FREELANCER", "Freelancer"

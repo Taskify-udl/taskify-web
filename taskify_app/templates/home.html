@@ -274,7 +274,7 @@
         }
 
         favoriteButtons.forEach(buttonDiv => {
-            const serviceId = parseInt(buttonDiv.dataset.serviceId);
+            const serviceId = Number.parseInt(buttonDiv.dataset.serviceId);
             const icon = buttonDiv.querySelector('i');
 
             // Establecer estado inicial

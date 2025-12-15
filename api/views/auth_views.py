@@ -26,7 +26,7 @@ def login(request):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    token, created = Token.objects.get_or_create(user=user)
+    token, _ = Token.objects.get_or_create(user=user)
 
     user_data = UserSerializer(user).data
     user_data.pop('password', None)  # por si acaso

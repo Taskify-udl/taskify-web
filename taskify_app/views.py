@@ -542,7 +542,7 @@ def profile(request):
 
 @login_required
 def edit_profile(request):
-    profile, created = CustomUser.objects.get_or_create(username=request.user)
+    profile, _ = CustomUser.objects.get_or_create(username=request.user)
 
     if request.method == 'POST':
         # Update user basic info
@@ -1074,7 +1074,7 @@ def toggle_favorite(request, service_id):
 
         if favorite:
             # Si existe, eliminarlo
-            favorite_id = favorite.id
+
             favorite.delete()
             return JsonResponse({
                 'success': True,
@@ -1292,7 +1292,7 @@ def request_service(request, service_id):
         return redirect('service_detail', service_id=service_id)
 
     try:
-        contract = Contract.objects.create(
+        Contract.objects.create(
             user=request.user,
             service=service,
             start_date=start_date,

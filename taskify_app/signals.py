@@ -363,7 +363,7 @@ def create_default_users(sender=None, **kwargs):
     import os
     from django.contrib.auth import get_user_model
 
-    User = get_user_model()
+    user_model = get_user_model()
     created_count = 0
     updated_count = 0
 
@@ -382,10 +382,10 @@ def create_default_users(sender=None, **kwargs):
         first_name = profile.get("first_name", default_first_name)
         last_name = profile.get("last_name", "")
 
-        user = User.objects.filter(username=username).first()
+        user = user_model.objects.filter(username=username).first()
         if not user:
             # Crear usuario nuevo
-            user = User(
+            user = user_model(
                 username=username,
                 email=email,
                 first_name=first_name,
