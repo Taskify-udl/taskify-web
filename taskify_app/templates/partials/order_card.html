@@ -1,0 +1,546 @@
+{% load json_i18n %}
+<article id="order-{{ order.id }}"
+    class="bg-white border border-gray-200 rounded-2xl shadow-sm p-5 flex flex-col gap-4 scroll-mt-24 transition-colors duration-500 relative overflow-hidden">
+    <!-- Active Service Indicator (Background Pulse) -->
+    {% if order.actual_start and not order.actual_end and not order.is_paused %}
+    <div class="absolute top-0 right-0 w-2 h-2 bg-green-500 rounded-full animate-ping m-4"></div>
+    {% endif %}
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <div>
+            <span class="text-lg font-semibold text-gray-900">{{ order.service_name }}</span>
+            <p class="text-sm text-gray-500">{{ order.counterpart_label }}: {{ order.counterpart_name }}</p>
+            {% if order.service_description %}
+            <p class="text-sm text-gray-500 mt-1 line-clamp-2">{{ order.service_description }}</p>
+            {% endif %}
+        </div>
+        <div class="flex items-center gap-2">
+            <a href="{% url 'start_chat_order' order.id %}"
+                class="p-2 text-gray-400 hover:text-[#1c1b2b] hover:bg-gray-100 rounded-full transition-colors"
+                title="{% t 'orders.contact' %}">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+            </a>
+            <!-- Status Badge -->
+            <span class="inline-flex items-center gap-2 px-3 py-1 text-xs font-medium rounded-full
+                {{ order.badge_classes }}">
+                <span class="w-2 h-2 rounded-full
+                    {{ order.dot_classes }}"></span>
+                {{ order.status_label }}
+            </span>
+            <!-- Live Status Badge -->
+            {% if order.actual_start and not order.actual_end %}
+            {% if order.is_paused %}
+            <span
+                class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200">
+                <span class="relative flex h-2 w-2">
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                </span>
+                Pausado
+            </span>
+            {% else %}
+            <span
+                class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+                <span class="relative flex h-2 w-2">
+                    <span
+                        class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                </span>
+                En Curso
+            </span>
+            {% endif %}
+            {% endif %}
+        </div>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-600">
+        <div class="flex items-center gap-2">
+            <span class="font-medium text-gray-900">{% t "orders.service_start" %}</span>
+            <span>{{ order.start_date|date:'d \d\e F, Y' }}</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="font-medium text-gray-900">{% t "orders.contract" %}</span>
+            <span class="line-clamp-2 text-xs uppercase tracking-wide">{{ order.code }}</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="font-medium text-gray-900">{% t "orders.created" %}</span>
+            <span>{{ order.created_at|date:'d/m/Y H:i' }}</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="font-medium text-gray-900">{% t "orders.price_agreed" %}</span>
+            {% if order.has_price %}
+            <span>€{{ order.price|floatformat:2 }}</span>
+            {% else %}
+            <span>{% t "orders.pending_to_confirm" %}</span>
+            {% endif %}
+        </div>
+    </div>
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-4 border-t border-gray-100">
+        <div class="flex items-center gap-2">
+            <span class="text-sm text-gray-500">{% t "orders.estimated_total" %}</span>
+            {% if order.has_price %}
+            <span class="text-lg font-semibold text-gray-900">€{{ order.price|floatformat:2 }}</span>
+            {% else %}
+            <span class="text-lg font-semibold text-gray-900">{% t "orders.pending" %}</span>
+            {% endif %}
+        </div>
+        <div class="flex gap-2 flex-wrap justify-end">
+            <a href="{{ order.detail_url }}"
+                class="px-4 py-2 text-md font-medium border border-gray-200 !rounded-xl text-gray-700 hover:bg-gray-100 transition">{% t "orders.view_service" %}</a>
+            {% if is_provider and order.can_manage %}
+            <form method="post" class="inline-flex">
+                {% csrf_token %}
+                <input type="hidden" name="contract_id" value="{{ order.id }}">
+                <input type="hidden" name="action" value="accept">
+                <button type="submit"
+                    class="px-4 py-2 text-sm font-medium bg-emerald-600 text-white !rounded-xl hover:bg-emerald-700 transition cursor-pointer">{% t "orders.accept" %}</button>
+            </form>
+            <button type="button" onclick="openRejectModal('{{ order.id }}')"
+                class="px-4 py-2 text-sm font-medium bg-red-600 text-white !rounded-xl hover:bg-red-700 transition cursor-pointer">{% t "orders.reject" %}</button>
+            {% endif %}
+            {% if not is_provider and order.status in 'pending,accepted' %}
+            <button type="button" onclick="openCancelModal('{{ order.id }}')"
+                class="px-4 py-2 text-sm font-medium bg-red-600 text-white !rounded-xl hover:bg-amber-700 transition cursor-pointer">{% t "orders.cancel" %}</button>
+            {% endif %}
+            {% if is_provider and order.status == 'accepted' %}
+            <button type="button" onclick="openCancelModal('{{ order.id }}')"
+                class="px-4 py-2 text-sm font-medium bg-red-600 text-white !rounded-xl hover:bg-red-700 transition cursor-pointer">{% t "orders.cancel" %}</button>
+            {% endif %}
+            <!-- Dynamic Verification Button -->
+            {% if order.status in 'accepted,active,finished,paused' %}
+            {% if is_provider %}
+            <button onclick="openVerifyModal('{{ order.id }}')"
+                class="px-4 py-2 text-sm font-medium bg-[#1c1b2b] text-white !rounded-xl hover:bg-gray-800 transition cursor-pointer flex items-center gap-2">
+                <svg class='h-5 w-5' viewBox="0 0 28 28" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000" stroke="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools --> <title>ic_fluent_qr_code_24_regular</title> <desc>Created with Sketch.</desc> <g id="🔍-Product-Icons" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"> <g id="ic_fluent_qr_code_24_regular" fill="#ffffff" fill-rule="nonzero"> <path d="M10.75,15 C11.9926407,15 13,16.0073593 13,17.25 L13,22.75 C13,23.9926407 11.9926407,25 10.75,25 L5.25,25 C4.00735931,25 3,23.9926407 3,22.75 L3,17.25 C3,16.0073593 4.00735931,15 5.25,15 L10.75,15 Z M18.3346843,15 L18.3346843,18.3333333 L21.6671089,18.3333333 L21.6671089,21.6666667 L18.3346843,21.6660851 L18.3346843,24.9994184 L15.0013509,24.9994184 L15.0013509,21.6660851 L18.3337756,21.6666667 L18.3337756,18.3333333 L15.0013509,18.3333333 L15.0013509,15 L18.3346843,15 Z M25.0004423,21.6660851 L25.0004423,24.9994184 L21.6671089,24.9994184 L21.6671089,21.6660851 L25.0004423,21.6660851 Z M10.75,16.5 L5.25,16.5 C4.83578644,16.5 4.5,16.8357864 4.5,17.25 L4.5,22.75 C4.5,23.1642136 4.83578644,23.5 5.25,23.5 L10.75,23.5 C11.1642136,23.5 11.5,23.1642136 11.5,22.75 L11.5,17.25 C11.5,16.8357864 11.1642136,16.5 10.75,16.5 Z M9.5,18.5 L9.5,21.5 L6.5,21.5 L6.5,18.5 L9.5,18.5 Z M25.0004423,15 L25.0004423,18.3333333 L21.6671089,18.3333333 L21.6671089,15 L25.0004423,15 Z M10.75,3 C11.9926407,3 13,4.00735931 13,5.25 L13,10.75 C13,11.9926407 11.9926407,13 10.75,13 L5.25,13 C4.00735931,13 3,11.9926407 3,10.75 L3,5.25 C3,4.00735931 4.00735931,3 5.25,3 L10.75,3 Z M22.75,3 C23.9926407,3 25,4.00735931 25,5.25 L25,10.75 C25,11.9926407 23.9926407,13 22.75,13 L17.25,13 C16.0073593,13 15,11.9926407 15,10.75 L15,5.25 C15,4.00735931 16.0073593,3 17.25,3 L22.75,3 Z M10.75,4.5 L5.25,4.5 C4.83578644,4.5 4.5,4.83578644 4.5,5.25 L4.5,10.75 C4.5,11.1642136 4.83578644,11.5 5.25,11.5 L10.75,11.5 C11.1642136,11.5 11.5,11.1642136 11.5,10.75 L11.5,5.25 C11.5,4.83578644 11.1642136,4.5 10.75,4.5 Z M22.75,4.5 L17.25,4.5 C16.8357864,4.5 16.5,4.83578644 16.5,5.25 L16.5,10.75 C16.5,11.1642136 16.8357864,11.5 17.25,11.5 L22.75,11.5 C23.1642136,11.5 23.5,11.1642136 23.5,10.75 L23.5,5.25 C23.5,4.83578644 23.1642136,4.5 22.75,4.5 Z M9.5,6.5 L9.5,9.5 L6.5,9.5 L6.5,6.5 L9.5,6.5 Z M21.5,6.5 L21.5,9.5 L18.5,9.5 L18.5,6.5 L21.5,6.5 Z"> </path> </g> </g> </g></svg>
+                {% t "orders.view_codes" %}
+            </button>
+            {% else %}
+            {% if not order.actual_start %}
+            <button onclick="openVerifyModal('{{ order.id }}')"
+                class="px-4 py-2 text-sm font-medium bg-emerald-600 text-white !rounded-xl hover:bg-emerald-700 transition cursor-pointer flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {% t "orders.start_service" %}
+            </button>
+            {% elif not order.actual_end %}
+            {% if order.is_paused %}
+            <button onclick="openVerifyModal('{{ order.id }}')"
+                class="px-4 py-2 text-sm font-medium bg-amber-500 text-white !rounded-xl hover:bg-amber-600 transition cursor-pointer flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                </svg>
+                {% t "orders.resume_service" %}
+            </button>
+            {% else %}
+            <button onclick="openVerifyModal('{{ order.id }}')"
+                class="px-4 py-2 text-sm font-medium bg-red-600 text-white !rounded-xl hover:bg-red-700 transition cursor-pointer flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                </svg>
+                {% t "orders.end_service" %}
+            </button>
+            {% endif %}
+            {% else %}
+            <button onclick="openVerifyModal('{{ order.id }}')"
+                class="px-4 py-2 text-sm font-medium bg-gray-100 text-gray-700 border border-gray-200 !rounded-xl hover:bg-gray-200 transition cursor-pointer flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {% t "orders.view_summary" %}
+            </button>
+            {% endif %}
+            {% endif %}
+            {% endif %}
+            {% if not is_provider and order.status == 'finished' and not order.has_review %}
+            <button type="button" onclick="document.getElementById('reviewModal-{{ order.id }}').classList.remove('hidden')"
+                class="px-4 py-2 text-sm font-medium bg-[#1c1b2b] text-white !rounded-xl hover:bg-gray-800 transition cursor-pointer">
+                {% t "orders.rate_service" %}
+            </button>
+            {% endif %}
+        </div>
+    </div>
+</article>
+<!-- Verification Modal -->
+<div id="verifyModal-{{ order.id }}" class="relative z-50 hidden" aria-labelledby="modal-title" role="dialog"
+    aria-modal="true">
+    <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity"></div>
+    <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+        <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <div
+                class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-2xl border border-gray-100">
+                <!-- Header -->
+                <div class="bg-white px-4 py-4 sm:px-6 flex justify-between items-center border-b border-gray-100">
+                    <h3 class="text-lg font-bold leading-6 text-gray-900" id="modal-title">
+                        {% if is_provider %}Códigos de Servicio{% else %}Gestión del Servicio{% endif %}
+                    </h3>
+                    <button type="button" onclick="closeVerifyModal('{{ order.id }}')"
+                        class="!rounded-full p-1 text-gray-400 hover:bg-gray-100 transition">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <!-- Content -->
+                <div class="px-6 py-8">
+                    <!-- Stepper (Visual Progress) -->
+                    <div class="flex items-center justify-center mb-10">
+                        <!-- Step 1: Start -->
+                        <div class="flex flex-col items-center relative">
+                            <div
+                                class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-colors duration-500
+                                {% if order.actual_start %}bg-emerald-500 text-white shadow-lg shadow-emerald-200{% else %}bg-gray-100 text-gray-400{% endif %}">
+                                {% if order.actual_start %}✓{% else %}1{% endif %}
+                            </div>
+                            <span
+                                class="absolute -bottom-6 text-xs font-semibold {% if order.actual_start %}text-emerald-600{% else %}text-gray-400{% endif %}">Inicio</span>
+                        </div>
+                        <!-- Connector -->
+                        <div class="w-24 h-1 mx-2 rounded-full bg-gray-100 overflow-hidden">
+                            <div class="h-full bg-emerald-500 transition-all duration-1000 ease-out"
+                                style="width: {% if order.actual_start %}100%{% else %}0%{% endif %}"></div>
+                        </div>
+                        <!-- Step 2: In Progress (Implicit) -->
+                        <div class="flex flex-col items-center relative">
+                            <div
+                                class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-colors duration-500
+                                {% if order.actual_start and not order.actual_end %}
+                                    {% if order.is_paused %}bg-amber-500 text-white shadow-lg shadow-amber-200{% else %}bg-blue-500 text-white shadow-lg shadow-blue-200 animate-pulse{% endif %}
+                                {% elif order.actual_end %}bg-emerald-500 text-white{% else %}bg-gray-100 text-gray-400{% endif %}">
+                                {% if order.actual_end %}✓{% elif order.actual_start %}
+                                {% if order.is_paused %}||{% else %}...{% endif %}
+                                {% else %}2{% endif %}
+                            </div>
+                            <span
+                                class="absolute -bottom-6 text-xs font-semibold whitespace-nowrap {% if order.actual_start and not order.actual_end %}{% if order.is_paused %}text-amber-600{% else %}text-blue-600{% endif %}{% elif order.actual_end %}text-emerald-600{% else %}text-gray-400{% endif %}">
+                                {% if order.is_paused %}Pausado{% else %}En Curso{% endif %}
+                            </span>
+                        </div>
+                        <!-- Connector -->
+                        <div class="w-24 h-1 mx-2 rounded-full bg-gray-100 overflow-hidden">
+                            <div class="h-full bg-emerald-500 transition-all duration-1000 ease-out"
+                                style="width: {% if order.actual_end %}100%{% else %}0%{% endif %}"></div>
+                        </div>
+                        <!-- Step 3: End -->
+                        <div class="flex flex-col items-center relative">
+                            <div
+                                class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-colors duration-500
+                                {% if order.actual_end %}bg-emerald-500 text-white shadow-lg shadow-emerald-200{% else %}bg-gray-100 text-gray-400{% endif %}">
+                                {% if order.actual_end %}✓{% else %}3{% endif %}
+                            </div>
+                            <span
+                                class="absolute -bottom-6 text-xs font-semibold {% if order.actual_end %}text-emerald-600{% else %}text-gray-400{% endif %}">Fin</span>
+                        </div>
+                    </div>
+                    {% if is_provider %}
+                    <!-- PROVIDER CONTENT -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                        <!-- Start Code -->
+                        <div
+                            class="flex flex-col items-center p-4 rounded-2xl border {% if not order.actual_start %}border-emerald-200 bg-emerald-50/50{% else %}border-gray-100 bg-gray-50 opacity-60{% endif %} transition-all">
+                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 mb-3">Código de
+                                Inicio</span>
+                            <div class="bg-white p-2 rounded-xl shadow-sm border border-gray-200">
+                                <img src="{% url 'contract_qr_code' order.id 'start' %}" alt="Start QR"
+                                    class="w-32 h-32 object-contain">
+                            </div>
+                            <div class="mt-4 text-center">
+                                <span
+                                    class="text-2xl font-mono font-bold text-gray-900 tracking-widest bg-white border border-gray-200 px-4 py-2 rounded-lg shadow-sm">{{ order.start_code_alpha }}</span>
+                            </div>
+                            {% if order.actual_start %}
+                            <div
+                                class="mt-4 flex items-center gap-2 text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full text-xs font-bold">
+                                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                                CONFIRMADO {{ order.actual_start|date:"H:i" }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <!-- End Code -->
+                        <div
+                            class="flex flex-col items-center p-4 rounded-2xl border {% if order.actual_start and not order.actual_end %}border-red-200 bg-red-50/50{% else %}border-gray-100 bg-gray-50 opacity-60{% endif %} transition-all">
+                            <span class="text-xs font-bold uppercase tracking-wider text-red-600 mb-3">Código de
+                                Finalización</span>
+                            <div class="bg-white p-2 rounded-xl shadow-sm border border-gray-200">
+                                <img src="{% url 'contract_qr_code' order.id 'end' %}" alt="End QR"
+                                    class="w-32 h-32 object-contain">
+                            </div>
+                            <div class="mt-4 text-center">
+                                <span
+                                    class="text-2xl font-mono font-bold text-gray-900 tracking-widest bg-white border border-gray-200 px-4 py-2 rounded-lg shadow-sm">{{ order.end_code_alpha }}</span>
+                            </div>
+                            {% if order.actual_end %}
+                            <div
+                                class="mt-4 flex items-center gap-2 text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full text-xs font-bold">
+                                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                                CONFIRMADO {{ order.actual_end|date:"H:i" }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <!-- CLIENT CONTENT -->
+                    <div class="max-w-md mx-auto">
+                        {% if not order.actual_start %}
+                        <!-- Step 1: Start -->
+                        <div class="text-center mb-8">
+                            <h3 class="text-xl font-bold text-gray-900">Iniciar Servicio</h3>
+                            <p class="text-gray-500 mt-2">Estás a punto de comenzar. Pide al profesional el código QR o el código manual de inicio.</p>
+                        </div>
+                        <form id="start-form-{{ order.id }}" onsubmit="handleVerification(event, '{{ order.id }}', 'start')" action="{% url 'verify_service_code' order.id %}" method="POST" class="mt-4">
+                            {% csrf_token %}
+                            <input type="hidden" name="type" value="start">
+                            <div class="relative">
+                                <input type="text" name="code" placeholder="INTRODUCE EL CÓDIGO"
+                                    class="block w-full mb-3 !rounded-2xl border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-center text-3xl tracking-[0.2em] uppercase font-mono py-4 placeholder:text-gray-300 placeholder:text-xl placeholder:tracking-normal transition-all"
+                                    required maxlength="6" autocomplete="off">
+                            </div>
+                            
+                            <!-- Error Container -->
+                            <div id="error-message-start-{{ order.id }}" class="hidden mb-4 p-3 bg-red-100 text-red-700 rounded-xl text-sm font-bold text-center"></div>
+                            <button type="submit"
+                                class="mt-6 w-full inline-flex justify-center items-center gap-2 !rounded-2xl border border-transparent bg-emerald-600 px-6 py-4 text-base font-bold text-white shadow-lg shadow-emerald-200 hover:bg-emerald-700 hover:shadow-xl hover:-translate-y-0.5 transition-all">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                CONFIRMAR INICIO
+                            </button>
+                        </form>
+                        {% elif not order.actual_end %}
+                        <!-- Step 2: End / Pause -->
+                        <div class="text-center mb-6">
+                            <div class="inline-block bg-gray-100 rounded-lg px-4 py-2 mb-4">
+                                <span class="text-xs text-gray-500 uppercase tracking-wide block">Tiempo Total</span>
+                                <div class="text-2xl font-mono font-bold text-gray-900">{{ order.total_duration }}</div>
+                            </div>
+                            <div class="flex gap-3 justify-center mt-2">
+                                <!-- Pause/Resume Button -->
+                                <form action="{% url 'toggle_pause_service' order.id %}" method="POST">
+                                    {% csrf_token %}
+                                    {% if order.is_paused %}
+                                    <button type="submit"
+                                        class="px-6 py-2 bg-amber-500 text-white !rounded-xl font-medium hover:bg-amber-600 transition flex items-center gap-2 shadow-md">
+                                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                            stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                        </svg>
+                                        Reanudar
+                                    </button>
+                                    {% else %}
+                                    <button type="submit"
+                                        class="px-6 py-2 bg-amber-100 text-amber-700 !rounded-xl font-medium hover:bg-amber-200 transition flex items-center gap-2">
+                                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                            stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        Pausar
+                                    </button>
+                                    {% endif %}
+                                </form>
+                            </div>
+                        </div>
+                        {% if not order.is_paused %}
+                        <div class="border-t border-gray-100 pt-6 mt-6">
+                            <h3 class="text-lg font-bold text-gray-900 text-center mb-2">Finalizar Servicio</h3>
+                            <p class="text-gray-500 text-center text-sm mb-4">Introduce el código para cerrar el pedido.
+                            </p>
+                            <form id="end-form-{{ order.id }}" onsubmit="handleVerification(event, '{{ order.id }}', 'end')" action="{% url 'verify_service_code' order.id %}" method="POST" class="mt-4">
+                                {% csrf_token %}
+                                <input type="hidden" name="type" value="end">
+                                <div class="relative">
+                                    <input type="text" name="code" placeholder="CÓDIGO FIN"
+                                        class="block w-full mb-3 !rounded-2xl border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 text-center text-3xl tracking-[0.2em] uppercase font-mono py-4 placeholder:text-gray-300 placeholder:text-xl placeholder:tracking-normal transition-all"
+                                        required maxlength="6" autocomplete="off">
+                                </div>
+                                
+                                <!-- Error Container -->
+                                <div id="error-message-end-{{ order.id }}" class="hidden mb-4 p-3 bg-red-100 text-red-700 rounded-xl text-sm font-bold text-center"></div>
+                                <button type="submit"
+                                    class="mt-6 w-full inline-flex justify-center items-center gap-2 !rounded-2xl border border-transparent bg-red-600 px-6 py-4 text-base font-bold text-white shadow-lg shadow-red-200 hover:bg-red-700 hover:shadow-xl hover:-translate-y-0.5 transition-all">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                                    </svg>
+                                    CONFIRMAR FINALIZACIÓN
+                                </button>
+                            </form>
+                        </div>
+                        {% endif %}
+                        {% else %}
+                        <!-- Step 3: Completed -->
+                        <div class="text-center py-4">
+                            <div
+                                class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100 mb-6 shadow-sm">
+                                <svg class="h-10 w-10 text-green-600" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+                            <h3 class="text-2xl font-bold text-gray-900 mb-2">¡Servicio Completado!</h3>
+                            <div class="inline-block bg-gray-100 rounded-lg px-4 py-2 mb-6">
+                                <span class="text-xs text-gray-500 uppercase tracking-wide block">Tiempo Total</span>
+                                <div class="text-2xl font-mono font-bold text-gray-900">{{ order.total_duration }}</div>
+                            </div>
+                            <div class="bg-gray-50 rounded-2xl p-6 border border-gray-100">
+                                <div class="flex justify-between items-center mb-4 pb-4 border-b border-gray-200">
+                                    <span class="text-gray-500 text-sm">Hora de Inicio</span>
+                                    <span class="font-mono font-bold text-gray-900">{{ order.actual_start|date:"H:i" }}</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-500 text-sm">Hora de Fin</span>
+                                    <span class="font-mono font-bold text-gray-900">{{ order.actual_end|date:"H:i" }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Review Modal -->
+<div id="reviewModal-{{ order.id }}" class="relative z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity"></div>
+    <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+        <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-gray-100">
+                <div class="bg-white px-4 py-4 sm:px-6 flex justify-between items-center border-b border-gray-100">
+                    <h3 class="text-lg font-bold leading-6 text-gray-900">Valorar Servicio</h3>
+                    <button type="button" onclick="window.location.reload()" class="!rounded-full p-1 text-gray-400 hover:bg-gray-100 transition">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                
+                <form onsubmit="handleReviewSubmit(event, '{{ order.id }}')" action="{% url 'create_review' order.id %}" method="POST" class="p-6">
+                    {% csrf_token %}
+                    <div class="text-center mb-6">
+                        <p class="text-gray-500 mb-4">¿Qué te ha parecido el servicio de <span class="font-semibold text-gray-900">{{ order.counterpart_name }}</span>?</p>
+                        
+                        <!-- Star Rating -->
+                        <div class="flex justify-center gap-2 flex-row-reverse mb-4 group">
+                            {% for i in "54321"|make_list %}
+                            <input type="radio" name="rating" id="star{{ i }}-{{ order.id }}" value="{{ i }}" class="peer hidden" required>
+                            <label for="star{{ i }}-{{ order.id }}" class="cursor-pointer text-gray-300 peer-checked:text-yellow-400 hover:text-yellow-400 peer-hover:text-yellow-400 transition-colors">
+                                <svg class="w-10 h-10" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 0 0 .95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 0 0-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 0 0-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 0 0-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 0 0 .951-.69l1.07-3.292Z"/>
+                                </svg>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="comment" class="block text-sm font-medium text-gray-700 mb-1">Comentario (opcional)</label>
+                        <textarea name="comment" rows="3" class="block py-1 px-2 w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm resize-none" placeholder="Cuéntanos tu experiencia..."></textarea>
+                    </div>
+
+                    <div id="review-error-{{ order.id }}" class="hidden mb-4 p-3 bg-red-100 text-red-700 rounded-xl text-sm font-bold text-center"></div>
+
+                    <button type="submit" class="w-full inline-flex justify-center items-center !rounded-xl border border-transparent bg-[#1c1b2b] px-6 py-3 text-base font-bold text-white shadow-sm hover:bg-opacity-90 transition-all">
+                        Enviar Valoración
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openVerifyModal(id) {
+        document.getElementById('verifyModal-' + id).classList.remove('hidden');
+    }
+    function closeVerifyModal(id) {
+        document.getElementById('verifyModal-' + id).classList.add('hidden');
+    }
+    function handleVerification(event, orderId, type) {
+        event.preventDefault();
+        const form = event.target;
+        const errorDiv = document.getElementById(`error-message-${type}-${orderId}`);
+        const formData = new FormData(form);
+        // Hide previous errors
+        errorDiv.classList.add('hidden');
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.show_review_modal) {
+                        closeVerifyModal(orderId);
+                        document.getElementById('reviewModal-' + orderId).classList.remove('hidden');
+                    } else {
+                        window.location.reload();
+                    }
+                } else {
+                    errorDiv.textContent = data.message;
+                    errorDiv.classList.remove('hidden');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                errorDiv.textContent = "Error de conexión. Inténtalo de nuevo.";
+                errorDiv.classList.remove('hidden');
+            });
+    }
+
+    function handleReviewSubmit(event, orderId) {
+        event.preventDefault();
+        const form = event.target;
+        const errorDiv = document.getElementById(`review-error-${orderId}`);
+        const formData = new FormData(form);
+        
+        errorDiv.classList.add('hidden');
+
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                errorDiv.textContent = data.message;
+                errorDiv.classList.remove('hidden');
+            }
+        })
+        .catch(error => {
+            errorDiv.textContent = "Error de conexión.";
+            errorDiv.classList.remove('hidden');
+        });
+    }
+</script>

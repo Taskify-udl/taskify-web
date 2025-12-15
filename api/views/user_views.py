@@ -6,11 +6,12 @@ from rest_framework.decorators import (
 )
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 from rest_framework.response import Response
 
-from api.serializers import UserProfileSerializer
+from api.serializers import UserProfileSerializer, ChangePasswordSerializer, PublicUserProfileSerializer
+from taskify_app.models import CustomUser
 
 
 @api_view(["GET", "PUT", "PATCH"])
@@ -35,3 +36,48 @@ def profile_detail(request):
 
     obj = serializer.save()
     return Response(UserProfileSerializer(obj, context={"request": request}).data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def public_profile_detail(request, pk):
+    try:
+        user = CustomUser.objects.get(pk=pk)
+    except CustomUser.DoesNotExist:
+        return Response(
+            {"error": "Usuario no encontrado."},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    serializer = PublicUserProfileSerializer(user)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def change_password(request):
+    serializer = ChangePasswordSerializer(data=request.data)
+
+    if serializer.is_valid():
+        user = request.user
+        old_password = serializer.data.get("old_password")
+        new_password = serializer.data.get("new_password")
+
+        # Verificar si la contraseña actual es correcta
+        if not user.check_password(old_password):
+            return Response(
+                {"old_password": ["La contraseña actual es incorrecta."]},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Establecer la nueva contraseña y guardar
+        user.set_password(new_password)
+        user.save()
+
+        return Response(
+            {"message": "Contraseña actualizada correctamente."},
+            status=status.HTTP_200_OK
+        )
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -4,9 +4,9 @@ from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.http import JsonResponse
-from django.db.models import Count, Avg, Q
+from django.db.models import Count, Avg, Q, Case, When, Value, BooleanField, Sum
 from django.core.mail import send_mail
-from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie, csrf_protect
 from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth import logout
@@ -17,14 +17,17 @@ import random
 from django.utils.dateparse import parse_datetime
 from django.views.decorators.http import require_POST
 
+import qrcode
+from django.http import HttpResponse
+
 from core.decorators import allowed_roles
 from .forms import RegisterForm
 from django.templatetags.static import static
-from .models import Service, ServiceImage, Contract, Review, Notification, CustomUser, EmailVerification, \
-    Category, Conversation, Message, Favorite
+from .models import Service, ServiceImage, Contract, Review, Notification, CustomUser, EmailVerification, Category, Conversation, Message, Favorite, ServiceSession
 
+# --- IMPORTACIÓN DE LA IA DE SEGURIDAD ---
+from .utils.nsfw_check import analizar_contenido_peligroso, es_contenido_seguro
 
-@ensure_csrf_cookie
 @ensure_csrf_cookie
 def home(request):
     # Seleccionar hasta 6 categorías aleatorias
@@ -34,12 +37,19 @@ def home(request):
     else:
         categories = all_categories
 
-    # Seleccionar hasta 12 servicios destacados aleatorios
-    all_featured_services = list(Service.objects.all())
-    if len(all_featured_services) > 12:
-        featured_services = random.sample(all_featured_services, 12)
-    else:
-        featured_services = all_featured_services
+    # Servicios destacados paginados (ordenados por rating o fecha)
+    featured_services_list = Service.objects.annotate(
+        avg_rating=Avg('reviews__rating'),
+        promoted_status=Case(
+            When(promoted_until__gt=timezone.now(), then=Value(True)),
+            default=Value(False),
+            output_field=BooleanField(),
+        )
+    ).order_by('-promoted_status', '-avg_rating', '-created_at')
+    
+    paginator = Paginator(featured_services_list, 12)
+    page_number = request.GET.get('page')
+    featured_services = paginator.get_page(page_number)
 
     user_favorites = {}
     if request.user.is_authenticated:
@@ -49,6 +59,7 @@ def home(request):
     context = {
         'categories': categories,
         'featured_services': featured_services,
+        'page_obj': featured_services, # Para el template de paginación
         'user_favorites_json': json.dumps(user_favorites),
     }
     return render(request, 'home.html', context)
@@ -83,7 +94,7 @@ def search(request):
 
     # Empezamos con todos los servicios y optimizamos la consulta
     results = Service.objects.all().select_related(
-        'provider__profile'
+        'provider'
     ).prefetch_related(
         'images', 'categories', 'reviews'
     )
@@ -102,8 +113,18 @@ def search(request):
     # Añadimos anotaciones para la media de estrellas (para mostrar en las tarjetas)
     results = results.annotate(
         average_rating=Avg('reviews__rating'),
-        review_count=Count('reviews')
-    ).distinct()
+        review_count=Count('reviews'),
+        promoted_status=Case(
+            When(promoted_until__gt=timezone.now(), then=Value(True)),
+            default=Value(False),
+            output_field=BooleanField(),
+        )
+    ).distinct().order_by('-promoted_status', '-average_rating', '-created_at')
+
+    # Paginación
+    paginator = Paginator(results, 12)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     # (Pasamos los favoritos del usuario para los botones de corazón)
     user_favorites = {}
@@ -114,7 +135,8 @@ def search(request):
     context = {
         'query': query,
         'category_id': category_id,  # por si quieres marcar la categoría activa en la plantilla
-        'results': results,
+        'results': page_obj,
+        'page_obj': page_obj,
         'user_favorites_json': json.dumps(user_favorites),
     }
 
@@ -130,12 +152,17 @@ def favourites(request):
     from .models import Favorite
 
     user = request.user
-    favorite_services = Service.objects.filter(
+    favorite_services_list = Service.objects.filter(
         favorited_by__user=user
     ).prefetch_related('categories', 'images').order_by('-favorited_by__favorited_at')
 
+    paginator = Paginator(favorite_services_list, 12)
+    page_number = request.GET.get('page')
+    favorite_services = paginator.get_page(page_number)
+
     context = {
         'favorite_services': favorite_services,
+        'page_obj': favorite_services,
     }
     return render(request, 'favourites.html', context)
 
@@ -160,6 +187,13 @@ def signup(request):
         username = request.POST.get('username')
         email = request.POST.get('email')
         password = request.POST.get('password')
+        full_name = request.POST.get('full_name', '')
+        
+        # Role information from the form
+        role = request.POST.get('role')  # 'client' or 'provider'
+        provider_sub_role = request.POST.get('provider_sub_role', '')  # 'freelancer' or 'company'
+        company_name = request.POST.get('company_name', '')
+        company_tax_id = request.POST.get('company_tax_id', '')
 
         if CustomUser.objects.filter(username__iexact=username, is_active=True).exists():
             messages.error(request, f"El nombre de usuario '{username}' ya está en uso. Por favor, elige otro.")
@@ -178,18 +212,40 @@ def signup(request):
 
             user.username = username
             user.set_password(password)
-            user.save()
-
         else:
             user = CustomUser.objects.filter(username__iexact=username, is_active=False).first()
             if user:
                 user.email = email
                 user.set_password(password)
-                user.save()
             else:
                 user = CustomUser.objects.create_user(username=username, email=email, password=password)
                 user.is_active = False
-                user.save()
+        
+        # Parse and save full name
+        if full_name:
+            name_parts = full_name.strip().split(' ', 1)
+            user.first_name = name_parts[0] if len(name_parts) > 0 else ''
+            user.last_name = name_parts[1] if len(name_parts) > 1 else ''
+        
+        # Map frontend role to database role
+        if role == 'client':
+            user.role = CustomUser.Roles.CUSTOMER
+        elif role == 'provider':
+            if provider_sub_role == 'freelancer':
+                user.role = CustomUser.Roles.FREELANCER
+            elif provider_sub_role == 'company':
+                user.role = CustomUser.Roles.COMPANY_ADMIN
+                # Save company info for company admins
+                if hasattr(user, 'company_name') and company_name:
+                    user.company_name = company_name
+                if hasattr(user, 'tax_id') and company_tax_id:
+                    user.tax_id = company_tax_id
+            else:
+                user.role = CustomUser.Roles.PROVIDER
+        else:
+            user.role = CustomUser.Roles.CUSTOMER  # Default
+        
+        user.save()
 
         verification, _ = EmailVerification.objects.get_or_create(user=user)
         verification.generate_code()
@@ -254,22 +310,47 @@ def my_orders(request):
         }.get(action)
 
         if contract_id and next_status:
-            contract = get_object_or_404(
-                Contract, pk=contract_id, service__provider=user
-            )
-            if contract.status != next_status:
-                contract.status = next_status
-                contract.save(update_fields=['status'])
-                if next_status == 'accepted':
-                    messages.success(
-                        request,
-                        'Has aceptado la solicitud. El cliente será notificado.',
-                    )
-                else:
-                    messages.info(
-                        request,
-                        'Has rechazado la solicitud. El cliente será notificado.',
-                    )
+            try:
+                contract = get_object_or_404(
+                    Contract, pk=contract_id
+                )
+                
+                # Validación de permisos usando el método del modelo
+                if not contract.can_be_accepted_by(user):
+                    messages.error(request, 'No tienes permiso para modificar este contrato.')
+                    return redirect('my_orders')
+                
+                if contract.status != next_status:
+                    contract.status = next_status
+                    if next_status == 'rejected':
+                        contract.rejection_reason = request.POST.get('rejection_reason', '')
+                        contract.save(update_fields=['status', 'rejection_reason'])
+                        
+                        # Crear notificación de rechazo
+                        create_notification(
+                            user=contract.user,
+                            title="Solicitud rechazada",
+                            message=f"Tu solicitud para '{contract.service.name}' ha sido rechazada. Motivo: {contract.rejection_reason}",
+                            notification_type='contract_rejected',
+                            contract=contract
+                        )
+                        messages.info(request, 'Has rechazado la solicitud. El cliente será notificado.')
+                    else:
+                        contract.save(update_fields=['status'])
+                        
+                        # Crear notificación de aceptación
+                        create_notification(
+                            user=contract.user,
+                            title="¡Solicitud aceptada!",
+                            message=f"Tu solicitud para '{contract.service.name}' ha sido   aceptada para el {contract.start_date.strftime('%d/%m/%Y')} a las {contract.start_time.strftime('%H:%M')}.",
+                            notification_type='contract_accepted',
+                            contract=contract
+                        )
+                        messages.success(request, 'Has aceptado la solicitud. El cliente será notificado.')
+                        
+            except Exception as e:
+                messages.error(request, f'Error al procesar la solicitud: {str(e)}')
+                
         return redirect('my_orders')
 
     if user.is_provider:
@@ -293,8 +374,8 @@ def my_orders(request):
             'group': 'pending',
         },
         'accepted': {
-            'badge_classes': 'bg-blue-100 text-blue-700',
-            'dot_classes': 'bg-blue-500',
+            'badge_classes': 'bg-green-100 text-green-700',
+            'dot_classes': 'bg-green-500',
             'label': 'Aceptado',
             'group': 'accepted',
         },
@@ -337,7 +418,10 @@ def my_orders(request):
         if group in status_totals:
             status_totals[group] += bucket['total']
 
-    orders = []
+    upcoming_orders = []
+    pending_orders = []
+    past_orders = []
+
     for contract in contracts_qs:
         status_config = status_styles.get(
             contract.status,
@@ -359,29 +443,45 @@ def my_orders(request):
             counterpart_label = 'Profesional'
             counterpart_name = counterpart.get_full_name() or counterpart.username
 
-        orders.append(
-            {
-                'id': contract.id,
-                'service_name': contract.service.name,
-                'counterpart_label': counterpart_label,
-                'counterpart_name': counterpart_name,
-                'status': contract.status,
-                'status_label': status_config['label'],
-                'badge_classes': status_config['badge_classes'],
-                'dot_classes': status_config['dot_classes'],
-                'start_date': contract.start_date,
-                'created_at': contract.created_at,
-                'price': price_value,
-                'has_price': price_value is not None,
-                'detail_url': reverse('service_detail', args=[contract.service.id]),
-                'service_description': contract.service.description,
-                'code': contract.code,
-                'can_manage': user.is_provider and contract.status == 'pending',
-            }
-        )
+        order_data = {
+            'id': contract.id,
+            'service_id': contract.service.id,
+            'service_name': contract.service.name,
+            'counterpart_label': counterpart_label,
+            'counterpart_name': counterpart_name,
+            'counterpart_id': counterpart.id,
+            'status': contract.status,
+            'status_label': status_config['label'],
+            'badge_classes': status_config['badge_classes'],
+            'dot_classes': status_config['dot_classes'],
+            'start_date': contract.start_date,
+            'created_at': contract.created_at,
+            'price': price_value,
+            'has_price': price_value is not None,
+            'detail_url': reverse('service_detail', args=[contract.service.id]),
+            'service_description': contract.service.description,
+            'code': contract.code,
+            'can_manage': user.is_provider and contract.status == 'pending',
+            'start_code_alpha': contract.start_code_alpha,
+            'end_code_alpha': contract.end_code_alpha,
+            'actual_start': contract.actual_start,
+            'actual_end': contract.actual_end,
+            'total_duration': contract.get_formatted_duration(),
+            'is_paused': contract.status == 'paused',
+            'has_review': Review.objects.filter(contract=contract).exists(),
+        }
+
+        if contract.status in ['accepted', 'active']:
+            upcoming_orders.append(order_data)
+        elif contract.status in ['pending', 'paused']:
+            pending_orders.append(order_data)
+        else:  # rejected, cancelled, finished
+            past_orders.append(order_data)
 
     context = {
-        'orders': orders,
+        'upcoming_orders': upcoming_orders,
+        'pending_orders': pending_orders,
+        'past_orders': past_orders,
         'is_provider': user.is_provider,
         'pending_orders_count': status_totals['pending'],
         'accepted_orders_count': status_totals['accepted'],
@@ -458,9 +558,26 @@ def edit_profile(request):
         profile.website = request.POST.get('website', '')
         profile.profession = request.POST.get('profession', '')
 
-        # Handle avatar upload
+        # Handle avatar upload with AI Check
         if request.FILES.get('avatar'):
-            profile.avatar = request.FILES['avatar']
+            avatar_file = request.FILES['avatar']
+            
+            # --- AI SECURITY CHECK ---
+            print(f"Analizando avatar: {avatar_file.name}")
+            analisis = analizar_contenido_peligroso(avatar_file)
+            is_safe = es_contenido_seguro(analisis)
+
+            if not is_safe:
+                # Opcional: ver detalles del rechazo en consola
+                print(f"AVATAR RECHAZADO: {analisis}")
+                messages.error(request, 'Tu imagen de perfil contiene contenido inapropiado (violencia, drogas, desnudos) y ha sido rechazada.')
+                return redirect('edit_profile')
+            
+            # ¡IMPORTANTE! Rebobinar el archivo después de que la IA lo lea
+            avatar_file.seek(0)
+            # -------------------------
+
+            profile.avatar = avatar_file
 
         profile.save()
 
@@ -479,13 +596,42 @@ def advanced_stats(request):
     contracts_count = Contract.objects.filter(user=user).count()
     reviews_count = Review.objects.filter(service__provider=user).count()
 
+    # --- New Dashboard Data ---
+    from django.db.models import Sum, Q
+
+    # 1. Total Earnings
+    earnings_aggregate = Contract.objects.filter(
+        service__provider=user,
+        status='finished'
+    ).aggregate(total=Sum('price'))
+    total_earnings = earnings_aggregate['total'] or 0
+
+    # 2. Upcoming Appointments
+    upcoming_contracts = Contract.objects.filter(
+        Q(user=user) | Q(service__provider=user),
+        status__in=['accepted', 'active'],
+        start_date__gte=timezone.now().date()
+    ).order_by('start_date', 'start_time')[:3]
+
+    # 3. Pending Requests Count
+    if user.is_provider:
+        pending_count = Contract.objects.filter(service__provider=user, status='pending').count()
+    else:
+        pending_count = 0
+
     # Monthly statistics (last 12 months)
     from django.db.models.functions import TruncMonth
-    from django.utils import timezone
     from dateutil.relativedelta import relativedelta
 
+    # Calculate last 12 months range
+    today = timezone.now().date()
+    last_12_months = []
+    for i in range(11, -1, -1):
+        d = today.replace(day=1) - relativedelta(months=i)
+        last_12_months.append(d)
+
     # Services created by month
-    services_by_month = Service.objects.filter(
+    services_by_month_qs = Service.objects.filter(
         provider=user,
         created_at__gte=timezone.now() - relativedelta(months=12)
     ).annotate(
@@ -495,14 +641,28 @@ def advanced_stats(request):
     ).order_by('month')
 
     # Contracts by month
-    contracts_by_month = Contract.objects.filter(
-        user=user,
-        created_at__gte=timezone.now() - relativedelta(months=12)
+    contracts_by_month_qs = Contract.objects.filter(
+        service__provider=user,
+        status='finished',
+        actual_end__gte=timezone.now() - relativedelta(months=12)
     ).annotate(
-        month=TruncMonth('created_at')
+        month=TruncMonth('actual_end')
     ).values('month').annotate(
         count=Count('id')
     ).order_by('month')
+
+    # Helper to format data for Chart.js
+    def get_monthly_counts(queryset):
+        data_map = {}
+        for item in queryset:
+            # item['month'] is datetime
+            month_key = item['month'].strftime('%Y-%m')
+            data_map[month_key] = item['count']
+        
+        return [data_map.get(d.strftime('%Y-%m'), 0) for d in last_12_months]
+
+    services_counts = get_monthly_counts(services_by_month_qs)
+    contracts_counts = get_monthly_counts(contracts_by_month_qs)
 
     # Reviews by month
     reviews_by_month = Review.objects.filter(
@@ -515,11 +675,17 @@ def advanced_stats(request):
     ).order_by('month')
 
     # Rating distribution
-    rating_distribution = Review.objects.filter(
+    rating_distribution_qs = Review.objects.filter(
         service__provider=user
     ).values('rating').annotate(
         count=Count('rating')
     ).order_by('rating')
+
+    rating_counts = [0] * 5
+    for item in rating_distribution_qs:
+        r = item['rating']
+        if 1 <= r <= 5:
+            rating_counts[r-1] = item['count']
 
     # Top performing services
     top_services = Service.objects.filter(provider=user).annotate(
@@ -528,20 +694,28 @@ def advanced_stats(request):
     ).filter(review_count__gt=0).order_by('-avg_rating')[:5]
 
     # Recent activity
-    recent_contracts = Contract.objects.filter(user=user).order_by('-created_at')[:10]
+    recent_contracts = Contract.objects.filter(
+        Q(user=user) | Q(service__provider=user)
+    ).order_by('-created_at')[:10]
     recent_reviews = Review.objects.filter(service__provider=user).order_by('-created_at')[:10]
 
     context = {
         'services_count': services_count,
         'contracts_count': contracts_count,
         'reviews_count': reviews_count,
-        'services_by_month': list(services_by_month),
-        'contracts_by_month': list(contracts_by_month),
+        'services_by_month': list(services_by_month_qs),
+        'contracts_by_month': list(contracts_by_month_qs),
         'reviews_by_month': list(reviews_by_month),
-        'rating_distribution': list(rating_distribution),
+        'rating_distribution': list(rating_distribution_qs),
+        'services_counts_json': json.dumps(services_counts),
+        'contracts_counts_json': json.dumps(contracts_counts),
+        'rating_counts_json': json.dumps(rating_counts),
         'top_services': top_services,
         'recent_contracts': recent_contracts,
         'recent_reviews': recent_reviews,
+        'total_earnings': total_earnings,
+        'upcoming_contracts': upcoming_contracts,
+        'pending_count': pending_count,
     }
 
     return render(request, 'advanced_stats.html', context)
@@ -615,6 +789,7 @@ def verify_email(request):
                 verification.delete()
                 del request.session['pending_email']
 
+                user.backend = 'django.contrib.auth.backends.ModelBackend'
                 login(request, user)
                 messages.success(request, '¡Cuenta verificada exitosamente! Bienvenido.')
                 return redirect('home')
@@ -673,8 +848,14 @@ def chat_list_view(request):
         reverse=True
     )
 
+    # Paginación manual de la lista ordenada
+    paginator = Paginator(context_conversations, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     return render(request, 'chats.html', {
-        'conversations': context_conversations
+        'conversations': page_obj,
+        'page_obj': page_obj
     })
 
 
@@ -762,6 +943,22 @@ def my_services(request):
         category_ids = request.POST.getlist('categories')
         service_id = request.POST.get('service_id')
 
+        # --- AI SECURITY CHECK PARA IMÁGENES DE SERVICIO ---
+        if cover_images:
+            for i, img in enumerate(cover_images):
+                print(f"Analizando imagen de servicio: {img.name}")
+                analisis = analizar_contenido_peligroso(img)
+                is_safe = es_contenido_seguro(analisis)
+                
+                if not is_safe:
+                    print(f"IMAGEN RECHAZADA: {analisis}")
+                    messages.error(request, f'La imagen "{img.name}" contiene contenido inapropiado y ha sido rechazada. No se ha guardado el servicio.')
+                    return redirect('my_services')
+                
+                # ¡IMPORTANTE! Rebobinar el archivo para que Django pueda guardarlo después
+                img.seek(0)
+        # ---------------------------------------------------
+
         if not name or not price_str:
             messages.error(request, 'El nombre y el precio son obligatorios.')
             return redirect('my_services')
@@ -781,11 +978,11 @@ def my_services(request):
                 service.price = price
 
                 # Eliminar imágenes marcadas
-                images_to_delete_ids = request.POST.getlist('delete_images')
+                images_to_delete_ids = request.POST.getlist('images_to_delete')
                 if images_to_delete_ids:
                     ServiceImage.objects.filter(id__in=images_to_delete_ids, service=service).delete()
 
-                # Agregar nuevas imágenes
+                # Agregar nuevas imágenes (ya validadas arriba)
                 for f in cover_images:
                     ServiceImage.objects.create(service=service, image=f)
 
@@ -819,7 +1016,7 @@ def my_services(request):
                 price=price
             )
 
-            # Agregar imágenes
+            # Agregar imágenes (ya validadas arriba)
             for f in cover_images:
                 ServiceImage.objects.create(service=new_service, image=f)
 
@@ -832,12 +1029,18 @@ def my_services(request):
         return redirect('my_services')
 
     # GET request
-    user_services = Service.objects.filter(provider=request.user).prefetch_related('images', 'categories').order_by(
+    user_services_list = Service.objects.filter(provider=request.user).prefetch_related('images', 'categories').order_by(
         '-created_at')
+    
+    paginator = Paginator(user_services_list, 10)
+    page_number = request.GET.get('page')
+    user_services = paginator.get_page(page_number)
+
     all_categories = Category.objects.all()
 
     context = {
         'services': user_services,
+        'page_obj': user_services,
         'categories': all_categories,
     }
     return render(request, 'my_services.html', context)
@@ -906,23 +1109,37 @@ def public_profile(request, username):
     profile, _ = CustomUser.objects.get_or_create(username=user)
 
     # 2. Obtener los servicios de este usuario
-    services = Service.objects.filter(provider=user).prefetch_related('images', 'categories')
+    services_list = Service.objects.filter(provider=user).prefetch_related('images', 'categories').order_by('-created_at')
+    
+    paginator = Paginator(services_list, 6)
+    page_number = request.GET.get('page')
+    services = paginator.get_page(page_number)
 
     # 3. Obtener las reseñas recibidas por este usuario (en cualquiera de sus servicios)
-    reviews = Review.objects.filter(service__provider=user).select_related('user', 'user__profile').order_by(
+    reviews = Review.objects.filter(service__provider=user).select_related('user').order_by(
         '-created_at')
 
     # 4. Calcular estadísticas
     reviews_count = reviews.count()
     average_rating = reviews.aggregate(avg=Avg('rating'))['avg'] or 0
+    total_services_count = services_list.count()
+
+    # 5. Obtener favoritos del usuario actual
+    user_favorites = {}
+    if request.user.is_authenticated:
+        favorites = Favorite.objects.filter(user=request.user).values('service_id', 'id')
+        user_favorites = {fav['service_id']: fav['id'] for fav in favorites}
 
     context = {
         'profile_user': user,
         'profile': profile,
         'services': services,
+        'page_obj': services,
         'reviews': reviews,
         'reviews_count': reviews_count,
         'average_rating': average_rating,
+        'total_services_count': total_services_count,
+        'user_favorites_json': json.dumps(user_favorites),
     }
 
     return render(request, 'public_profile.html', context)
@@ -933,13 +1150,13 @@ def service_detail(request, service_id):
     Muestra la página de detalle de un servicio.
     """
     service = get_object_or_404(
-        Service.objects.select_related('provider', 'provider__profile')
+        Service.objects.select_related('provider')
         .prefetch_related('images', 'categories'),
         id=service_id
     )
 
     # Obtener reviews y estadísticas
-    reviews = Review.objects.filter(service=service).select_related('user', 'user__profile').order_by('-created_at')
+    reviews = Review.objects.filter(service=service).select_related('user').order_by('-created_at')
 
     stats = reviews.aggregate(
         average_rating=Avg('rating'),
@@ -959,6 +1176,15 @@ def service_detail(request, service_id):
     provider_avg_rating = provider_stats.get('total_avg_rating') or 0
     provider_reviews_count = provider_stats.get('total_reviews_count') or 0
 
+    # Verificar si el usuario ya tiene un contrato activo/pendiente para este servicio
+    existing_contract = None
+    if request.user.is_authenticated:
+        existing_contract = Contract.objects.filter(
+            user=request.user,
+            service=service,
+            status__in=['pending', 'accepted', 'active']
+        ).first()
+
     context = {
         'service': service,
         'reviews': reviews,
@@ -966,6 +1192,7 @@ def service_detail(request, service_id):
         'reviews_count': reviews_count,
         'provider_avg_rating': provider_avg_rating,
         'provider_reviews_count': provider_reviews_count,
+        'existing_contract': existing_contract,
     }
     return render(request, 'service_detail.html', context)
 
@@ -998,3 +1225,360 @@ def start_chat(request, service_id):
         new_convo.participants.add(user, provider)
         new_convo.save()
         return redirect('chat_detail', conversation_id=new_convo.id)
+
+
+def start_chat_order(request, contract_id):
+    """
+    Inicia un chat desde un pedido/contrato.
+    Identifica automáticamente quién es el interlocutor.
+    """
+    contract = get_object_or_404(Contract, id=contract_id)
+    user = request.user
+    
+    # Determinar el interlocutor
+    if user == contract.service.provider:
+        counterpart = contract.user
+    elif user == contract.user:
+        counterpart = contract.service.provider
+    else:
+        messages.error(request, "No tienes permiso para acceder a este chat.")
+        return redirect('my_orders')
+
+    # Buscar conversación existente
+    conversation = Conversation.objects.filter(participants=user).filter(participants=counterpart).first()
+
+    if conversation:
+        return redirect('chat_detail', conversation_id=conversation.id)
+    else:
+        new_convo = Conversation.objects.create()
+        new_convo.participants.add(user, counterpart)
+        new_convo.save()
+        return redirect('chat_detail', conversation_id=new_convo.id)
+
+
+@login_required
+def request_service(request, service_id):
+    """
+    Procesa la solicitud de contratación de un servicio.
+    Crea un contrato en estado 'pending'.
+    """
+    if request.method != 'POST':
+        return redirect('service_detail', service_id=service_id)
+
+    service = get_object_or_404(Service, id=service_id)
+    
+    # No puedes contratar tu propio servicio
+    if service.provider == request.user:
+        messages.error(request, "No puedes contratar tu propio servicio.")
+        return redirect('service_detail', service_id=service_id)
+
+    # Verificar duplicados
+    existing = Contract.objects.filter(
+        user=request.user,
+        service=service,
+        status__in=['pending', 'accepted', 'active']
+    ).exists()
+
+    if existing:
+        messages.warning(request, "Ya tienes una solicitud activa para este servicio.")
+        return redirect('service_detail', service_id=service_id)
+
+    start_date = request.POST.get('start_date')
+    start_time = request.POST.get('start_time')
+    description = request.POST.get('description')
+
+    if not start_date or not start_time:
+        messages.error(request, "Debes seleccionar fecha y hora.")
+        return redirect('service_detail', service_id=service_id)
+
+    try:
+        contract = Contract.objects.create(
+            user=request.user,
+            service=service,
+            start_date=start_date,
+            start_time=start_time,
+            description=description,
+            status='pending',
+            price=service.price  # Guardamos el precio actual
+        )
+        
+        # Crear notificación para el proveedor
+        create_notification(
+            user=service.provider,
+            title="Nueva solicitud de servicio",
+            message=f"{request.user.get_full_name() or request.user.username} ha solicitado contratar '{service.name}'.",
+            notification_type='contract_update'
+        )
+        
+        messages.success(request, "Solicitud enviada correctamente. El profesional revisará tu petición.")
+        return redirect('my_orders')
+        
+    except Exception as e:
+        messages.error(request, f"Error al procesar la solicitud: {str(e)}")
+        return redirect('service_detail', service_id=service_id)
+
+
+
+@login_required
+def cancel_contract(request, contract_id):
+    """
+    Permite a un cliente cancelar un contrato pendiente o aceptado.
+    Notifica al proveedor de la cancelación.
+    """
+    if request.method != 'POST':
+        return redirect('my_orders')
+    
+    contract = get_object_or_404(Contract, id=contract_id)
+    
+    # Validar permisos usando el método del modelo
+    if not contract.can_be_cancelled_by(request.user):
+        messages.error(request, 'No puedes cancelar este contrato. Solo se pueden cancelar contratos pendientes o aceptados.')
+        return redirect('my_orders')
+    
+    cancellation_reason = request.POST.get('cancellation_reason', '')
+    
+    try:
+        contract.status = 'cancelled'
+        contract.cancellation_reason = cancellation_reason
+        contract.save(update_fields=['status', 'cancellation_reason'])
+        
+        # Determinar a quién notificar
+        if request.user == contract.user:
+            # El cliente canceló, notificar al proveedor
+            notify_user = contract.service.provider
+            title = "Contrato cancelado por cliente"
+            message = f"El cliente {request.user.get_full_name() or request.user.username} ha cancelado su solicitud para '{contract.service.name}'. Motivo: {cancellation_reason}"
+        else:
+            # El proveedor canceló, notificar al cliente
+            notify_user = contract.user
+            title = "Contrato cancelado por profesional"
+            message = f"El profesional {request.user.get_full_name() or request.user.username} ha cancelado el servicio '{contract.service.name}'. Motivo: {cancellation_reason}"
+
+        create_notification(
+            user=notify_user,
+            title=title,
+            message=message,
+            notification_type='contract_cancelled',
+            contract=contract
+        )
+        
+        messages.success(request, 'Has cancelado el contrato correctamente. La otra parte será notificada.')
+        
+    except Exception as e:
+        messages.error(request, f'Error al cancelar el contrato: {str(e)}')
+    
+    return redirect('my_orders')
+
+
+@login_required
+def provider_agenda(request):
+    """
+    Vista de agenda para proveedores.
+    Muestra los servicios aceptados futuros ordenados cronológicamente.
+    """
+    if not request.user.is_provider:
+        messages.error(request, "Acceso no autorizado.")
+        return redirect('home')
+
+    today = timezone.now().date()
+    
+    # Obtener contratos aceptados desde hoy en adelante
+    upcoming_contracts = Contract.objects.filter(
+        service__provider=request.user,
+        status='accepted',
+        start_date__gte=today
+    ).select_related('user', 'service').order_by('start_date', 'start_time')
+
+    context = {
+        'upcoming_contracts': upcoming_contracts,
+    }
+    return render(request, 'provider_agenda.html', context)
+
+@require_POST
+@csrf_protect
+def save_signup_data_session(request):
+    """Guarda los datos del formulario en la sesión antes de ir a Google"""
+    try:
+        data = json.loads(request.body)
+        # Guardamos todo el diccionario en la sesión bajo una clave específica
+        request.session['signup_context'] = data
+        return JsonResponse({'status': 'ok'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+
+@login_required
+def contract_qr_code(request, contract_id, type):
+    contract = get_object_or_404(Contract, id=contract_id)
+    
+    # Security check: only the client or provider can view the codes
+    if request.user != contract.user and request.user != contract.service.provider:
+        return HttpResponse("Unauthorized", status=403)
+    if type == 'start':
+        data = contract.start_token
+    elif type == 'end':
+        data = contract.end_token
+    else:
+        return HttpResponse("Invalid type", status=400)
+    # Generate QR code
+    img = qrcode.make(data)
+    response = HttpResponse(content_type="image/png")
+    img.save(response, "PNG")
+    return response
+
+
+@login_required
+def verify_service_code(request, contract_id):
+    if request.method != 'POST':
+        return redirect('my_orders')
+        
+    contract = get_object_or_404(Contract, id=contract_id)
+    
+    # Only the client can verify codes (Provider generates them)
+    if request.user != contract.user:
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'message': "Solo el cliente puede verificar los códigos."})
+        messages.error(request, "Solo el cliente puede verificar los códigos.")
+        return redirect('my_orders')
+        
+    code = request.POST.get('code', '').strip().upper()
+    verification_type = request.POST.get('type') # 'start' or 'end'
+    
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
+
+    if verification_type == 'start':
+        if contract.start_code_alpha == code:
+            contract.actual_start = timezone.now()
+            contract.status = 'active'
+            contract.save()
+            # Create first session
+            ServiceSession.objects.create(contract=contract)
+            
+            if is_ajax:
+                return JsonResponse({'success': True, 'message': "¡Servicio iniciado correctamente!"})
+            messages.success(request, "¡Servicio iniciado correctamente!")
+        else:
+            if is_ajax:
+                return JsonResponse({'success': False, 'message': "Código de inicio incorrecto."})
+            messages.error(request, "Código de inicio incorrecto.")
+            
+    elif verification_type == 'end':
+        if contract.end_code_alpha == code:
+            contract.actual_end = timezone.now()
+            contract.status = 'finished'
+            contract.save()
+            # Close active session
+            active_session = contract.sessions.filter(end_time__isnull=True).last()
+            if active_session:
+                active_session.end_time = timezone.now()
+                active_session.save()
+            
+            if is_ajax:
+                return JsonResponse({
+                    'success': True, 
+                    'message': "¡Servicio finalizado correctamente!",
+                    'show_review_modal': True,
+                    'contract_id': contract.id
+                })
+            messages.success(request, "¡Servicio finalizado correctamente!")
+        else:
+            if is_ajax:
+                return JsonResponse({'success': False, 'message': "Código de finalización incorrecto."})
+            messages.error(request, "Código de finalización incorrecto.")
+            
+    return redirect('my_orders')
+
+
+@login_required
+def create_review(request, contract_id):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Método no permitido'})
+        
+    contract = get_object_or_404(Contract, id=contract_id)
+    
+    # Verificar que el usuario es el cliente
+    if request.user != contract.user:
+        return JsonResponse({'success': False, 'message': 'No tienes permiso para valorar este servicio.'})
+        
+    # Verificar que el contrato está finalizado
+    if contract.status != 'finished':
+        return JsonResponse({'success': False, 'message': 'El contrato debe estar finalizado para dejar una reseña.'})
+        
+    if Review.objects.filter(contract=contract).exists():
+        return JsonResponse({'success': False, 'message': 'Ya has valorado este servicio.'})
+    
+    try:
+        rating = int(request.POST.get('rating'))
+        comment = request.POST.get('comment', '').strip()
+        
+        if not (1 <= rating <= 5):
+            return JsonResponse({'success': False, 'message': 'La valoración debe estar entre 1 y 5.'})
+            
+        Review.objects.create(
+            user=request.user,
+            service=contract.service,
+            contract=contract,
+            rating=rating,
+            comment=comment
+        )
+        
+        return JsonResponse({'success': True, 'message': '¡Reseña guardada correctamente!'})
+    except ValueError:
+        return JsonResponse({'success': False, 'message': 'Valoración inválida.'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
+
+
+@login_required
+def toggle_pause_service(request, contract_id):
+    if request.method != 'POST':
+        return redirect('my_orders')
+        
+    contract = get_object_or_404(Contract, id=contract_id)
+    
+    if request.user != contract.user:
+        messages.error(request, "Solo el cliente puede pausar/reanudar.")
+        return redirect('my_orders')
+    if contract.status == 'active':
+        # PAUSE
+        contract.status = 'paused'
+        contract.save()
+        # Close session
+        active_session = contract.sessions.filter(end_time__isnull=True).last()
+        if active_session:
+            active_session.end_time = timezone.now()
+            active_session.save()
+        messages.info(request, "Servicio pausado.")
+        
+    elif contract.status == 'paused':
+        # RESUME
+        contract.status = 'active'
+        contract.save()
+        # Start new session
+        ServiceSession.objects.create(contract=contract)
+        messages.success(request, "Servicio reanudado.")
+        
+    return redirect('my_orders')
+
+
+@login_required
+@require_POST
+def promote_service(request):
+    service_id = request.POST.get('service_id')
+    duration_days = int(request.POST.get('duration', 1))
+    
+    service = get_object_or_404(Service, id=service_id, provider=request.user)
+    
+    # Calculate new promotion end date
+    # If already promoted, extend the time? For now, let's just set from now.
+    # Or if we want to stack: start = max(timezone.now(), service.promoted_until or timezone.now())
+    
+    start_time = timezone.now()
+    if service.promoted_until and service.promoted_until > start_time:
+        start_time = service.promoted_until
+        
+    service.promoted_until = start_time + timedelta(days=duration_days)
+    service.save()
+    
+    messages.success(request, f"Servicio promocionado por {duration_days} días.")
+    return redirect('my_services')

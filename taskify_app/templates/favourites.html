@@ -1,235 +1,203 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% load static %}
 {% load json_i18n %}
 
-{% block title %}{% t 'favourites.page_title' %}{% endblock %}
-
 {% block content %}
-    <main>
-        <div class="w-[1024px] mx-auto py-4" id="favorites-container">
-            <span class="text-2xl font-semibold text-gray-900 mb-6 block">{% t 'favourites.page_title' %}</span>
+<link href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
-            {% if favorite_services %}
-                <p class="text-sm lg:text-base text-slate-600 mb-8" id="favorites-count">
-                    {% if favorite_services.count == 1 %}
-                        {{ favorite_services.count }} {% t 'favourites.service_saved' %}
-                    {% else %}
-                        {{ favorite_services.count }} {% t 'favourites.services_saved' %}
+<div class="w-[1024px] mx-auto">
+    <div class="my-4">
+        <span class="text-2xl font-semibold text-gray-900 mb-6 block">{% t "favourites.page_title" %}</span>
+    </div>
+
+    {% if favorite_services %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for service in favorite_services %}
+        <article class="rounded-xl border border-gray-200 group shadow-sm bg-white overflow-hidden">
+
+            <a href="{% url 'service_detail' service.id %}"
+                class="block h-[220px] relative rounded-t-lg overflow-hidden">
+
+                {% if request.user.is_authenticated %}
+                <div role="button" tabindex="0" class="flex align-items favorite-btn absolute top-2 right-2 z-10 p-2 bg-white/80 rounded-full cursor-pointer backdrop-blur-sm transition-colors duration-200 hover:bg-white"
+                    data-service-id="{{ service.id }}" title="{% t 'favourites.remove_title' %}"
+                    style="outline: none !important; box-shadow: none !important;">
+                    <i class="fa-solid text-red-500 hover:text-gray-700 fa-heart text-xl" aria-hidden="true"></i>
+                </div>
+                {% endif %}
+
+                <div class="swiper service-swiper-{{ service.id }} h-full">
+                    <div class="swiper-wrapper">
+                        {% for img in service.images.all %}
+                        <div class="swiper-slide h-full bg-cover bg-center"
+                            style="background-image: url('{{ img.image.url }}');"></div>
+                        {% empty %}
+                        <div
+                            class="swiper-slide h-full bg-cover bg-center flex items-center justify-center bg-gray-100">
+                            <span class="text-gray-500">Sin imagen</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% if service.images.count > 1 %}
+                    <div class="swiper-button-prev"></div>
+                    <div class="swiper-button-next"></div>
                     {% endif %}
-                </p>
+                </div>
+            </a>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="services-grid">
-                    {% for service in favorite_services %}
-                        <div class="rounded-xl border border-gray-200 group shadow-sm bg-white overflow-hidden service-card" data-service-id="{{ service.id }}">
-                            <div class="h-[220px] relative rounded-t-lg overflow-hidden cursor-pointer service-link" data-url="{% url 'service_detail' service.id %}">
-                                <div
-                                    class="flex align-items favorite-btn absolute top-2 right-2 z-10 p-2 bg-white/80 rounded-full cursor-pointer backdrop-blur-sm
-                                           transition-colors duration-200 hover:bg-white"
-                                    data-service-id="{{ service.id }}"
-                                    title="{% t 'favourites.remove_title' %}">
-                                    <i class="fa-solid text-red-500 hover:text-red-600 fa-heart text-xl"
-                                       aria-hidden="true"></i>
-                                </div>
+            <div class="p-3 flex flex-col justify-between h-[170px]">
+                <div>
+                    <a href="{% url 'service_detail' service.id %}"
+                        class="!ml-[1px] text-lg font-medium text-gray-800 line-clamp-1 group-hover:text-blue-600 transition-colors block no-underline hover:no-underline overflow-hidden text-ellipsis whitespace-nowrap">
+                        {{ service.name }}</a>
+                </div>
 
-                                <div class="swiper service-swiper-{{ service.id }} h-full">
-                                    <div class="swiper-wrapper h-full">
-                                        {% if service.images.all %}
-                                            {% with service.images.first as image %}
-                                                <img src="{{ image.image.url }}" alt="{{ service.name }}"
-                                                     class="w-full h-full object-cover">
-                                            {% endwith %}
-                                        {% else %}
-                                            <div class="w-full h-full flex items-center justify-center bg-gray-400">
-                                                <span class="text-gray-600">{% t 'favourites.no_image' %}</span>
-                                            </div>
-                                        {% endif %}
-                                    </div>
+                <div>
+                    <div class="flex flex-row flex-wrap max-h-[26px] overflow-y-hidden mb-2">
+                        {% for category in service.categories.all|slice:":2" %}
+                        <span class="text-xs px-2 py-1 mr-1 mb-1 border border-gray-300 bg-gray-50 rounded-full">
+                            {{ category.name }}
+                        </span>
+                        {% endfor %}
+                    </div>
 
-                                    {% if service.images.count > 1 %}
-                                        <div class="swiper-button-prev opacity-0 group-hover:opacity-100 transition-opacity duration-300 !left-2 !text-white" style="filter: drop-shadow(0 0 3px rgba(0,0,0,0.7)); --swiper-navigation-size: 24px;"></div>
-                                        <div class="swiper-button-next opacity-0 group-hover:opacity-100 transition-opacity duration-300 !right-2 !text-white" style="filter: drop-shadow(0 0 3px rgba(0,0,0,0.7)); --swiper-navigation-size: 24px;"></div>
-                                    {% endif %}
-                                </div>
-
+                    <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 mb-1">
+                                <img class="w-6 h-6 rounded-full object-cover" src="{{ service.provider.avatar_url }}"
+                                    alt="{{ service.provider.username }}">
+                                <span class="text-sm font-medium text-gray-700 truncate">
+                                    {{ service.provider.first_name }}</span>
                             </div>
-                            <div class="p-3 grid grid-rows-[auto_1fr_auto] h-[calc(100%-220px)]">
-                                <div>
-                                    <span class="block text-lg font-semibold text-gray-900 mb-1 line-clamp-1 group-hover:text-blue-600 transition-colors cursor-pointer service-link"
-                                          data-url="{% url 'service_detail' service.id %}">
-                                        {{ service.name }}
-                                    </span>
-
-                                    <span class="text-xs px-2 py-1 mr-1 mb-1 border border-gray-300 bg-gray-50 rounded-full">
-                                        {% if service.categories.all %}
-                                            {{ service.categories.first.name }}
-                                        {% else %}
-                                            {% t 'favourites.category_none' %}
-                                        {% endif %}
-                                    </span>
-                                </div>
-                                <div></div>
-                                <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex items-center gap-2 mb-1">
-                                            {% if service.provider.user_profile.avatar %}
-                                                <img class="w-6 h-6 rounded-full object-cover"
-                                                     src="{{ service.provider.user_profile.avatar.url }}"
-                                                     alt="{{ service.provider.username }}">
-                                            {% endif %}
-                                            <span class="text-sm font-medium text-gray-700 truncate">{{ service.provider.first_name }}</span>
-                                        </div>
-                                        <div class="flex items-center gap-1 text-sm text-gray-600">
-                                            <svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 47.94 47.94" style="enable-background:new 0 0 47.94 47.94;" xml:space="preserve" class="!h-[15px] !w-[15px]">
-                                                <path style="fill:#ED8A19;" d="M26.285,2.486l5.407,10.956c0.376,0.762,1.103,1.29,1.944,1.412l12.091,1.757
-                                                  c2.118,0.308,2.963,2.91,1.431,4.403l-8.749,8.528c-0.608,0.593-0.886,1.448-0.742,2.285l2.065,12.042
-                                                  c0.362,2.109-1.852,3.717-3.746,2.722l-10.814-5.685c-0.752-0.395-1.651-0.395-2.403,0l-10.814,5.685
-                                                  c-1.894,0.996-4.108-0.613-3.746-2.722l2.065-12.042c0.144-0.837-0.134-1.692-0.742-2.285l-8.749-8.528
-                                                  c-1.532-1.494-0.687-4.096,1.431-4.403l12.091-1.757c0.841-0.122,1.568-0.65,1.944-1.412l5.407-10.956
-                                                  C22.602,0.567,25.338,0.567,26.285,2.486z"></path>
-                                            </svg>
-                                            <span class="font-semibold text-gray-800">{{ service.average_rating|default:0|floatformat:1 }}</span>
-                                            <span>({{ service.reviews.count|default:0 }})</span>
-                                        </div>
-                                    </div>
-                                    <div class="flex-shrink-0">
-                                        <span class="text-xl font-bold text-gray-800">€{{ service.price|floatformat:0 }}</span>
-                                    </div>
-                                </div>
+                            <div class="flex items-center gap-1 text-sm text-gray-600">
+                                <svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg"
+                                    xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 47.94 47.94"
+                                    style="enable-background:new 0 0 47.94 47.94;" xml:space="preserve"
+                                    class="!h-[15px] !w-[15px]">
+                                    <path style="fill:#ED8A19;" d="M26.285,2.486l5.407,10.956c0.376,0.762,1.103,1.29,1.944,1.412l12.091,1.757
+                                              c2.118,0.308,2.963,2.91,1.431,4.403l-8.749,8.528c-0.608,0.593-0.886,1.448-0.742,2.285l2.065,12.042
+                                              c0.362,2.109-1.852,3.717-3.746,2.722l-10.814-5.685c-0.752-0.395-1.651-0.395-2.403,0l-10.814,5.685
+                                              c-1.894,0.996-4.108-0.613-3.746-2.722l2.065-12.042c0.144-0.837-0.134-1.692-0.742-2.285l-8.749-8.528
+                                              c-1.532-1.494-0.687-4.096,1.431-4.403l12.091-1.757c0.841-0.122,1.568-0.65,1.944-1.412l5.407-10.956
+                                              C22.602,0.567,25.338,0.567,26.285,2.486z"></path>
+                                </svg>
+                                <span class="font-semibold text-gray-800">
+                                    {{ service.average_rating|default:0|floatformat:1 }}</span>
+                                <span>({{ service.review_count|default:0 }})</span>
                             </div>
                         </div>
-                    {% endfor %}
+                        <div class="flex-shrink-0">
+                            <span class="text-xl font-bold text-gray-800">€{{ service.price|floatformat:0 }}</span>
+                        </div>
+                    </div>
                 </div>
-            {% else %}
-                <div class="text-center py-16 px-8 rounded-lg flex flex-col items-center justify-center min-h-96" id="empty-state">
-                    <div class="text-6xl mb-4 opacity-40"><i class="fa fa-heart-crack" aria-hidden="true"></i></div>
-                    <p class="text-lg font-medium text-slate-600 mb-2">{% t 'favourites.no_favorites_title' %}</p>
-                    <p class="text-sm text-slate-400 mb-8">{% t 'favourites.no_favorites_desc' %}</p>
-                    <form action="{% url 'home' %}" method="get" style="display: inline;">
-                        <button type="submit"
-                                class="flex flex-row gap-x-[5px] text-lg px-3 !py-1.5 items-center bg-[#1c1b2b] text-white !rounded-xl hover:shadow-[0_2px_8px_rgba(0,0,0,0.3)] transition-shadow">
-                            {% t 'favourites.explore_services' %}
-                        </button>
-                    </form>
-                </div>
-            {% endif %}
-        </div>
-    </main>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% include 'includes/pagination.html' %}
+    {% else %}
+    <div class="text-center py-12 text-gray-500">
+        <p class="text-lg mb-4">{% t "favourites.no_favorites_title" %}</p>
+        <p class="mb-6">{% t "favourites.no_favorites_desc" %}</p>
+        <a href="{% url 'search' %}"
+            class="inline-block px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors no-underline">
+            {% t "favourites.explore_services" %}
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+{% include "includes/confirmation_modal.html" with modal_id="deleteModal" title="favourites.remove_title" description="favourites.remove_confirmation_text" confirm_text="favourites.confirm_remove" cancel_text="favourites.cancel" confirm_id="confirmDelete" cancel_id="cancelDelete" %}
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-
-        const t_service_saved = '{% t "favourites.service_saved" %}';
-        const t_services_saved = '{% t "favourites.services_saved" %}';
-        const t_page_title = '{% t "favourites.page_title" %}';
-        const t_no_fav_title = '{% t "favourites.no_favorites_title" %}';
-        const t_no_fav_desc = '{% t "favourites.no_favorites_desc" %}';
-        const t_explore = '{% t "favourites.explore_services" %}';
-        const t_empty_icon_alt = '{% t "favourites.empty_heart_icon_alt" %}';
-
-        // --- Función para obtener el CSRF token ---
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
-
-        // --- Manejar clicks en los enlaces de servicio ---
-        document.querySelectorAll('.service-link').forEach(link => {
-            link.addEventListener('click', function(e) {
-                const url = this.dataset.url;
-                if (url) {
-                    window.location.href = url;
-                }
+        document.querySelectorAll('.swiper').forEach((el) => {
+            new Swiper(el, {
+                navigation: {
+                    nextEl: el.querySelector('.swiper-button-next'),
+                    prevEl: el.querySelector('.swiper-button-prev'),
+                },
+                loop: true,
             });
         });
 
-        // --- Lógica de Favoritos ---
         const favoriteButtons = document.querySelectorAll('.favorite-btn');
+        const deleteModal = document.getElementById('deleteModal');
+        const confirmDeleteBtn = document.getElementById('confirmDelete');
+        const cancelDeleteBtn = document.getElementById('cancelDelete');
+        let serviceIdToDelete = null;
+        let buttonToDelete = null;
 
         favoriteButtons.forEach(buttonDiv => {
-            buttonDiv.addEventListener('click', async function(e) {
+            buttonDiv.addEventListener('click', function (e) {
                 e.preventDefault();
-                e.stopPropagation(); // CRÍTICO: Evita propagación al service-link
-
-                const serviceId = this.dataset.serviceId;
-                const serviceCard = this.closest('.service-card');
-
-                console.log(`Eliminando favorito: ${serviceId}`);
-
-                try {
-                    const response = await fetch(`/service/${serviceId}/toggle-favorite/`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': getCookie('csrftoken')
-                        }
-                    });
-
-                    if (response.ok) {
-                        const data = await response.json();
-                        console.log('Respuesta del servidor:', data);
-
-                        if (data.action === 'removed') {
-                            // Animación de salida suave
-                            serviceCard.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-                            serviceCard.style.opacity = '0';
-                            serviceCard.style.transform = 'scale(0.95)';
-
-                            setTimeout(() => {
-                                serviceCard.remove();
-
-                                // Verificar si quedan servicios
-                                const remainingServices = document.querySelectorAll('.service-card');
-                                const count = remainingServices.length;
-
-                                if (count === 0) {
-                                    // Mostrar mensaje de vacío
-                                    const container = document.getElementById('favorites-container');
-                                    container.innerHTML = `
-                                        <span class="text-2xl font-semibold text-gray-900 mb-6 block">${t_page_title}</span>
-                                        <div class="text-center py-16 px-8 rounded-lg flex flex-col items-center justify-center min-h-96">
-                                            <div class="text-6xl mb-4 opacity-40"><i class="fa fa-heart-crack" aria-hidden="true"></i></div>
-                                            <p class="text-lg font-medium text-slate-600 mb-2">${t_no_fav_title}</p>
-                                            <p class="text-sm text-slate-400 mb-8">${t_no_fav_desc}</p>
-                                            <form action="{% url 'home' %}" method="get" style="display: inline;">
-                                                <button type="submit"
-                                                        class="flex flex-row gap-x-[5px] text-lg px-3 !py-1.5 items-center bg-[#1c1b2b] text-white !rounded-xl hover:shadow-[0_2px_8px_rgba(0,0,0,0.3)] transition-shadow">
-                                                    ${t_explore}
-                                                </button>
-                                            </form>
-                                        </div>
-                                    `;
-                                } else {
-                                    // Actualizar contador
-                                    const countElement = document.getElementById('favorites-count');
-                                    if (countElement) {
-                                        countElement.textContent = count === 1
-                                            ? `${count} ${t_service_saved}`
-                                            : `${count} ${t_services_saved}`;
-                                    }
-                                }
-                            }, 300);
-                        }
-                    } else {
-                        console.error('Error en la respuesta del servidor:', response.status);
-                        alert('Error al quitar el favorito. Por favor, intenta de nuevo.');
-                    }
-                } catch (error) {
-                    console.error('Error al gestionar favorito:', error);
-                    alert('Error de conexión. Por favor, intenta de nuevo.');
-                }
+                e.stopPropagation();
+                serviceIdToDelete = this.dataset.serviceId;
+                buttonToDelete = this;
+                deleteModal.classList.remove('hidden');
             });
         });
 
+        const hideModal = () => {
+            deleteModal.classList.add('hidden');
+            serviceIdToDelete = null;
+            buttonToDelete = null;
+        };
+
+        cancelDeleteBtn.addEventListener('click', hideModal);
+
+        confirmDeleteBtn.addEventListener('click', async function () {
+            if (!serviceIdToDelete || !buttonToDelete) return;
+
+            try {
+                const response = await fetch(`/service/${serviceIdToDelete}/toggle-favorite/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.action === 'removed') {
+                        const article = buttonToDelete.closest('article');
+                        article.style.transition = 'opacity 0.3s ease-out';
+                        article.style.opacity = '0';
+                        setTimeout(() => {
+                            article.remove();
+                            const remainingCards = document.querySelectorAll('article').length;
+                            if (remainingCards === 0) {
+                                location.reload();
+                            }
+                        }, 300);
+                    }
+                } else {
+                    console.error('Error:', response.status);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+
+            hideModal();
+        });
     });
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
 </script>
 {% endblock %}

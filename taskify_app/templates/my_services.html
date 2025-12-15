@@ -3,499 +3,736 @@
 {% load json_i18n %}
 
 {% block content %}
-    <link href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" rel="stylesheet"/>
-    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
-    <div class="w-[1024px] mx-auto py-4">
-        <div class="flex flex-row justify-between mb-6">
-            <span class="text-2xl font-semibold text-gray-900">{% t "services.page_title" %}</span>
+<div class="w-[1024px] mx-auto py-4">
+    <div class="flex flex-row justify-between mb-6">
+        <span class="text-2xl font-semibold text-gray-900">{% t "services.page_title" %}</span>
 
-            <button class="flex flex-row gap-x-[5px] text-lg !px-2.5 !py-1.5 items-center bg-[#1c1b2b] text-white !rounded-xl hover:shadow-[0_2px_8px_rgba(0,0,0,0.3)] transition-shadow"
-                    id="btnCreateService">
-                <i class="fa fa-plus !text-sm"></i>
-                {% t "services.create_service" %}
+        <button
+            class="flex flex-row gap-x-2 text-base px-4 py-2.5 items-center bg-[#1c1b2b] text-white !rounded-xl hover:bg-[#2d2c3f] hover:shadow-lg transition-all duration-200 font-medium"
+            id="btnCreateService">
+            <i class="fa fa-plus text-sm"></i>
+            {% t "services.create_service" %}
+        </button>
+    </div>
+
+    {% if services %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for service in services %}
+        <div class="rounded-xl border border-gray-200 group shadow-sm bg-white overflow-hidden">
+            <!-- Service Card Content -->
+            <div class="h-[220px] relative rounded-t-lg overflow-hidden cursor-pointer service-link"
+                data-url="{% url 'service_detail' service.id %}">
+
+                <!-- Promoted Badge -->
+                {% if service.is_promoted %}
+                <div
+                    class="absolute top-2 left-2 z-10 bg-yellow-400 text-black text-xs font-bold px-2 py-1 rounded-full shadow-md flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3 h-3">
+                        <path fill-rule="evenodd"
+                            d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z"
+                            clip-rule="evenodd" />
+                    </svg>
+                    <span>{% t "services.promoted_badge" %}</span>
+                    <span class="promotion-timer ml-1 font-mono"
+                        data-end-time="{{ service.promoted_until|date:'c' }}"></span>
+                </div>
+                {% endif %}
+
+                <div class="swiper service-swiper-{{ service.id }} h-full">
+                    <div class="swiper-wrapper">
+                        {% if service.images.all %}
+                        {% for img in service.images.all %}
+                        <div class="swiper-slide">
+                            <img src="{{ img.image.url }}" alt="{{ service.name }}" class="w-full h-full object-cover">
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="w-full h-full flex items-center justify-center bg-gray-400">
+                            <span class="text-gray-600">{% t "services.no_image" %}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    {% if service.images.count > 1 %}
+                    <div class="swiper-button-prev opacity-0 group-hover:opacity-100 transition-opacity duration-300 !left-2 !text-white"
+                        style="filter: drop-shadow(0 0 3px rgba(0,0,0,0.7)); --swiper-navigation-size: 24px;"></div>
+                    <div class="swiper-button-next opacity-0 group-hover:opacity-100 transition-opacity duration-300 !right-2 !text-white"
+                        style="filter: drop-shadow(0 0 3px rgba(0,0,0,0.7)); --swiper-navigation-size: 24px;"></div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="p-3 grid grid-rows-[auto_1fr_auto] h-[calc(100%-220px)]">
+                <a class="!ml-[1px] mb-2 text-lg font-medium text-gray-800 line-clamp-1 group-hover:text-blue-600 transition-colors block no-underline hover:no-underline overflow-hidden text-ellipsis whitespace-nowrap"
+                    href="{% url 'service_detail' service.id %}">
+                    {{ service.name }}
+                </a>
+                <div class="flex flex-row justify-between">
+                    <div class="flex flex-wrap gap-1 mb-3">
+                        {% for category in service.categories.all %}
+                        <span class="text-xs px-2 py-1 border border-gray-300 bg-gray-50 rounded-full">
+                            {% t category.name %}
+                        </span>
+                        {% empty %}
+                        <span class="text-xs px-2 py-1 border border-gray-300 bg-gray-50 rounded-full">
+                            {% t "services.no_category" %}
+                        </span>
+                        {% endfor %}
+                    </div>
+                    <div class="flex-shrink-0">
+                        <span class="text-xl font-bold text-gray-800 mr-1">€{{ service.price|floatformat:0 }}</span>
+                    </div>
+                </div>
+                <div></div>
+
+                <div class="grid grid-cols-3 gap-2">
+                    <button
+                        class="promote-btn flex flex-row justify-center items-center gap-1.5 px-3 py-2 border border-yellow-400 bg-yellow-50 hover:bg-yellow-100 text-yellow-700 !rounded-xl transition-all duration-200 font-medium shadow-sm"
+                        data-id="{{ service.id }}" data-name="{{ service.name|escapejs }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
+                            <path fill-rule="evenodd"
+                                d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        <span class="hidden xl:inline text-sm">{% t "services.promote_button" %}</span>
+                    </button>
+
+                    <button
+                        class="edit-btn flex flex-row justify-center items-center gap-1.5 px-3 py-2 border border-gray-300 bg-white hover:bg-gray-50 hover:border-gray-400 !rounded-xl transition-all duration-200 font-medium shadow-sm"
+                        data-id="{{ service.id }}" data-name="{{ service.name|escapejs }}"
+                        data-description="{{ service.description|escapejs }}"
+                        data-price="{{ service.price|stringformat:'.2f' }}"
+                        data-categories="{% for cat in service.categories.all %}{{ cat.id }}{% if not forloop.last %},{% endif %}{% endfor %}"
+                        data-images-json='[{% for img in service.images.all %}{"id": {{ img.id }}, "url": "{{ img.image.url }}"}{% if not forloop.last %},{% endif %}{% endfor %}]'>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                            stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                        </svg>
+                        <span class="hidden xl:inline text-sm">{% t "services.edit" %}</span>
+                    </button>
+
+                    <form action="{% url 'delete_service' service.id %}" method="POST" class="delete-form w-full">
+                        {% csrf_token %}
+                        <button
+                            class="w-full flex flex-row justify-center items-center gap-1.5 px-3 py-2 bg-red-600 text-white hover:bg-red-700 !rounded-xl transition-all duration-200 font-medium shadow-sm hover:shadow-md"
+                            type="submit">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                stroke="currentColor" class="xl:hidden w-4 h-4">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                            </svg>
+                            <span class="hidden xl:inline text-sm">{% t "services.delete" %}</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% include 'includes/pagination.html' %}
+    {% else %}
+    <div class="text-center py-12 text-gray-500">
+        <p>{% t "services.no_services" %}</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal for Create/Edit Service -->
+<div id="serviceModal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+    <div id="modalOverlay" class="absolute inset-0 transition-opacity" style="background-color: rgba(0, 0, 0, 0.5);">
+    </div>
+
+    <div id="modalPanel" class="relative w-full max-w-xl transform rounded-2xl bg-white shadow-xl transition-all">
+        <form id="serviceForm" method="POST" action="{% url 'my_services' %}" enctype="multipart/form-data"
+            class="flex flex-col">
+            {% csrf_token %}
+            <input type="hidden" name="service_id" id="serviceIdField">
+            <div id="imagesToDeleteContainer"></div>
+
+            <div class="flex items-center justify-between p-3 pr-2 md:p-5 border-b rounded-t">
+                <span id="modalTitle" class="text-xl">{% t "services.modal_edit_title" %}</span>
+                <button type="button" id="modalClose"
+                    class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center">
+                    <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+                        viewBox="0 0 14 14">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+                    </svg>
+                    <span class="sr-only">{% t "services.close_modal_sr" %}</span>
+                </button>
+            </div>
+
+            <div class="p-3 md:p-5 space-y-4 overflow-y-auto !max-h-[500px]">
+                <div>
+                    <label for="serviceName" class="block mb-2 text-sm font-medium text-gray-900">{% t "services.label_title" %}</label>
+                    <input id="serviceName" name="name" type="text" required
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full !py-1.5 !p-2.5" />
+                </div>
+
+                <div>
+                    <label for="serviceDescription" class="block mt-2 mb-2 text-sm font-medium text-gray-900">{% t "services.label_description" %}</label>
+                    <textarea id="serviceDescription" name="description" rows="3"
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full !py-1.5 !p-2.5"></textarea>
+                </div>
+
+                <div>
+                    <label for="servicePrice" class="block mt-2 mb-2 text-sm font-medium text-gray-900">{% t "services.label_price" %}</label>
+                    <input id="servicePrice" name="price" type="number" step="0.01" min="0" required
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full !py-1.5 !p-2.5" />
+                </div>
+
+                <div>
+                    <label for="serviceCategory" class="block mt-2 mb-2 text-sm font-medium text-gray-900">{% t "services.label_category" %}</label>
+                    <select id="serviceCategory" name="categories" required
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full !py-2 !p-2.5">
+                        <option value="">{% t "services.select_category" %}</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}">{% t category.name %}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block mb-2 text-sm font-medium text-gray-900">{% t "services.images_label" %}</label>
+
+                    <div id="currentImagesWrapper" class="mt-2 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
+                    </div>
+
+                    <label id="dropzone" for="serviceImageUpload"
+                        class="flex flex-col items-center justify-center w-full h-32 mt-4 px-6 py-10 border-2 border-gray-300 border-dashed rounded-md cursor-pointer bg-gray-50 hover:bg-gray-100">
+                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                            <svg class="w-8 h-8 mb-4 text-gray-500" aria-hidden="true"
+                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.017 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L7 9m3-2 3 2" />
+                            </svg>
+                            <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">{% t "services.dropzone_click" %}</span> {% t "services.dropzone_or" %}</p>
+                            <p class="text-xs text-gray-500">{% t "services.dropzone_formats" %}</p>
+                        </div>
+                    </label>
+                    <input type="file" id="serviceImageUpload" name="cover_images" accept="image/png,image/jpeg"
+                        multiple class="hidden" />
+
+                    <p id="imageError" class="hidden text-sm text-red-600 mt-1">{% t "services.image_error" %}</p>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 p-3 md:p-5 border-t border-gray-200 rounded-b">
+                <button type="button" id="modalCancel"
+                    class="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 !rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm">
+                    {% t "services.cancel" %}
+                </button>
+                <button type="submit" id="modalSave"
+                    class="px-4 py-2.5 text-sm font-medium text-white bg-[#1c1b2b] !rounded-xl hover:bg-[#2d2c3f] hover:shadow-md transition-all duration-200 shadow-sm">
+                    {% t "services.save_changes" %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Promote Service Modal -->
+<div id="promoteServiceModal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+    <div id="promoteModalOverlay" class="absolute inset-0 transition-opacity"
+        style="background-color: rgba(0, 0, 0, 0.5);"></div>
+
+    <div class="relative w-full max-w-md transform rounded-2xl bg-white shadow-xl transition-all p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-semibold text-gray-900">{% t "services.promote_modal_title" %}</h3>
+            <button type="button" id="promoteModalClose" class="text-gray-400 hover:text-gray-900">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                </svg>
             </button>
         </div>
 
-        {% if services %}
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {% for service in services %}
-                    <div class="rounded-xl border border-gray-200 group shadow-sm bg-white overflow-hidden">
-                        <div class="h-[220px] relative rounded-t-lg overflow-hidden cursor-pointer service-link" data-url="{% url 'service_detail' service.id %}">
-                            <div class="swiper service-swiper-{{ service.id }} h-full">
-                                <div class="swiper-wrapper">
-                                    {% if service.images.all %}
-                                        {% for img in service.images.all %}
-                                            <div class="swiper-slide">
-                                                <img src="{{ img.image.url }}" alt="{{ service.name }}"
-                                                     class="w-full h-full object-cover">
-                                            </div>
-                                        {% endfor %}
-                                    {% else %}
-                                        <div class="w-full h-full flex items-center justify-center bg-gray-400">
-                                            <span class="text-gray-600">Sin imagen</span>
-                                        </div>
-                                    {% endif %}
-                                </div>
+        {% t "services.promote_modal_desc" as promote_desc %}
+        <p class="text-gray-600 mb-6">{{ promote_desc|safe }}</p>
 
-                                {% if service.images.count > 1 %}
-                                    <div class="swiper-button-prev opacity-0 group-hover:opacity-100 transition-opacity duration-300 !left-2 !text-white" style="filter: drop-shadow(0 0 3px rgba(0,0,0,0.7)); --swiper-navigation-size: 24px;"></div>
-                                    <div class="swiper-button-next opacity-0 group-hover:opacity-100 transition-opacity duration-300 !right-2 !text-white" style="filter: drop-shadow(0 0 3px rgba(0,0,0,0.7)); --swiper-navigation-size: 24px;"></div>
-                                {% endif %}
-                            </div>
-                        </div>
+        <form action="{% url 'promote_service' %}" method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="service_id" id="promoteServiceId">
 
-                        <div class="p-3 grid grid-rows-[auto_1fr_auto] h-[calc(100%-220px)]">
-                            <div>
-                                <span class="block text-lg font-semibold text-gray-900 mb-2 line-clamp-1 group-hover:text-blue-600 transition-colors cursor-pointer service-link"
-                                      data-url="{% url 'service_detail' service.id %}">
-                                    {{ service.name }}
-                                </span>
-
-                                <div class="flex flex-row justify-between">
-                                    <div class="flex flex-wrap gap-1 mb-3">
-                                        {% for category in service.categories.all %}
-                                            <span class="text-xs px-2 py-1 border border-gray-300 bg-gray-50 rounded-full">
-                                            {{ category.name }}
-                                            </span>
-                                        {% empty %}
-                                            <span class="text-xs px-2 py-1 border border-gray-300 bg-gray-50 rounded-full">
-                                            Sin categoría
-                                            </span>
-                                        {% endfor %}
-                                    </div>
-                                    <div class="flex-shrink-0">
-                                        <span class="text-xl font-bold text-gray-800 mr-1">€{{ service.price|floatformat:0 }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div></div>
-
-                            <div class="grid grid-cols-2 gap-2">
-                                <button
-                                    class="edit-btn flex flex-row justify-center items-center gap-1.5 p-2 border border-gray-300 hover:bg-gray-100 !rounded-xl transition-colors duration-200"
-                                    data-id="{{ service.id }}"
-                                    data-name="{{ service.name|escapejs }}"
-                                    data-description="{{ service.description|escapejs }}"
-                                    data-price="{{ service.price|stringformat:'.2f' }}"
-                                    data-categories="{% for cat in service.categories.all %}{{ cat.id }}{% if not forloop.last %},{% endif %}{% endfor %}"
-                                    data-images-json='[{% for img in service.images.all %}{"id": {{ img.id }}, "url": "{{ img.image.url }}"}{% if not forloop.last %},{% endif %}{% endfor %}]'>
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                         stroke-width="1.5" stroke="currentColor" class="!size-4">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                              d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"/>
-                                    </svg>
-
-                                    <span class="text-sm">{% t "services.edit" %}</span>
-                                </button>
-
-                                <form action="{% url 'delete_service' service.id %}" method="POST" class="delete-form">
-                                    {% csrf_token %}
-                                    <button class="w-full flex flex-row justify-center items-center gap-1.5 p-2 border border-red-500 bg-red-500 text-white hover:bg-red-600 hover:border-red-600 !rounded-xl transition-colors duration-200"
-                                            type="submit">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                             stroke-width="1.5" stroke="currentColor" class="!size-4">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                  d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/>
-                                        </svg>
-                                        <span class="text-sm">{% t "services.delete" %}</span>
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
+            <div class="grid grid-cols-3 gap-3 mb-6">
+                <label
+                    class="flex flex-col items-center justify-center p-3 border rounded-xl cursor-pointer hover:bg-gray-50 transition-colors has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 h-full">
+                    <div class="flex items-center gap-2 mb-2">
+                        <input type="radio" name="duration" value="1" class="w-4 h-4 text-blue-600 focus:ring-blue-500">
+                        <span class="font-medium text-gray-900 text-sm">{% t "services.duration_24h" %}</span>
                     </div>
-                {% endfor %}
+                    <span class="font-bold text-gray-900">€5.00</span>
+                </label>
+
+                <label
+                    class="flex flex-col items-center justify-center p-3 border rounded-xl cursor-pointer hover:bg-gray-50 transition-colors has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 relative overflow-hidden h-full">
+                    <div
+                        class="absolute top-0 inset-x-0 bg-blue-600 text-white text-[9px] py-0.5 text-center font-bold uppercase tracking-wider">
+                        {% t "services.best_value" %}</div>
+                    <div class="flex items-center gap-2 mb-2 mt-2">
+                        <input type="radio" name="duration" value="3" checked
+                            class="w-4 h-4 text-blue-600 focus:ring-blue-500">
+                        <span class="font-medium text-gray-900 text-sm">{% t "services.duration_3d" %}</span>
+                    </div>
+                    <span class="font-bold text-gray-900">€12.00</span>
+                </label>
+
+                <label
+                    class="flex flex-col items-center justify-center p-3 border rounded-xl cursor-pointer hover:bg-gray-50 transition-colors has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 h-full">
+                    <div class="flex items-center gap-2 mb-2">
+                        <input type="radio" name="duration" value="7" class="w-4 h-4 text-blue-600 focus:ring-blue-500">
+                        <span class="font-medium text-gray-900 text-sm">{% t "services.duration_7d" %}</span>
+                    </div>
+                    <span class="font-bold text-gray-900">€25.00</span>
+                </label>
             </div>
-        {% else %}
-            <div class="text-center py-16 px-8 rounded-lg flex flex-col items-center justify-center min-h-96">
-                <div class="text-6xl mb-4 opacity-40"><i class="fa fa-briefcase"></i></div>
-                <p class="text-lg font-medium text-slate-600 mb-2">{% t "services.no_services_title" %}</p>
-                <p class="text-sm text-slate-400 mb-8">{% t "services.no_services_desc" %}</p>
-            </div>
-        {% endif %}
+
+            <button type="submit"
+                class="w-full py-3 px-4 bg-[#1c1b2b] hover:bg-[#2d2c3f] text-white font-medium !rounded-xl transition-colors shadow-lg flex items-center justify-center gap-2">
+                <span>{% t "services.pay_promote_button" %}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
+                    <path fill-rule="evenodd"
+                        d="M14.615 1.595a.75.75 0 0 1 .359.852L12.982 9.75h7.268a.75.75 0 0 1 .548 1.262l-10.5 11.25a.75.75 0 0 1-1.272-.71l1.992-7.302H3.75a.75.75 0 0 1-.548-1.262l10.5-11.25a.75.75 0 0 1 .914-.143Z"
+                        clip-rule="evenodd" />
+                </svg>
+            </button>
+        </form>
     </div>
+</div>
 
-    <div id="serviceModal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
-        <div id="modalOverlay" class="absolute inset-0 transition-opacity"
-             style="background-color: rgba(0, 0, 0, 0.5);"></div>
+<!-- Delete Service Confirmation Modal -->
+{% include "includes/confirmation_modal.html" with modal_id="deleteServiceModal" title="services.delete_title" description="services.confirm_delete" confirm_text="services.delete" cancel_text="services.cancel" confirm_id="confirmDeleteServiceBtn" cancel_id="cancelDeleteServiceBtn" %}
 
-        <div id="modalPanel" class="relative w-full max-w-xl transform rounded-2xl bg-white shadow-xl transition-all">
-            <form id="serviceForm" method="POST" action="{% url 'my_services' %}" enctype="multipart/form-data"
-                  class="flex flex-col">
-                {% csrf_token %}
-                <input type="hidden" name="service_id" id="serviceIdField">
-                <div id="imagesToDeleteContainer"></div>
+<!-- Discard Changes Confirmation Modal -->
+{% include "includes/confirmation_modal.html" with modal_id="discardChangesModal" title="services.discard_title" description="services.discard_confirm" confirm_text="services.discard" cancel_text="services.cancel" confirm_id="confirmDiscardBtn" cancel_id="cancelDiscardBtn" %}
 
-                <div class="flex items-center justify-between p-3 pr-2 md:p-5 border-b rounded-t">
-                    <span id="modalTitle" class="text-xl">{% t "services.modal_edit_title" %}</span>
-                    <button type="button" id="modalClose"
-                            class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center">
-                        <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
-                             viewBox="0 0 14 14">
-                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
-                        </svg>
-                        <span class="sr-only">{% t "services.close_modal_sr" %}</span>
-                    </button>
-                </div>
-
-                <div class="p-3 md:p-5 space-y-4 overflow-y-auto !max-h-[500px]">
-                    <div>
-                        <label for="serviceName" class="block mb-2 text-sm font-medium text-gray-900">{% t "services.label_title" %}</label>
-                        <input id="serviceName" name="name" type="text" required
-                               class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full !py-1.5 !p-2.5"/>
-                    </div>
-
-                    <div>
-                        <label for="serviceDescription" class="block mt-2 mb-2 text-sm font-medium text-gray-900">{% t "services.label_description" %}</label>
-                        <textarea id="serviceDescription" name="description" rows="3"
-                                  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full !py-1.5 !p-2.5"></textarea>
-                    </div>
-
-                    <div>
-                        <label for="servicePrice" class="block mt-2 mb-2 text-sm font-medium text-gray-900">{% t "services.label_price" %}</label>
-                        <input id="servicePrice" name="price" type="number" step="0.01" min="0" required
-                               class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full !py-1.5 !p-2.5"/>
-                    </div>
-
-                    <div>
-                        <label for="serviceCategory" class="block mt-2 mb-2 text-sm font-medium text-gray-900">{% t "services.label_category" %}</label>
-                        <select id="serviceCategory" name="categories" required
-                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full !py-2 !p-2.5">
-                            <option value="">{% t "services.select_category" %}</option>
-                            {% for category in categories %}
-                                <option value="{{ category.id }}">{{ category.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block mb-2 text-sm font-medium text-gray-900">{% t "services.images_label" %}</label>
-
-                        <div id="currentImagesWrapper" class="mt-2 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4"></div>
-
-                        <label id="dropzone" for="serviceImageUpload"
-                               class="flex flex-col items-center justify-center w-full h-32 mt-4 px-6 py-10 border-2 border-gray-300 border-dashed rounded-md cursor-pointer bg-gray-50 hover:bg-gray-100">
-                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                <svg class="w-8 h-8 mb-4 text-gray-500" aria-hidden="true"
-                                     xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
-                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                                          stroke-width="2"
-                                          d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L7 9m3-2 3 2"/>
-                                </svg>
-                                <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">{% t "services.dropzone_click" %}</span> {% t "services.dropzone_or" %}</p>
-                                <p class="text-xs text-gray-500">{% t "services.dropzone_formats" %}</p>
-                            </div>
-                        </label>
-                        <input type="file" id="serviceImageUpload" name="cover_images" accept="image/png,image/jpeg"
-                               multiple class="hidden"/>
-
-                        <p id="imageError" class="hidden text-sm text-red-600 mt-1">{% t "services.image_error" %}</p>
-                    </div>
-                </div>
-
-                <div class="flex items-center justify-end gap-3 p-3 md:p-5 border-t border-gray-200 rounded-b">
-                    <button type="button" id="modalCancel"
-                            class="py-1 !px-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 !rounded-xl shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                        {% t "services.cancel" %}
-                    </button>
-                    <button type="submit" id="modalSave"
-                            class="py-1 !px-2.5 text-sm font-medium text-white bg-[#1c1b2b] border border-transparent !rounded-xl shadow-sm hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-[#1c1b2b] focus:ring-offset-2">
-                        {% t "services.save_changes" %}
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const TR_CREATE = "{% t 'services.create_service' %}";
-            const TR_EDIT = "{% t 'services.edit' %}";
-            const TR_DELETE = "{% t 'services.delete' %}";
-            const TR_CONFIRM_DELETE = "{% t 'services.confirm_delete' %}";
-            const TR_MODAL_CREATE_TITLE = "{% t 'services.modal_create_title' %}";
-            const TR_MODAL_EDIT_TITLE = "{% t 'services.modal_edit_title' %}";
-            const TR_CLOSE_MODAL = "{% t 'services.close_modal_sr' %}";
-            const TR_LABEL_TITLE = "{% t 'services.label_title' %}";
-            const TR_LABEL_DESC = "{% t 'services.label_description' %}";
-            const TR_LABEL_PRICE = "{% t 'services.label_price' %}";
-            const TR_LABEL_CATEGORY = "{% t 'services.label_category' %}";
-            const TR_SELECT_CATEGORY = "{% t 'services.select_category' %}";
-            const TR_IMAGES_LABEL = "{% t 'services.images_label' %}";
-            const TR_DROPZONE_CLICK = "{% t 'services.dropzone_click' %}";
-            const TR_DROPZONE_OR = "{% t 'services.dropzone_or' %}";
-            const TR_DROPZONE_FORMATS = "{% t 'services.dropzone_formats' %}";
-            const TR_IMAGE_ERROR = "{% t 'services.image_error' %}";
-            const TR_CANCEL = "{% t 'services.cancel' %}";
-            const TR_SAVE_CHANGES = "{% t 'services.save_changes' %}";
-            const TR_SAVING = "{% t 'services.saving' %}";
-            const TR_ERR_SAVE = "{% t 'services.err_save' %}";
-            const TR_ERR_NETWORK = "{% t 'services.err_network' %}";
-            const TR_NO_IMAGE = "{% t 'services.no_image' %}";
-            const TR_NO_SERVICES_TITLE = "{% t 'services.no_services_title' %}";
-            const TR_NO_SERVICES_DESC = "{% t 'services.no_services_desc' %}";
-            const TR_NO_CATEGORY = "{% t 'services.no_category' %}";
-
-            // Inicializar Swiper
-            document.querySelectorAll('.swiper').forEach((el) => {
-                new Swiper(el, {
-                    navigation: {
-                        nextEl: el.querySelector('.swiper-button-next'),
-                        prevEl: el.querySelector('.swiper-button-prev'),
-                    },
-                    loop: true,
-                });
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Initialize Swiper
+        document.querySelectorAll('.swiper').forEach((el) => {
+            new Swiper(el, {
+                navigation: {
+                    nextEl: el.querySelector('.swiper-button-next'),
+                    prevEl: el.querySelector('.swiper-button-prev'),
+                },
+                loop: true,
             });
+        });
 
-            // Manejar clicks en los enlaces de servicio
-            document.querySelectorAll('.service-link').forEach(link => {
-                link.addEventListener('click', function(e) {
-                    const url = this.dataset.url;
-                    if (url) {
-                        window.location.href = url;
-                    }
-                });
-            });
-
-            document.querySelectorAll('.swiper-button-prev, .swiper-button-next').forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                });
-            });
-
-            // Manejar botones de editar
-            document.querySelectorAll('.edit-btn').forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    openEditModalFromButton(this);
-                });
-            });
-
-            // Manejar formularios de eliminar
-            document.querySelectorAll('.delete-form').forEach(form => {
-                form.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (confirm(TR_CONFIRM_DELETE)) {
-                        this.submit();
-                    }
-                });
-            });
-
-            // Elementos del modal
-            const modal = document.getElementById('serviceModal');
-            const btnCreate = document.getElementById('btnCreateService');
-            const btnClose = document.getElementById('modalClose');
-            const btnCancel = document.getElementById('modalCancel');
-            const form = document.getElementById('serviceForm');
-            const idField = document.getElementById('serviceIdField');
-            const nameField = document.getElementById('serviceName');
-            const descField = document.getElementById('serviceDescription');
-            const priceField = document.getElementById('servicePrice');
-            const currentWrapper = document.getElementById('currentImagesWrapper');
-            const deleteContainer = document.getElementById('imagesToDeleteContainer');
-            const imageInput = document.getElementById('serviceImageUpload');
-            const dropzone = document.getElementById('dropzone');
-            const imageError = document.getElementById('imageError');
-            const modalTitle = document.getElementById('modalTitle');
-            const saveButton = document.getElementById('modalSave');
-
-            let newFiles = [];
-
-            function openModal() {
-                modal.classList.remove('hidden');
-            }
-
-            function closeModal() {
-                modal.classList.add('hidden');
-            }
-
-            function resetModalForm() {
-                form.reset();
-                idField.value = '';
-                currentWrapper.innerHTML = '';
-                deleteContainer.innerHTML = '';
-                imageInput.value = '';
-                imageError.classList.add('hidden');
-                document.getElementById('serviceCategory').value = '';
-                newFiles = [];
-                saveButton.disabled = false;
-                saveButton.textContent = TR_SAVE_CHANGES;
-            }
-
-            btnCreate.addEventListener('click', function () {
-                resetModalForm();
-                modalTitle.textContent = TR_MODAL_CREATE_TITLE;
-                openModal();
-            });
-
-            btnClose.addEventListener('click', closeModal);
-            btnCancel.addEventListener('click', closeModal);
-            document.getElementById('modalOverlay').addEventListener('click', closeModal);
-
-            window.openEditModalFromButton = function (btn) {
-                resetModalForm();
-
-                const id = btn.getAttribute('data-id') || '';
-                const name = btn.getAttribute('data-name') || '';
-                const description = btn.getAttribute('data-description') || '';
-                const price = btn.getAttribute('data-price') || '';
-                const catsRaw = btn.getAttribute('data-categories') || '';
-                const imagesJson = btn.getAttribute('data-images-json') || '[]';
-                let images = [];
-                try {
-                    images = JSON.parse(imagesJson);
-                } catch (e) {
-                    images = [];
-                }
-
-                idField.value = id;
-                nameField.value = name;
-                descField.value = description;
-                priceField.value = price;
-                modalTitle.textContent = TR_MODAL_EDIT_TITLE;
-
-                const categorySelect = document.getElementById('serviceCategory');
-                if (catsRaw) {
-                    const cats = catsRaw.split(',').map(x => x.trim());
-                    if (cats.length > 0 && cats[0]) {
-                        categorySelect.value = cats[0];
-                    }
-                }
-
-                images.forEach(img => {
-                    const div = document.createElement('div');
-                    div.className = "relative group";
-                    div.innerHTML = `
-                        <img src="${img.url}" alt="Imagen actual" class="h-24 w-full object-cover rounded-md border border-gray-200" />
-                        <button type="button" data-image-id="${img.id}" class="absolute top-1 right-1 !p-0.5 bg-red-600 text-white !rounded-sm opacity-100">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="!size-4">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                            </svg>
-                        </button>
-                    `;
-                    currentWrapper.appendChild(div);
-                });
-                openModal();
-            };
-
-            currentWrapper.addEventListener('click', function (e) {
-                const btnDelete = e.target.closest('button[data-image-id]');
-                if (btnDelete) {
-                    const id = btnDelete.dataset.imageId;
-                    btnDelete.closest('div').remove();
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = 'delete_images';
-                    input.value = id;
-                    deleteContainer.appendChild(input);
-                    return;
-                }
-
-                const btnIndex = e.target.closest('button[data-index]');
-                if (btnIndex) {
-                    const index = parseInt(btnIndex.dataset.index, 10);
-                    if (!isNaN(index) && index < newFiles.length) {
-                        newFiles[index] = null;
-                    }
-                    btnIndex.closest('div').remove();
+        // Handle clicks on service links
+        document.querySelectorAll('.service-link').forEach(link => {
+            link.addEventListener('click', function (e) {
+                const url = this.dataset.url;
+                if (url) {
+                    window.location.href = url;
                 }
             });
+        });
 
-            dropzone.addEventListener('dragover', (e) => e.preventDefault());
-            dropzone.addEventListener('drop', (e) => {
+        // Prevent swiper button clicks from triggering service link
+        document.querySelectorAll('.swiper-button-prev, .swiper-button-next').forEach(btn => {
+            btn.addEventListener('click', function (e) {
                 e.preventDefault();
-                if (e.dataTransfer && e.dataTransfer.files) {
-                    handleNewFiles(e.dataTransfer.files);
+                e.stopPropagation();
+            });
+        });
+
+        // Handle edit buttons
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                openEditModal(this);
+            });
+        });
+
+        // Promote Service Logic
+        const promoteModal = document.getElementById('promoteServiceModal');
+        const promoteOverlay = document.getElementById('promoteModalOverlay');
+        const promoteCloseBtn = document.getElementById('promoteModalClose');
+        const promoteServiceIdInput = document.getElementById('promoteServiceId');
+        const promoteServiceNameSpan = document.getElementById('promoteServiceName');
+
+        function closePromoteModal() {
+            promoteModal.classList.add('hidden');
+        }
+
+        if (promoteModal) {
+            promoteCloseBtn.addEventListener('click', closePromoteModal);
+            promoteOverlay.addEventListener('click', closePromoteModal);
+        }
+
+        document.querySelectorAll('.promote-btn').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const serviceId = this.dataset.id;
+                const serviceName = this.dataset.name;
+
+                promoteServiceIdInput.value = serviceId;
+                promoteServiceNameSpan.textContent = serviceName;
+
+                promoteModal.classList.remove('hidden');
+            });
+        });
+
+        // --- DELETE SERVICE LOGIC ---
+        const deleteServiceModal = document.getElementById('deleteServiceModal');
+        const confirmDeleteServiceBtn = document.getElementById('confirmDeleteServiceBtn');
+        const cancelDeleteServiceBtn = document.getElementById('cancelDeleteServiceBtn');
+        let formToDelete = null;
+
+        document.querySelectorAll('.delete-form').forEach(form => {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault(); // Stop submission
+                formToDelete = this;
+                deleteServiceModal.classList.remove('hidden');
+            });
+        });
+
+        if (cancelDeleteServiceBtn) {
+            cancelDeleteServiceBtn.addEventListener('click', () => {
+                deleteServiceModal.classList.add('hidden');
+                formToDelete = null;
+            });
+        }
+
+        if (confirmDeleteServiceBtn) {
+            confirmDeleteServiceBtn.addEventListener('click', () => {
+                if (formToDelete) {
+                    formToDelete.submit();
                 }
+                deleteServiceModal.classList.add('hidden');
             });
-            imageInput.addEventListener('change', (e) => {
-                handleNewFiles(e.target.files);
-                e.target.value = '';
+        }
+
+        // --- DISCARD CHANGES LOGIC ---
+        const discardChangesModal = document.getElementById('discardChangesModal');
+        const confirmDiscardBtn = document.getElementById('confirmDiscardBtn');
+        const cancelDiscardBtn = document.getElementById('cancelDiscardBtn');
+
+        // Modal elements
+        const modal = document.getElementById('serviceModal');
+        const btnCreate = document.getElementById('btnCreateService');
+        const btnClose = document.getElementById('modalClose');
+        const btnCancel = document.getElementById('modalCancel'); // The "Cancel" button in the edit modal
+        const form = document.getElementById('serviceForm');
+        const idField = document.getElementById('serviceIdField');
+        const nameField = document.getElementById('serviceName');
+        const descField = document.getElementById('serviceDescription');
+        const priceField = document.getElementById('servicePrice');
+        const categoryField = document.getElementById('serviceCategory');
+        const currentWrapper = document.getElementById('currentImagesWrapper');
+        const deleteContainer = document.getElementById('imagesToDeleteContainer');
+        const imageInput = document.getElementById('serviceImageUpload');
+        const modalTitle = document.getElementById('modalTitle');
+
+        // Open create modal
+        btnCreate.addEventListener('click', () => {
+            modalTitle.textContent = '{% t "services.modal_create_title" %}';
+            form.reset();
+            idField.value = '';
+            currentWrapper.innerHTML = '';
+            deleteContainer.innerHTML = '';
+            modal.classList.remove('hidden');
+        });
+
+        // Close modal function (hides the service modal)
+        function closeServiceModal() {
+            modal.classList.add('hidden');
+        }
+
+        // Intercept Close/Cancel to show Discard Modal
+        function requestClose() {
+            discardChangesModal.classList.remove('hidden');
+        }
+
+        // Bind "X" and "Cancel" to requestClose
+        btnClose.addEventListener('click', requestClose);
+        btnCancel.addEventListener('click', requestClose);
+        document.getElementById('modalOverlay').addEventListener('click', requestClose);
+
+        // Handle Discard Modal Actions
+        if (cancelDiscardBtn) {
+            cancelDiscardBtn.addEventListener('click', () => {
+                discardChangesModal.classList.add('hidden');
+            });
+        }
+
+        if (confirmDiscardBtn) {
+            confirmDiscardBtn.addEventListener('click', () => {
+                discardChangesModal.classList.add('hidden');
+                closeServiceModal(); // Actually close the service modal
+            });
+        }
+
+        // Open edit modal
+        function openEditModal(btn) {
+            modalTitle.textContent = '{% t "services.modal_edit_title" %}';
+            const serviceId = btn.dataset.id;
+            const serviceName = btn.dataset.name;
+            const serviceDesc = btn.dataset.description;
+            const servicePrice = btn.dataset.price;
+            const categories = btn.dataset.categories.split(',').filter(c => c);
+            const images = JSON.parse(btn.dataset.imagesJson || '[]');
+
+            idField.value = serviceId;
+            nameField.value = serviceName;
+            descField.value = serviceDesc;
+            priceField.value = servicePrice;
+
+            // Set category
+            if (categories.length > 0) {
+                categoryField.value = categories[0];
+            }
+
+            // Display current images
+            currentWrapper.innerHTML = '';
+            deleteContainer.innerHTML = '';
+            images.forEach(img => {
+                const div = document.createElement('div');
+                div.className = 'relative';
+                div.innerHTML = `
+                    <img src="${img.url}" class="w-full h-20 object-cover rounded">
+                    <button type="button" class="absolute top-0 right-0 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+                        onclick="removeImage(${img.id}, this.parentElement)">×</button>
+                `;
+                currentWrapper.appendChild(div);
             });
 
-            function handleNewFiles(files) {
-                imageError.classList.add('hidden');
-                Array.from(files).forEach(file => {
-                    if (!file.type.startsWith('image/')) return;
+            modal.classList.remove('hidden');
+        }
 
-                    newFiles.push(file);
-                    const fileIndex = newFiles.length - 1;
+        // Remove image function
+        window.removeImage = function (imageId, element) {
+            element.remove();
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'images_to_delete';
+            input.value = imageId;
+            deleteContainer.appendChild(input);
+        };
 
+        // Handle image upload preview
+        imageInput.addEventListener('change', function (e) {
+            const files = e.target.files;
+            if (files.length > 0) {
+                // Clear existing previews of new uploads (not saved images)
+                const existingPreviews = currentWrapper.querySelectorAll('.preview-image');
+                existingPreviews.forEach(el => el.remove());
+
+                // Add previews for newly selected files
+                Array.from(files).forEach((file, index) => {
                     const reader = new FileReader();
-                    reader.onload = (ev) => {
+                    reader.onload = function (event) {
                         const div = document.createElement('div');
-                        div.className = "relative group";
+                        div.className = 'relative preview-image';
                         div.innerHTML = `
-                            <img src="${ev.target.result}" alt="Nueva imagen" class="h-24 w-full object-cover rounded-md border border-gray-200" />
-                            <button type="button" data-index="${fileIndex}" class="absolute top-1 right-1 !p-0.5 bg-red-600 text-white !rounded-sm opacity-100">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="!size-4">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                                </svg>
-                            </button>
+                            <img src="${event.target.result}" class="w-full h-20 object-cover rounded">
+                            <button type="button" class="absolute top-0 right-0 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+                                onclick="removePreview(this.parentElement, ${index})">×</button>
                         `;
                         currentWrapper.appendChild(div);
                     };
                     reader.readAsDataURL(file);
                 });
             }
+        });
 
-            form.addEventListener('submit', function (e) {
-                e.preventDefault();
+        // Remove preview function (for new uploads)
+        window.removePreview = function (element, fileIndex) {
+            element.remove();
+            // Note: We can't actually remove files from FileList, so user will need to reselect
+            // For production, you might want to track which files to keep
+        };
 
-                const existing = currentWrapper.querySelectorAll('img').length;
-                const imagesInArray = newFiles.filter(f => f !== null).length;
+        // --- COUNTDOWN TIMER LOGIC ---
+        function updateTimers() {
+            const now = new Date().getTime();
+            document.querySelectorAll('.promotion-timer').forEach(timer => {
+                const endTime = new Date(timer.dataset.endTime).getTime();
+                const distance = endTime - now;
 
-                if (existing === 0 && imagesInArray === 0) {
-                    imageError.classList.remove('hidden');
+                if (distance < 0) {
+                    timer.textContent = "{% t 'services.expired' %}";
+                    // Optional: Remove badge or change style
                     return;
                 }
 
-                saveButton.disabled = true;
-                saveButton.textContent = TR_SAVING;
+                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
 
-                const formData = new FormData(form);
+                let text = "";
+                if (days > 0) text += `${days}{% t 'services.days_short' %} `;
+                text += `${hours}{% t 'services.hours_short' %} ${minutes}{% t 'services.minutes_short' %}`;
 
-                let fileCounter = 0;
-                newFiles.forEach(file => {
-                    if (file) {
-                        formData.append('cover_images', file, file.name);
-                        fileCounter++;
-                    }
-                });
-
-                console.log(`Enviando ${fileCounter} archivos nuevos.`);
-
-                fetch(form.action, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
-                    }
-                })
-                    .then(response => {
-                        if (response.ok) {
-                            window.location.reload();
-                        } else {
-                            alert(TR_ERR_SAVE);
-                            saveButton.disabled = false;
-                            saveButton.textContent = TR_SAVE_CHANGES;
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert(TR_ERR_NETWORK);
-                        saveButton.disabled = false;
-                        saveButton.textContent = TR_SAVE_CHANGES;
-                    });
+                timer.textContent = text;
             });
+        }
 
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeModal();
-            });
-        });
-    </script>
+        // Update immediately and then every minute
+        updateTimers();
+        setInterval(updateTimers, 60000);
+    });
+</script>
+<!-- Notification Modal (Max width 400px & Text wrap) -->
+{% if messages %}
+<div id="notificationModal"
+    data-auto-dismiss="{% for message in messages %}{% if message.tags == 'success' %}true{% endif %}{% endfor %}"
+    class="fixed inset-0 z-[60] flex items-center justify-center p-4"
+    style="opacity: 0; pointer-events: none; transition: opacity 0.3s ease-out;">
+
+    <!-- Overlay -->
+    <div class="absolute inset-0 transition-opacity" style="background-color: rgba(0, 0, 0, 0.5);"
+        onclick="closeNotificationModal()">
+    </div>
+
+    <!-- Modal Panel -->
+    <div id="notificationContent"
+        class="relative w-full max-w-[400px] transform rounded-2xl bg-white shadow-xl transition-all p-6 scale-95 opacity-0"
+        style="transition: transform 0.3s ease-out, opacity 0.3s ease-out;">
+
+        <!-- Close Button -->
+        <div class="absolute top-3 right-3">
+            <button type="button" onclick="closeNotificationModal()"
+                class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center">
+                <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+                    viewBox="0 0 14 14">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+                </svg>
+                <span class="sr-only">{% t "notifications.close_sr" %}</span>
+            </button>
+        </div>
+
+        <div class="flex flex-col items-center text-center mt-2">
+            {% for message in messages %}
+            {% if message.tags == 'success' %}
+            <div
+                class="mx-auto flex h-16 w-16 flex items-center justify-center rounded-full bg-green-100 mb-4 animate-bounce-short">
+                <svg class="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+            </div>
+            <h3 class="text-xl font-bold leading-6 text-gray-900 mb-2">{% t "notifications.success_title" %}
+            </h3>
+            <div class="mt-2 w-full">
+                <p class="text-sm text-gray-500 break-words">{{ message }}</p>
+            </div>
+            <!-- Auto-close indicator -->
+            <div class="mt-6 w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
+                <div class="bg-green-500 h-1.5 rounded-full w-full animate-progress"></div>
+            </div>
+            {% elif message.tags == 'error' %}
+            <div class="mx-auto flex h-16 w-16 flex items-center justify-center rounded-full bg-red-100 mb-4">
+                <svg class="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+            </div>
+            <h3 class="text-xl font-bold leading-6 text-gray-900 mb-2">{% t "notifications.error_title" %}</h3>
+            <div class="mt-2 w-full">
+                <p class="text-sm text-gray-500 break-words">{{ message }}</p>
+            </div>
+            <div class="mt-6 w-full">
+                <button type="button" onclick="closeNotificationModal()"
+                    class="inline-flex w-full justify-center !rounded-xl bg-red-600 px-3 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-red-500 transition-all duration-200">
+                    {% t "notifications.understood" %}
+                </button>
+            </div>
+            {% else %}
+            <!-- Info/Warning default -->
+            <div class="mx-auto flex h-12 w-12 flex items-center justify-center rounded-full bg-blue-100 mb-4">
+                <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <h3 class="text-lg font-medium leading-6 text-gray-900 mb-2">{% t "notifications.info_title" %}</h3>
+            <div class="mt-2 w-full">
+                <p class="text-sm text-gray-500 break-words">{{ message }}</p>
+            </div>
+            <div class="mt-5 w-full">
+                <button type="button" onclick="closeNotificationModal()"
+                    class="inline-flex w-full justify-center !rounded-xl bg-[#1c1b2b] px-3 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#2d2c3f] transition-all duration-200">
+                    {% t "notifications.accept" %}
+                </button>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<style>
+    @keyframes progress {
+        from { width: 100%; }
+        to { width: 0%; }
+    }
+
+    .animate-progress {
+        animation: progress 1.5s linear forwards;
+    }
+
+    @keyframes bounce-short {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10%); }
+    }
+
+    .animate-bounce-short {
+        animation: bounce-short 0.5s ease-in-out 1;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const modal = document.getElementById('notificationModal');
+        const content = document.getElementById('notificationContent');
+
+        if (modal) {
+            // Show with animation
+            setTimeout(() => {
+                modal.style.opacity = '1';
+                modal.style.pointerEvents = 'auto';
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+
+            // Auto close for success messages
+            const autoDismiss = modal.getAttribute('data-auto-dismiss');
+            if (autoDismiss && autoDismiss.includes('true')) {
+                setTimeout(closeNotificationModal, 1500);
+            }
+        }
+    });
+
+    function closeNotificationModal() {
+        const modal = document.getElementById('notificationModal');
+        const content = document.getElementById('notificationContent');
+
+        if (modal && content) {
+            // Hide with animation
+            modal.style.opacity = '0';
+            modal.style.pointerEvents = 'none';
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+
+            // Remove from DOM after animation
+            setTimeout(() => {
+                modal.remove();
+            }, 300);
+        }
+    }
+</script>
+{% endif %}
 {% endblock %}

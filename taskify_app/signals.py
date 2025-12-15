@@ -4,7 +4,7 @@ from django.db.models.signals import post_save, pre_save, post_delete
 from django.dispatch import receiver
 from django.utils.text import slugify
 
-from .models import Contract, Review, Notification, CustomUser  # OK si se importa en ready()
+from .models import Contract, Review, Notification, CustomUser, Message  # OK si se importa en ready()
 
 
 @receiver(post_save, sender=Contract)
@@ -12,8 +12,8 @@ def create_contract_notification(sender, instance, created, **kwargs):
     if created:
         Notification.objects.create(
             user=instance.service.provider,
-            title='Nuevo contrato creado',
-            message=f'Has recibido un nuevo contrato para tu servicio "{instance.service.name}".',
+            title='Nueva solicitud recibida',
+            message=f'Has recibido una nueva solicitud para tu servicio "{instance.service.name}".',
             notification_type='contract_created',
             contract=instance,
         )
@@ -31,10 +31,78 @@ def create_review_notification(sender, instance, created, **kwargs):
         )
 
 
+@receiver(post_save, sender=Message)
+def create_message_notification(sender, instance, created, **kwargs):
+    """
+    Crea una notificación cuando se recibe un mensaje nuevo.
+    Muestra el nombre del remitente como título y el contenido del mensaje.
+    """
+    if created:
+        from django.utils import timezone
+        
+        # Obtener el receptor (el otro participante que no es el sender)
+        conversation = instance.conversation
+        participants = conversation.participants.all()
+        receiver = participants.exclude(id=instance.sender.id).first()
+        
+        if receiver:
+            sender_name = instance.sender.get_full_name() or instance.sender.username
+            
+            # Truncar el mensaje si es muy largo
+            message_preview = instance.content
+            if len(message_preview) > 100:
+                message_preview = message_preview[:100] + '...'
+            
+            # Buscar notificación existente no leída de esta conversación
+            existing_notification = Notification.objects.filter(
+                user=receiver,
+                conversation=conversation,
+                notification_type='new_message',
+                is_read=False
+            ).first()
+            
+            if existing_notification:
+                # Actualizar la existente
+                existing_notification.message = message_preview
+                existing_notification.message_count += 1
+                existing_notification.created_at = timezone.now()
+                existing_notification.save()
+            else:
+                # Crear nueva
+                Notification.objects.create(
+                    user=receiver,
+                    title=sender_name,
+                    message=message_preview,
+                    notification_type='new_message',
+                    conversation=conversation,
+                    message_count=1,
+                )
+
+
+
+@receiver(pre_save, sender=Contract)
+def store_original_contract_status(sender, instance, **kwargs):
+    """
+    Guarda el estado original del contrato antes de guardarlo,
+    para poder detectar cambios en el post_save.
+    """
+    if instance.pk:
+        try:
+            original = Contract.objects.get(pk=instance.pk)
+            instance._original_status = original.status
+        except Contract.DoesNotExist:
+            instance._original_status = None
+    else:
+        instance._original_status = None
+
+
 @receiver(post_save, sender=Contract)
 def update_contract_status_notification(sender, instance, created, **kwargs):
-    if not created and instance.status != instance._original_status:
+    if not created and hasattr(instance, '_original_status') and instance._original_status and instance.status != instance._original_status:
         status_messages = {
+            'pending': 'Tu solicitud está pendiente de aceptación.',
+            'accepted': 'Tu solicitud ha sido aceptada.',
+            'rejected': 'Tu solicitud ha sido rechazada.',
             'active': 'Tu contrato ha sido activado.',
             'paused': 'Tu contrato ha sido pausado.',
             'cancelled': 'Tu contrato ha sido cancelado.',
@@ -45,6 +113,9 @@ def update_contract_status_notification(sender, instance, created, **kwargs):
             instance.status,
             f'El estado de tu contrato ha cambiado a: {instance.status}',
         )
+
+        if instance.status == 'rejected' and instance.rejection_reason:
+            message += f' Motivo: {instance.rejection_reason}'
 
         Notification.objects.create(
             user=instance.user,

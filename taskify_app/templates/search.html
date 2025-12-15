@@ -4,269 +4,302 @@
 {% block title %}{% t "search.page_title" %}{% endblock %}
 
 {% block content %}
-    <!-- Links de Swiper (para el carrusel de las tarjetas) -->
-    <link href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" rel="stylesheet"/>
-    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<!-- Links de Swiper (para el carrusel de las tarjetas) -->
+<link href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
-    <div class="w-[1024px] mx-auto mt-">
+<div class="w-[1024px] mx-auto mt-">
 
-        <!-- Formulario de búsqueda -->
-        <form action="{% url 'search' %}" method="get" class="my-4 w-[400px] justify-self-center" id="searchForm">
-            <div class="relative">
-                <input
-                        type="text"
-                        name="q"
-                        value="{{ query|default:'' }}"
-                        placeholder="{% t 'search.search_placeholder' %}"
-                        class="w-full pl-3 pr-5 py-2 text-base text-gray-900 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
-                >
+    <!-- Formulario de búsqueda -->
+    <form action="{% url 'search' %}" method="get" class="my-4 w-[400px] justify-self-center" id="searchForm">
+        <div class="relative">
+            <input type="text" name="q" value="{{ query|default:'' }}" placeholder="{% t 'search.search_placeholder' %}"
+                class="w-full pl-3 pr-5 py-2 text-base text-gray-900 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
 
-                <!-- DIV como botón funcional -->
-                <div id="searchButton"
-                     role="button"
-                     tabindex="0"
-                     class="absolute right-2 top-1/2 -translate-y-1/2 !p-1.5 text-black rounded-xl cursor-pointer hover:bg-gray-200 focus:ring-2 focus:ring-blue-500 transition-colors"
-                     title="{% t 'search.search_placeholder' %}">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                         stroke="currentColor" class="w-5 h-5">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                              d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
-                    </svg>
-                </div>
+            <!-- DIV como botón funcional -->
+            <div id="searchButton" role="button" tabindex="0"
+                class="absolute right-2 top-1/2 -translate-y-1/2 !p-1.5 text-black rounded-xl cursor-pointer hover:bg-gray-200 focus:ring-2 focus:ring-blue-500 transition-colors"
+                title="{% t 'search.search_placeholder' %}">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor" class="w-5 h-5">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                </svg>
             </div>
-        </form>
-
-
-        <!-- Título de búsqueda -->
-        <div class="mb-4 px-2">
-            {% if query %}
-                <span class="block text-lg font-semibold" role="heading" aria-level="1">
-                {% t "search.results_for" %} "<span class="text-blue-600">{{ query }}</span>"
-            </span>
-            {% else %}
-                <span class="block text-xl font-semibold" role="heading"
-                      aria-level="1">{% t "search.explore_all" %}</span>
-            {% endif %}
-            <!-- Cambiado: mostrar el número fuera de la traducción -->
-            <p class="text-gray-600 mt-1 text-sm">{{ results|length }} {% t "search.results_count" %}</p>
         </div>
+    </form>
 
-        <!-- Resultados -->
-        <main class="w-full">
-            {% if results %}
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    {% for service in results %}
-                        <article class="rounded-xl border border-gray-200 group shadow-sm bg-white overflow-hidden">
 
-                            <!-- Carrusel de imágenes -->
-                            <div class="h-[220px] relative rounded-t-lg overflow-hidden cursor-pointer"
-                                 onclick="window.location.href='{% url 'service_detail' service.id %}'" role="link">
+    <!-- Título de búsqueda -->
+    <div class="mb-4 px-2">
+        {% if query %}
+        <span class="block text-lg font-semibold" role="heading" aria-level="1">
+            {% t "search.results_for" %} "<span class="text-blue-600">{{ query }}</span>"
+        </span>
+        {% else %}
+        <span class="block text-xl font-semibold" role="heading" aria-level="1">{% t "search.explore_all" %}</span>
+        {% endif %}
+        <!-- Cambiado: mostrar el número fuera de la traducción -->
+        <p class="text-gray-600 mt-1 text-sm">{{ results|length }} {% t "search.results_count" %}</p>
+    </div>
 
-                                {% if request.user.is_authenticated %}
-                                    <div
-                                            role="button"
-                                            tabindex="0"
-                                            class="flex align-items favorite-btn absolute top-2 right-2 z-10 p-2 bg-white/80 rounded-full cursor-pointer backdrop-blur-sm
+    <!-- Resultados -->
+    <main class="w-full">
+        {% if results %}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {% for service in results %}
+            <article class="rounded-xl border border-gray-200 group shadow-sm bg-white overflow-hidden">
+
+                <!-- Carrusel de imágenes -->
+                <div class="h-[220px] relative rounded-t-lg overflow-hidden cursor-pointer"
+                    href="{% url 'service_detail' service.id %}" role="link">
+
+                    {% if request.user.is_authenticated %}
+                    <div role="button" tabindex="0" class="flex align-items favorite-btn absolute top-2 right-2 z-10 p-2 bg-white/80 rounded-full cursor-pointer backdrop-blur-sm
                                        transition-colors duration-200 hover:bg-white"
-                                            data-service-id="{{ service.id }}"
-                                            title="{% t 'search.add_favorite' %}"
-                                            style="outline: none !important; box-shadow: none !important;">
-                                        <i class="fa-regular text-gray-700 hover:text-red-500 fa-heart text-xl"
-                                           aria-hidden="true"></i>
-                                    </div>
-                                {% endif %}
+                        data-service-id="{{ service.id }}" title="{% t 'search.add_favorite' %}"
+                        style="outline: none !important; box-shadow: none !important;">
+                        <i class="fa-regular text-gray-700 hover:text-red-500 fa-heart text-xl" aria-hidden="true"></i>
+                    </div>
+                    {% endif %}
 
 
-                                <div class="group relative h-full">
-                                    <div class="swiper service-swiper-{{ service.id }} h-full">
-                                        <div class="swiper-wrapper">
-                                            {% for img in service.images.all %}
-                                                <div class="swiper-slide h-full bg-cover bg-center"
-                                                     style="background-image: url('{{ img.image.url }}');"></div>
-                                            {% empty %}
-                                                <div class="swiper-slide h-full bg-cover bg-center flex items-center justify-center bg-gray-100">
-                                                    <span class="text-gray-500">{% t 'search.no_image' %}</span>
-                                                </div>
-                                            {% endfor %}
-                                        </div>
-
-                                        {% if service.images.count > 1 %}
-                                            <div class="swiper-button-prev opacity-0 group-hover:opacity-100 transition-opacity duration-300 !left-2 !text-white"
-                                                 style="filter: drop-shadow(0 0 3px rgba(0,0,0,0.7)); --swiper-navigation-size: 24px;"></div>
-                                            <div class="swiper-button-next opacity-0 group-hover:opacity-100 transition-opacity duration-300 !right-2 !text-white"
-                                                 style="filter: drop-shadow(0 0 3px rgba(0,0,0,0.7)); --swiper-navigation-size: 24px;"></div>
-                                        {% endif %}
-                                    </div>
+                    <div class="group relative h-full">
+                        <div class="swiper service-swiper-{{ service.id }} h-full">
+                            <div class="swiper-wrapper">
+                                {% for img in service.images.all %}
+                                <div class="swiper-slide h-full bg-cover bg-center"
+                                    style="background-image: url('{{ img.image.url }}');"></div>
+                                {% empty %}
+                                <div
+                                    class="swiper-slide h-full bg-cover bg-center flex items-center justify-center bg-gray-100">
+                                    <span class="text-gray-500">{% t 'search.no_image' %}</span>
                                 </div>
-
+                                {% endfor %}
                             </div>
 
-                            <!-- Contenido de la tarjeta -->
-                            <div class="p-3">
-                            <span class="block text-lg font-semibold text-gray-900 mb-1 line-clamp-1 group-hover:text-blue-600 transition-colors cursor-pointer"
-                                  onclick="window.location.href='{% url 'service_detail' service.id %}'" role="link">
-                                {{ service.name }}
-                            </span>
+                            {% if service.images.count > 1 %}
+                            <div class="swiper-button-prev opacity-0 group-hover:opacity-100 transition-opacity duration-300 !left-2 !text-white"
+                                style="filter: drop-shadow(0 0 3px rgba(0,0,0,0.7)); --swiper-navigation-size: 24px;">
+                            </div>
+                            <div class="swiper-button-next opacity-0 group-hover:opacity-100 transition-opacity duration-300 !right-2 !text-white"
+                                style="filter: drop-shadow(0 0 3px rgba(0,0,0,0.7)); --swiper-navigation-size: 24px;">
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
 
-                                <span class="text-xs px-2 py-1 mr-1 mb-1 border border-gray-300 bg-gray-50 rounded-full">
-                                {% if service.categories.all %}
-                                    {{ service.categories.first.name }}
-                                {% else %}
-                                    Sin categoría
-                                {% endif %}
-                            </span>
+                </div>
 
-                                <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex items-center gap-2 mb-1">
-                                            <img class="w-6 h-6 rounded-full object-cover"
-                                                 src="{{ service.provider.avatar_url }}"
-                                                 alt="{{ service.provider.username }}">
-                                            <span class="text-sm font-medium text-gray-700 truncate">{{ service.provider.first_name }}</span>
-                                        </div>
-                                        <div class="flex items-center gap-1 text-sm text-gray-600">
-                                            <svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg"
-                                                 xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-                                                 viewBox="0 0 47.94 47.94"
-                                                 style="enable-background:new 0 0 47.94 47.94;" xml:space="preserve"
-                                                 class="!h-[15px] !w-[15px]">
-                                            <path style="fill:#ED8A19;" d="M26.285,2.486l5.407,10.956c0.376,0.762,1.103,1.29,1.944,1.412l12.091,1.757
+                <!-- Contenido de la tarjeta -->
+                <div class="p-3">
+                    <a class="!ml-[1px] text-lg font-medium text-gray-800 line-clamp-1 group-hover:text-blue-600 transition-colors block no-underline hover:no-underline overflow-hidden text-ellipsis whitespace-nowrap"
+                        href="{% url 'service_detail' service.id %}" role="link">
+                        {{ service.name }}
+                    </a>
+
+                    <span class="text-xs px-2 py-1 mr-1 mb-1 border border-gray-300 bg-gray-50 rounded-full">
+                        {% if service.categories.all %}
+                        {{ service.categories.first.name }}
+                        {% else %}
+                        Sin categoría
+                        {% endif %}
+                    </span>
+
+                    <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 mb-1">
+                                <img class="w-6 h-6 rounded-full object-cover" src="{{ service.provider.avatar_url }}"
+                                    alt="{{ service.provider.username }}">
+                                <span class="text-sm font-medium text-gray-700 truncate">
+                                    {{ service.provider.first_name }}</span>
+                            </div>
+                            <div class="flex items-center gap-1 text-sm text-gray-600">
+                                <svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg"
+                                    xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 47.94 47.94"
+                                    style="enable-background:new 0 0 47.94 47.94;" xml:space="preserve"
+                                    class="!h-[15px] !w-[15px]">
+                                    <path style="fill:#ED8A19;" d="M26.285,2.486l5.407,10.956c0.376,0.762,1.103,1.29,1.944,1.412l12.091,1.757
                                               c2.118,0.308,2.963,2.91,1.431,4.403l-8.749,8.528c-0.608,0.593-0.886,1.448-0.742,2.285l2.065,12.042
                                               c0.362,2.109-1.852,3.717-3.746,2.722l-10.814-5.685c-0.752-0.395-1.651-0.395-2.403,0l-10.814,5.685
                                               c-1.894,0.996-4.108-0.613-3.746-2.722l2.065-12.042c0.144-0.837-0.134-1.692-0.742-2.285l-8.749-8.528
                                               c-1.532-1.494-0.687-4.096,1.431-4.403l12.091-1.757c0.841-0.122,1.568-0.65,1.944-1.412l5.407-10.956
                                               C22.602,0.567,25.338,0.567,26.285,2.486z"></path>
-                                        </svg>
-                                            <span class="font-semibold text-gray-800">{{ service.average_rating|default:0|floatformat:1 }}</span>
-                                            <span>({{ service.review_count|default:0 }})</span>
-                                        </div>
-                                    </div>
-                                    <div class="flex-shrink-0">
-                                        <span class="text-xl font-bold text-gray-800">€{{ service.price|floatformat:0 }}</span>
-                                    </div>
-                                </div>
+                                </svg>
+                                <span class="font-semibold text-gray-800">
+                                    {{ service.average_rating|default:0|floatformat:1 }}</span>
+                                <span>({{ service.review_count|default:0 }})</span>
                             </div>
-                        </article>
-                    {% endfor %}
+                        </div>
+                        <div class="flex-shrink-0">
+                            <span class="text-xl font-bold text-gray-800">€{{ service.price|floatformat:0 }}</span>
+                        </div>
+                    </div>
                 </div>
-            {% else %}
-                <div class="text-center py-3 px-3 text-gray-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                         stroke="currentColor" class="w-12 h-12 mx-auto text-gray-400 mb-3">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                              d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
-                    </svg>
-                    <p class="text-lg font-medium text-slate-600 mb-2">{% t "search.no_results_title" %}</p>
-                    <p class="text-sm text-slate-400 mb-8">{% t "search.no_results_desc" %}</p>
-                </div>
-            {% endif %}
-        </main>
-    </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% include 'includes/pagination.html' %}
+        {% else %}
+        <div class="text-center py-3 px-3 text-gray-500">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor" class="w-12 h-12 mx-auto text-gray-400 mb-3">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                    d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+            </svg>
+            <p class="text-lg font-medium text-slate-600 mb-2">{% t "search.no_results_title" %}</p>
+            <p class="text-sm text-slate-400 mb-8">{% t "search.no_results_desc" %}</p>
+        </div>
+        {% endif %}
+    </main>
+</div>
 
-    <!-- Scripts -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const TR_ADD_FAV = "{% t 'search.add_favorite' %}";
-            const TR_REMOVE_FAV = "{% t 'search.remove_favorite' %}";
-            // 1. Activar Swipers
-            document.querySelectorAll('.swiper').forEach((el) => {
-                new Swiper(el, {
-                    navigation: {
-                        nextEl: el.querySelector('.swiper-button-next'),
-                        prevEl: el.querySelector('.swiper-button-prev'),
-                    },
-                    loop: true,
-                });
+{% include "includes/confirmation_modal.html" with modal_id="removeFavoriteModal" title="favourites.remove_title" description="favourites.remove_confirmation_text" confirm_text="favourites.confirm_remove" cancel_text="favourites.cancel" confirm_id="confirmRemoveFavBtn" cancel_id="cancelRemoveFavBtn" %}
+
+<!-- Scripts -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const TR_ADD_FAV = "{% t 'search.add_favorite' %}";
+        const TR_REMOVE_FAV = "{% t 'search.remove_favorite' %}";
+
+        // 1. Activar Swipers
+        document.querySelectorAll('.swiper').forEach((el) => {
+            new Swiper(el, {
+                navigation: {
+                    nextEl: el.querySelector('.swiper-button-next'),
+                    prevEl: el.querySelector('.swiper-button-prev'),
+                },
+                loop: true,
             });
+        });
 
-            // 2. Activar búsqueda con el DIV
-            const searchButton = document.getElementById('searchButton');
-            const searchForm = document.getElementById('searchForm');
-            if (searchButton && searchForm) {
-                searchButton.addEventListener('click', (e) => {
+        // 2. Activar búsqueda con el DIV
+        const searchButton = document.getElementById('searchButton');
+        const searchForm = document.getElementById('searchForm');
+        if (searchButton && searchForm) {
+            searchButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                searchForm.submit();
+            });
+            searchButton.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
                     searchForm.submit();
-                });
-                searchButton.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        searchForm.submit();
+                }
+            });
+        }
+
+        // 3. Favoritos con Modal
+        function setupDivAsButton(divElement, callback) {
+            if (divElement) {
+                divElement.addEventListener('click', callback);
+                divElement.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        callback(event);
                     }
                 });
             }
+        }
 
-            // 3. Favoritos
-            function setupDivAsButton(divElement, callback) {
-                if (divElement) {
-                    divElement.addEventListener('click', callback);
-                    divElement.addEventListener('keydown', (event) => {
-                        if (event.key === 'Enter' || event.key === ' ') {
-                            event.preventDefault();
-                            callback(event);
-                        }
-                    });
+        const userFavorites = JSON.parse('{{ user_favorites_json|default:"{}"|escapejs }}');
+        const favoriteButtons = document.querySelectorAll('.favorite-btn');
+        const removeModal = document.getElementById('removeFavoriteModal');
+        const confirmRemoveBtn = document.getElementById('confirmRemoveFavBtn');
+        const cancelRemoveBtn = document.getElementById('cancelRemoveFavBtn');
+
+        let pendingServiceId = null;
+        let pendingButtonDiv = null;
+
+        const closeRemoveModal = () => {
+            removeModal.classList.add('hidden');
+            pendingServiceId = null;
+            pendingButtonDiv = null;
+        };
+
+        if (cancelRemoveBtn) {
+            cancelRemoveBtn.addEventListener('click', closeRemoveModal);
+        }
+
+        if (confirmRemoveBtn) {
+            confirmRemoveBtn.addEventListener('click', async () => {
+                if (pendingServiceId && pendingButtonDiv) {
+                    await toggleFavorite(pendingServiceId, pendingButtonDiv);
                 }
+                closeRemoveModal();
+            });
+        }
+
+        async function toggleFavorite(serviceId, buttonDiv) {
+            const icon = buttonDiv.querySelector('i');
+            try {
+                const response = await fetch(`/service/${serviceId}/toggle-favorite/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.action === 'added') {
+                        icon.classList.remove('fa-regular', 'text-gray-400', 'text-gray-700');
+                        icon.classList.add('fa-solid', 'text-red-500');
+                        buttonDiv.setAttribute('title', TR_REMOVE_FAV);
+                        userFavorites[serviceId] = data.favorite_id;
+                    } else if (data.action === 'removed') {
+                        icon.classList.remove('fa-solid', 'text-red-500');
+                        icon.classList.add('fa-regular', 'text-gray-700');
+                        buttonDiv.setAttribute('title', TR_ADD_FAV);
+                        delete userFavorites[serviceId];
+                    }
+                }
+            } catch (error) {
+                console.error('Error al gestionar favorito:', error);
+            }
+        }
+
+        favoriteButtons.forEach(buttonDiv => {
+            const serviceId = parseInt(buttonDiv.dataset.serviceId);
+            const icon = buttonDiv.querySelector('i');
+
+            if (serviceId in userFavorites) {
+                icon.classList.remove('fa-regular', 'text-gray-400');
+                icon.classList.add('fa-solid', 'text-red-500');
+                buttonDiv.setAttribute('title', TR_REMOVE_FAV);
             }
 
-            const userFavorites = JSON.parse('{{ user_favorites_json|default:"{}"|escapejs }}');
-            const favoriteButtons = document.querySelectorAll('.favorite-btn');
-
-            favoriteButtons.forEach(buttonDiv => {
-                const serviceId = parseInt(buttonDiv.dataset.serviceId);
-                const icon = buttonDiv.querySelector('i');
+            setupDivAsButton(buttonDiv, async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
 
                 if (serviceId in userFavorites) {
-                    icon.classList.remove('fa-regular', 'text-gray-400');
-                    icon.classList.add('fa-solid', 'text-red-500');
-                    buttonDiv.setAttribute('title', 'Quitar de favoritos');
+                    // Mostrar modal de confirmación
+                    pendingServiceId = serviceId;
+                    pendingButtonDiv = buttonDiv;
+                    removeModal.classList.remove('hidden');
+                } else {
+                    // Agregar inmediatamente
+                    await toggleFavorite(serviceId, buttonDiv);
                 }
-
-                setupDivAsButton(buttonDiv, async (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    try {
-                        const response = await fetch(`/service/${serviceId}/toggle-favorite/`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRFToken': getCookie('csrftoken')
-                            }
-                        });
-                        if (response.ok) {
-                            const data = await response.json();
-                            if (data.action === 'added') {
-                                icon.classList.remove('fa-regular', 'text-gray-400');
-                                icon.classList.add('fa-solid', 'text-red-500');
-                                buttonDiv.setAttribute('title', 'Quitar de favoritos');
-                                userFavorites[serviceId] = data.favorite_id;
-                            } else if (data.action === 'removed') {
-                                icon.classList.remove('fa-solid', 'text-red-500');
-                                icon.classList.add('fa-regular', 'text-gray-400');
-                                buttonDiv.setAttribute('title', 'Añadir a favoritos');
-                                delete userFavorites[serviceId];
-                            }
-                        }
-                    } catch (error) {
-                        console.error('Error al gestionar favorito:', error);
-                    }
-                });
             });
+        });
 
-            // 4. Obtener CSRF
-            function getCookie(name) {
-                let cookieValue = null;
-                if (document.cookie && document.cookie !== '') {
-                    const cookies = document.cookie.split(';');
-                    for (let i = 0; i < cookies.length; i++) {
-                        const cookie = cookies[i].trim();
-                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                            break;
-                        }
+        // 4. Obtener CSRF
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
                     }
                 }
-                return cookieValue;
             }
-        });
-    </script>
+            return cookieValue;
+        }
+    });
+</script>
 {% endblock %}

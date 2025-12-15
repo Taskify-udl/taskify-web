@@ -37,4 +37,20 @@ class TaskifyAppConfig(AppConfig):
             dispatch_uid="create_random_favorites",
         )
 
+        # Cargar modelo CLIP para detección NSFW
+        try:
+            from transformers import CLIPProcessor, CLIPModel
+            print("Cargando modelo CLIP (esto puede tardar un poco)...")
+            self.clip_model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
+            self.clip_processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+            print("Modelo CLIP cargado correctamente.")
+        except ImportError:
+            print("Advertencia: 'transformers' no está instalado. La detección NSFW no funcionará.")
+            self.clip_model = None
+            self.clip_processor = None
+        except Exception as e:
+            print(f"Error al cargar modelo CLIP: {e}")
+            self.clip_model = None
+            self.clip_processor = None
+
 

@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 
 class Service(models.Model):
@@ -25,6 +26,12 @@ class Service(models.Model):
         null=True,
         blank=True
     )
+
+    promoted_until = models.DateTimeField(null=True, blank=True)
+
+    @property
+    def is_promoted(self):
+        return self.promoted_until and self.promoted_until > timezone.now()
 
     class Meta:
         ordering = ["name"]

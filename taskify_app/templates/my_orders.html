@@ -3,6 +3,17 @@
 {% load json_i18n %}
 
 {% block content %}
+    <style>
+        article:target {
+            border-color: #1c1b2b;
+            box-shadow: 0 0 0 2px rgba(28, 27, 43, 0.1);
+            animation: highlight 2s ease-out;
+        }
+        @keyframes highlight {
+            0% { background-color: rgba(28, 27, 43, 0.05); }
+            100% { background-color: white; }
+        }
+    </style>
 
     <div class="w-[1024px] mx-auto">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-6 mb-4">
@@ -37,115 +48,253 @@
             </div>
         </div>
 
-        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-6">
-            <div class="flex flex-1 gap-2">
-                <div class="relative flex-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16Z" />
-                    </svg>
-                    <input type="text" placeholder="{% t 'orders.search_placeholder' %}" class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:border-[#1c1b2b] focus:ring-2 focus:ring-[#1c1b2b]/30 transition outline-none" />
+        <!-- Tabs Navigation -->
+        <div class="flex flex-row justify-between bg-gray-100 p-1.5 rounded-2xl w-full mb-6">
+                <button
+                    onclick="switchTab('upcoming')"
+                    id="tab-upcoming"
+            class="tab-btn w-[33%] bg-white text-[#1c1b2b] shadow-sm py-3 px-2 !rounded-xl font-semibold text-sm text-center transition-all focus:outline-none"
+        >
+            Próximos
+            {% if upcoming_orders %}
+                <span class="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2.5 rounded-full text-xs font-medium">
+                    {{ upcoming_orders|length }}
+                </span>
+            {% endif %}
+        </button>
+
+        <button
+            onclick="switchTab('pending')"
+            id="tab-pending"
+            class="tab-btn w-[33%] bg-transparent text-gray-600 hover:text-gray-900 py-3 px-2 border-none !rounded-xl font-semibold text-sm text-center transition-all focus:outline-none"
+        >
+            Solicitudes
+            {% if pending_orders %}
+                <span class="ml-2 bg-amber-100 text-amber-800 py-0.5 px-2.5 rounded-full text-xs font-medium">
+                    {{ pending_orders|length }}
+                </span>
+            {% endif %}
+        </button>
+
+        <button
+            onclick="switchTab('history')"
+            id="tab-history"
+            class="tab-btn w-[33%] bg-transparent text-gray-600 hover:text-gray-900 py-3 px-2 !rounded-xl font-semibold text-sm text-center transition-all focus:outline-none"
+        >
+            Historial
+        </button>
+</div>
+<!-- Tab Contents -->
+<div id="content-upcoming" class="tab-content space-y-4 mb-12">
+    {% if upcoming_orders %}
+        {% for order in upcoming_orders %}
+            {% include "partials/order_card.html" with order=order %}
+        {% endfor %}
+    {% else %}
+        <div class="text-center py-12 bg-gray-50 rounded-2xl border border-gray-100 border-dashed">
+            <p class="text-gray-500">No tienes servicios próximos agendados.</p>
+        </div>
+    {% endif %}
+</div>
+
+<div id="content-pending" class="tab-content space-y-4 mb-12 hidden">
+    {% if pending_orders %}
+        {% for order in pending_orders %}
+            {% include "partials/order_card.html" with order=order %}
+        {% endfor %}
+    {% else %}
+        <div class="text-center py-12 bg-gray-50 rounded-2xl border border-gray-100 border-dashed">
+            <p class="text-gray-500">No tienes solicitudes pendientes.</p>
+        </div>
+    {% endif %}
+</div>
+
+<div id="content-history" class="tab-content space-y-4 mb-12 hidden">
+    {% if past_orders %}
+        {% for order in past_orders %}
+            {% include "partials/order_card.html" with order=order %}
+        {% endfor %}
+    {% else %}
+        <div class="text-center py-12 bg-gray-50 rounded-2xl border border-gray-100 border-dashed">
+            <p class="text-gray-500">No tienes historial de pedidos.</p>
+        </div>
+    {% endif %}
+</div>
+
+
+
+    <!-- Reject Modal -->
+    <div id="rejectModal" class="relative z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity"></div>
+
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-gray-100">
+                    <div class="absolute right-4 top-4">
+                        <button type="button" onclick="closeRejectModal()" class="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-500 transition-colors">
+                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <form method="post" class="p-8">
+                        {% csrf_token %}
+                        <input type="hidden" name="contract_id" id="reject_contract_id">
+                        <input type="hidden" name="action" value="reject">
+                        
+                        <div class="sm:flex sm:items-start">
+                            <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
+                                <h3 class="text-2xl font-bold leading-6 text-gray-900 mb-2" id="modal-title">
+                                    Rechazar Solicitud
+                                </h3>
+                                <p class="text-sm text-gray-500 mb-6">
+                                    Por favor, indica el motivo por el cual rechazas esta solicitud.
+                                </p>
+
+                                <div>
+                                    <label for="rejection_reason" class="block text-left text-sm font-semibold text-gray-700 mb-1 pl-1">Motivo</label>
+                                    <textarea name="rejection_reason" id="rejection_reason" rows="3" required
+                                              class="block w-full rounded-xl border-gray-300 p-3 text-gray-900 shadow-sm focus:border-[#1c1b2b] focus:ring-[#1c1b2b] sm:text-sm transition-all bg-gray-100 focus:bg-white resize-none"
+                                              placeholder="Escribe el motivo aquí..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <button type="button" onclick="closeRejectModal()" class="inline-flex w-full justify-center !rounded-xl bg-gray-100 px-5 py-3 text-sm font-bold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-200 transition-all">
+                                Cancelar
+                            </button>
+                            <button type="submit" class="inline-flex w-full justify-center !rounded-xl bg-red-600 px-5 py-3 text-sm font-bold text-white shadow-lg hover:bg-red-700 hover:shadow-xl transition-all transform hover:-translate-y-0.5">
+                                Rechazar Solicitud
+                            </button>
+                        </div>
+                        
+                    </form>
                 </div>
-                <select class="px-3 py-2 border border-gray-200 rounded-xl text-sm text-gray-600 focus:border-[#1c1b2b] focus:ring-2 focus:ring-[#1c1b2b]/30 outline-none">
-                    <option value="">{% t "orders.filter_status" %}</option>
-                    <option value="pending">{% t "orders.status_pending" %}</option>
-                    <option value="accepted">{% t "orders.status_accepted" %}</option>
-                    <option value="rejected">{% t "orders.status_rejected" %}</option>
-                </select>
-            </div>
-            <div class="flex gap-2">
-                <div class="px-3 py-2 border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-100 transition">{% t "orders.last_30_days" %}</div>
-                <div class="px-3 py-2 border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-100 transition">{% t "orders.customize" %}</div>
             </div>
         </div>
+    </div>
 
-        {% if orders %}
-            <div class="space-y-4 mb-12">
-                {% for order in orders %}
-                    <article class="bg-white border border-gray-200 rounded-2xl shadow-sm p-5 flex flex-col gap-4">
-                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                            <div>
-                                <span class="text-lg font-semibold text-gray-900">{{ order.service_name }}</span>
-                                <p class="text-sm text-gray-500">{{ order.counterpart_label }}: {{ order.counterpart_name }}</p>
-                                {% if order.service_description %}
-                                    <p class="text-sm text-gray-500 mt-1 line-clamp-2">{{ order.service_description }}</p>
-                                {% endif %}
-                            </div>
-                            <span class="inline-flex items-center gap-2 px-3 py-1 text-xs font-medium rounded-full
-                                {{ order.badge_classes }}">
-                                <span class="w-2 h-2 rounded-full
-                                    {{ order.dot_classes }}"></span>
-                                {{ order.status_label }}
-                            </span>
-                        </div>
+    <!-- Cancel Modal -->
+    <div id="cancelModal" class="relative z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity"></div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-600">
-                            <div class="flex items-center gap-2">
-                                <!-- ...existing icon... -->
-                                <span class="font-medium text-gray-900">{% t "orders.service_start" %}</span>
-                                <span>{{ order.start_date|date:'d \d\e F, Y' }}</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <!-- ...existing icon... -->
-                                <span class="font-medium text-gray-900">{% t "orders.contract" %}</span>
-                                <span class="line-clamp-2 text-xs uppercase tracking-wide">{{ order.code }}</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <!-- ...existing icon... -->
-                                <span class="font-medium text-gray-900">{% t "orders.created" %}</span>
-                                <span>{{ order.created_at|date:'d/m/Y H:i' }}</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <!-- ...existing icon... -->
-                                <span class="font-medium text-gray-900">{% t "orders.price_agreed" %}</span>
-                                {% if order.has_price %}
-                                    <span>€{{ order.price|floatformat:2 }}</span>
-                                {% else %}
-                                    <span>{% t "orders.pending_to_confirm" %}</span>
-                                {% endif %}
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-gray-100">
+                    <div class="absolute right-4 top-4">
+                        <button type="button" onclick="closeCancelModal()" class="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-500 transition-colors">
+                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <form method="post" action="" id="cancelForm" class="p-8">
+                        {% csrf_token %}
+                        <input type="hidden" name="cancellation_reason" id="cancellation_reason_input">
+                        
+                        <div class="sm:flex sm:items-start">
+                            <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
+                                <h3 class="text-2xl font-bold leading-6 text-gray-900 mb-2" id="modal-title">
+                                    Cancelar Pedido
+                                </h3>
+                                <p class="text-sm text-gray-500 mb-6">
+                                    Por favor, indica el motivo por el cual cancelas este pedido.
+                                </p>
+
+                                <div>
+                                    <label for="cancellation_reason_textarea" class="block text-left text-sm font-semibold text-gray-700 mb-1 pl-1">Motivo</label>
+                                    <textarea id="cancellation_reason_textarea" rows="3" required
+                                              class="block w-full rounded-xl border-gray-300 p-3 text-gray-900 shadow-sm focus:border-[#1c1b2b] focus:ring-[#1c1b2b] sm:text-sm transition-all bg-gray-100 focus:bg-white resize-none"
+                                              placeholder="Escribe el motivo aquí..."></textarea>
+                                </div>
                             </div>
                         </div>
-
-                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-4 border-t border-gray-100">
-                            <div class="flex items-center gap-2">
-                                <span class="text-sm text-gray-500">{% t "orders.estimated_total" %}</span>
-                                {% if order.has_price %}
-                                    <span class="text-lg font-semibold text-gray-900">€{{ order.price|floatformat:2 }}</span>
-                                {% else %}
-                                    <span class="text-lg font-semibold text-gray-900">{% t "orders.pending" %}</span>
-                                {% endif %}
-                            </div>
-                            <div class="flex gap-2">
-                                <a href="{{ order.detail_url }}" class="px-4 py-2 text-sm font-medium border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-100 transition">{% t "orders.view_service" %}</a>
-                                {% if is_provider and order.can_manage %}
-                                    <form method="post" class="inline-flex">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="contract_id" value="{{ order.id }}">
-                                        <input type="hidden" name="action" value="accept">
-                                        <div class="px-4 py-2 text-sm font-medium bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition">{% t "orders.accept" %}</div>
-                                    </form>
-                                    <form method="post" class="inline-flex">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="contract_id" value="{{ order.id }}">
-                                        <input type="hidden" name="action" value="reject">
-                                        <div class="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-xl hover:bg-red-700 transition">{% t "orders.reject" %}</div>
-                                    </form>
-                                {% elif not is_provider %}
-                                    <div class="px-4 py-2 text-sm font-medium bg-[#1c1b2b] text-white rounded-xl hover:shadow-[0_2px_8px_rgba(0,0,0,0.3)] transition-shadow">{% t "orders.contact" %}</div>
-                                {% endif %}
-                            </div>
+                        <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <button type="button" onclick="closeCancelModal()" class="inline-flex w-full justify-center !rounded-xl bg-gray-100 px-5 py-3 text-sm font-bold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-200 transition-all">
+                                Volver
+                            </button>
+                            <button type="submit" class="inline-flex w-full justify-center !rounded-xl bg-red-600 px-5 py-3 text-sm font-bold text-white shadow-lg hover:bg-red-700 hover:shadow-xl transition-all transform hover:-translate-y-0.5">
+                                Cancelar Pedido
+                            </button>
                         </div>
-                    </article>
-                {% endfor %}
-            </div>
-        {% else %}
-            <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-10 text-center mb-12">
-                <span class="text-lg font-semibold text-gray-900">{% t "orders.no_orders_title" %}</span>
-                <p class="text-sm text-gray-500 mt-1">{% t "orders.no_orders_desc" %}</p>
-                <div class="mt-6 inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium bg-[#1c1b2b] text-white rounded-xl hover:shadow-[0_2px_8px_rgba(0,0,0,0.3)] transition-shadow cursor-pointer" onclick="window.location.href='{% url 'home' %}'">
-                    {% t "orders.explore_services" %}
+
+                    </form>
                 </div>
             </div>
-        {% endif %}
+        </div>
     </div>
+
+    <script>
+        function switchTab(tabName) {
+            // Hide all contents
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.classList.add('hidden');
+            });
+            
+            // Show selected content
+            document.getElementById(`content-${tabName}`).classList.remove('hidden');
+            
+            // Reset all tabs
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('bg-white', 'text-[#1c1b2b]', 'shadow-sm');
+                el.classList.add('bg-transparent', 'text-gray-600');
+            });
+            
+            // Activate selected tab
+            const activeTab = document.getElementById(`tab-${tabName}`);
+            activeTab.classList.remove('bg-transparent', 'text-gray-600');
+            activeTab.classList.add('bg-white', 'text-[#1c1b2b]', 'shadow-sm');
+        }
+
+        function openRejectModal(contractId) {
+            document.getElementById('reject_contract_id').value = contractId;
+            document.getElementById('rejectModal').classList.remove('hidden');
+        }
+
+        function closeRejectModal() {
+            document.getElementById('rejectModal').classList.add('hidden');
+        }
+        
+        function openCancelModal(contractId) {
+            const form = document.getElementById('cancelForm');
+            form.action = `/order/${contractId}/cancel/`;
+            document.getElementById('cancelModal').classList.remove('hidden');
+        }
+
+        function closeCancelModal() {
+            document.getElementById('cancelModal').classList.add('hidden');
+        }
+
+        // Sync textarea with hidden input before form submission
+        document.getElementById('cancelForm').addEventListener('submit', function(e) {
+            const textarea = document.getElementById('cancellation_reason_textarea');
+            const hiddenInput = document.getElementById('cancellation_reason_input');
+            hiddenInput.value = textarea.value;
+        });
+        // Auto-scroll to highlighted order on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const hash = window.location.hash;
+            if (hash && hash.startsWith('#order-')) {
+                const orderId = hash.replace('#order-', '');
+                const orderElement = document.getElementById(`order-${orderId}`);
+        
+        if (orderElement) {
+            // Find which tab contains this order
+            const parentTab = orderElement.closest('.tab-content');
+            if (parentTab) {
+                const tabId = parentTab.id.replace('content-', '');
+                switchTab(tabId);
+            }
+            
+            // Scroll to the element with smooth behavior
+            setTimeout(() => {
+                orderElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+            }
+        }
+    });
+    </script>
 
 {% endblock %}
