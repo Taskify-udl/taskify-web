@@ -681,7 +681,7 @@
     }
 
     .animate-progress {
-        animation: progress 1.5s linear forwards;
+        animation: progress 3s linear forwards;
     }
 
     @keyframes bounce-short {
@@ -711,7 +711,7 @@
             // Auto close for success messages
             const autoDismiss = modal.getAttribute('data-auto-dismiss');
             if (autoDismiss && autoDismiss.includes('true')) {
-                setTimeout(closeNotificationModal, 1500);
+                setTimeout(closeNotificationModal, 3000);
             }
         }
     });

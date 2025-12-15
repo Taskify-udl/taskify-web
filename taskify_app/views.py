@@ -754,9 +754,7 @@ def mark_notification_read(request, notification_id):
         return JsonResponse({'success': False, 'error': 'Notificación no encontrada'})
 
 
-@login_required
-def create_notification(user, title, message, notification_type='system', **kwargs):
-    """Helper function to create notifications"""
+def create_notification(user, title, message, notification_type='system', **kwargs):   
     notification = Notification.objects.create(
         user=user,
         title=title,

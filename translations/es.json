@@ -278,6 +278,7 @@
   "notifications": {
     "page_title": "Notificaciones - Taskify",
     "header": "Notificaciones",
+    "mark_read_button": "Marcar como leído",
     "mark_all_read": "Marcar todo como leído",
     "contract_label": "Contrato:",
     "review_label": "Reseña en:",
