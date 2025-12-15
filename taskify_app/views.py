@@ -6,6 +6,7 @@ from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.db.models import Count, Avg, Q, Case, When, Value, BooleanField, Sum
 from django.core.mail import send_mail
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie, csrf_protect
 from django.utils import timezone
 from datetime import timedelta
@@ -65,19 +66,27 @@ def home(request):
     return render(request, 'home.html', context)
 
 
-
-
 @require_POST
 def set_language(request):
     lang = request.POST.get("language", "es")
-    # Limitamos a los idiomas que realmente tenemos
+
     if lang not in ("es", "en", "ca"):
         lang = "es"
 
     request.session["lang"] = lang
 
-    # Volver a la página anterior o a la home
-    next_url = request.POST.get("next") or "/"
+    next_url = request.POST.get("next")
+
+    url_is_safe = url_has_allowed_host_and_scheme(
+        url=next_url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure()
+    )
+
+    # 3. Si no es segura o no existe, mandamos a la home
+    if not url_is_safe:
+        next_url = "/"
+
     return redirect(next_url)
 
 
