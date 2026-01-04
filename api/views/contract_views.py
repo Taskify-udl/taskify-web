@@ -1,4 +1,3 @@
-import uuid
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from sqlite3 import IntegrityError
@@ -57,6 +56,26 @@ def contracts(request):
     return Response(ContractSerializer(obj).data, status=status.HTTP_201_CREATED)
 
 
+# Nueva vista: devuelve los contratos donde el request.user es cliente o proveedor
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def my_contracts(request):
+    """
+    Devuelve todos los contratos en los que el usuario autenticado es
+    - el cliente (`contract.user`) o
+    - el proveedor del servicio (`contract.service.provider`).
+
+    Usa el `ContractSerializer` existente.
+    """
+    qs = Contract.objects.select_related('user', 'service', 'service__provider').filter(
+        Q(user=request.user) | Q(service__provider=request.user)
+    )
+
+    serializer = ContractSerializer(qs, many=True, context={'request': request})
+    return Response(serializer.data)
+
+
 @api_view(['GET', 'PUT', 'PATCH', 'DELETE'])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
@@ -96,6 +115,6 @@ def contract_detail(request, pk: int):
         return Response(ContractSerializer(obj).data, status=status.HTTP_200_OK)
 
     # DELETE → se interpreta como cancelación
-    contract.status = "cancelled"
+    contract.status = Contract.Status.CANCELLED
     contract.save()
     return Response({'detail': 'contract cancelled'}, status=status.HTTP_200_OK)

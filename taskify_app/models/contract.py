@@ -21,11 +21,22 @@ class Contract(models.Model):
     description = models.TextField(blank=True)
     rejection_reason = models.TextField(blank=True, null=True)
     cancellation_reason = models.TextField(blank=True, null=True)
+
+    class Status(models.TextChoices):
+        PENDING = 'pending', 'Pending'
+        ACCEPTED = 'accepted', 'Accepted'
+        ACTIVE = 'active', 'Active'
+        FINISHED = 'finished', 'Finished'
+        REJECTED = 'rejected', 'Rejected'
+        CANCELLED = 'cancelled', 'Cancelled'
+
     status = models.CharField(
         max_length=30,
-        default="active",
+        choices=Status.choices,
+        default=Status.ACTIVE,
         help_text="pending, accepted, active, finished, rejected, cancelled",
     )
+
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -51,9 +62,9 @@ class Contract(models.Model):
         Solo el cliente puede cancelar, y solo si está en estado pending o accepted.
         """
         if self.user == user:
-            return self.status in ['pending', 'accepted']
+            return self.status in [self.Status.PENDING, self.Status.ACCEPTED]
         elif self.service.provider == user:
-            return self.status == 'accepted'
+            return self.status == self.Status.ACCEPTED
         return False
 
     def can_be_accepted_by(self, user):
@@ -63,7 +74,7 @@ class Contract(models.Model):
         """
         return (
             self.service.provider == user and
-            self.status == 'pending'
+            self.status == self.Status.PENDING
         )
 
     def get_total_duration(self):
