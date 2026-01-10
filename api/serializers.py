@@ -206,6 +206,13 @@ class ContractSerializer(serializers.ModelSerializer):
     user_username = serializers.SerializerMethodField()
     service_name = serializers.SerializerMethodField()
 
+    # Limitar el campo status a las opciones definidas en Contract.Status
+    status = serializers.ChoiceField(choices=list(Contract.Status.choices), required=False)
+
+    # Exponer los códigos alfanuméricos solo en condiciones controladas
+    start_code_alpha = serializers.SerializerMethodField(read_only=True)
+    end_code_alpha = serializers.SerializerMethodField(read_only=True)
+
     service = serializers.PrimaryKeyRelatedField(
         queryset=Service.objects.all(),
         required=True
@@ -222,6 +229,8 @@ class ContractSerializer(serializers.ModelSerializer):
             "service_name",
             "start_date",
             "status",
+            "start_code_alpha",
+            "end_code_alpha",
             "price",
             "created_at",
         )
@@ -232,6 +241,37 @@ class ContractSerializer(serializers.ModelSerializer):
 
     def get_service_name(self, obj):
         return getattr(obj.service, "name", None)
+
+    def _request_user_is_service_provider_with_role(self, request_user, obj):
+        """
+        Devuelve True si `request_user` tiene un rol proveedor y es el proveedor del servicio del contrato.
+        """
+        if not request_user or not getattr(request_user, 'is_authenticated', False):
+            return False
+        provider_roles = [
+            CustomUser.Roles.PROVIDER,
+            CustomUser.Roles.FREELANCER,
+            CustomUser.Roles.COMPANY_ADMIN,
+            CustomUser.Roles.COMPANY_WORKER,
+        ]
+        user_role = getattr(request_user, 'role', None)
+        # además comprobar que es el proveedor del service
+        is_provider_of_service = getattr(obj.service, 'provider_id', None) == getattr(request_user, 'id', None)
+        return user_role in provider_roles and is_provider_of_service
+
+    def get_start_code_alpha(self, obj):
+        request = self.context.get('request')
+        # Mostrar código si el contrato está ACCEPTED o ACTIVE y el request.user es el proveedor con rol adecuado
+        if obj.status in (Contract.Status.ACCEPTED, Contract.Status.ACTIVE) and self._request_user_is_service_provider_with_role(getattr(request, 'user', None), obj):
+            return obj.start_code_alpha
+        return None
+
+    def get_end_code_alpha(self, obj):
+        request = self.context.get('request')
+        # Mostrar código si el contrato está ACCEPTED o ACTIVE y el request.user es el proveedor con rol adecuado
+        if obj.status in (Contract.Status.ACCEPTED, Contract.Status.ACTIVE) and self._request_user_is_service_provider_with_role(getattr(request, 'user', None), obj):
+            return obj.end_code_alpha
+        return None
 
     def update(self, instance, validated_data):
         validated_data.pop("user", None)

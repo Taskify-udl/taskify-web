@@ -8,7 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from rest_framework.response import Response
 
-from taskify_app.models import Contract
+from taskify_app.models import Contract, ServiceSession
 from api.serializers import ContractSerializer
 
 
@@ -118,3 +118,72 @@ def contract_detail(request, pk: int):
     contract.status = Contract.Status.CANCELLED
     contract.save()
     return Response({'detail': 'contract cancelled'}, status=status.HTTP_200_OK)
+
+
+# --- Nuevas vistas API para verificar códigos (start/stop) ---
+from django.utils import timezone
+
+
+@api_view(['POST'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def contract_start(request, contract_id: int):
+    """
+    Endpoint API para iniciar un contrato usando `start_code_alpha`.
+    Body esperado: { "code": "ABCDEF" }
+    Solo el cliente (contract.user) puede verificar el código.
+    """
+    contract = get_object_or_404(Contract.objects.select_related('user', 'service'), pk=contract_id)
+
+    # Only the client can verify codes
+    if request.user != contract.user:
+        return Response({'success': False, 'message': 'Solo el cliente puede verificar los códigos.'}, status=status.HTTP_403_FORBIDDEN)
+
+    code = str(request.data.get('code', '')).strip().upper()
+    if not code:
+        return Response({'success': False, 'message': 'Falta el código.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if contract.start_code_alpha == code:
+        contract.actual_start = timezone.now()
+        contract.status = Contract.Status.ACTIVE
+        contract.save()
+        # Create first session
+        ServiceSession.objects.create(contract=contract)
+        serializer = ContractSerializer(contract, context={'request': request})
+        return Response({'success': True, 'message': 'Servicio iniciado correctamente.', 'contract': serializer.data}, status=status.HTTP_200_OK)
+
+    return Response({'success': False, 'message': 'Código de inicio incorrecto.'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def contract_stop(request, contract_id: int):
+    """
+    Endpoint API para finalizar un contrato usando `end_code_alpha`.
+    Body esperado: { "code": "ABCDEF" }
+    Solo el cliente (contract.user) puede verificar el código.
+    """
+    contract = get_object_or_404(Contract.objects.select_related('user', 'service'), pk=contract_id)
+
+    # Only the client can verify codes
+    if request.user != contract.user:
+        return Response({'success': False, 'message': 'Solo el cliente puede verificar los códigos.'}, status=status.HTTP_403_FORBIDDEN)
+
+    code = str(request.data.get('code', '')).strip().upper()
+    if not code:
+        return Response({'success': False, 'message': 'Falta el código.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if contract.end_code_alpha == code:
+        contract.actual_end = timezone.now()
+        contract.status = Contract.Status.FINISHED
+        contract.save()
+        # Close active session
+        active_session = contract.sessions.filter(end_time__isnull=True).last()
+        if active_session:
+            active_session.end_time = timezone.now()
+            active_session.save()
+        serializer = ContractSerializer(contract, context={'request': request})
+        return Response({'success': True, 'message': 'Servicio finalizado correctamente.', 'show_review_modal': True, 'contract': serializer.data}, status=status.HTTP_200_OK)
+
+    return Response({'success': False, 'message': 'Código de finalización incorrecto.'}, status=status.HTTP_400_BAD_REQUEST)
