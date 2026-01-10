@@ -206,6 +206,9 @@ class ContractSerializer(serializers.ModelSerializer):
     user_username = serializers.SerializerMethodField()
     service_name = serializers.SerializerMethodField()
 
+    # Limitar el campo status a las opciones definidas en Contract.Status
+    status = serializers.ChoiceField(choices=list(Contract.Status.choices), required=False)
+
     service = serializers.PrimaryKeyRelatedField(
         queryset=Service.objects.all(),
         required=True

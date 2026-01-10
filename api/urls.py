@@ -15,6 +15,8 @@ urlpatterns = [
     path('contract', contract_views.contracts),
     path('contract/mine', contract_views.my_contracts),
     path('contract/<int:pk>', contract_views.contract_detail),
+    path('contract/<int:contract_id>/start', contract_views.contract_start),
+    path('contract/<int:contract_id>/stop', contract_views.contract_stop),
     path('category', category_views.categories),
     path('category/<int:pk>', category_views.category_detail),
     path('favorite', favorite_views.favorites), 
