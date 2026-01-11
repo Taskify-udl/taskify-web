@@ -92,7 +92,7 @@ def contract_detail(request, pk: int):
         return Response(ContractSerializer(contract).data)
 
     # Autorización
-    if contract.user_id != request.user.id:
+    if contract.service.provider.id != request.user.id:
         return Response({'detail': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
 
     if request.method in ('PUT', 'PATCH'):
