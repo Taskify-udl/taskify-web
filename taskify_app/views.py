@@ -1422,11 +1422,9 @@ def contract_qr_code(request, contract_id, type):
     if request.user != contract.user and request.user != contract.service.provider:
         return HttpResponse("Unauthorized", status=403)
     if type == 'start':
-        # Generar una URL absoluta que incluye el id del contrato y el token de inicio
-        data = request.build_absolute_uri(reverse('contract_qr_start', args=[contract.id, contract.start_token]))
+        data = contract.start_token
     elif type == 'end':
-        # Generar una URL absoluta que incluye el id del contrato y el token de fin
-        data = request.build_absolute_uri(reverse('contract_qr_end', args=[contract.id, contract.end_token]))
+        data = contract.end_token
     else:
         return HttpResponse("Invalid type", status=400)
     # Generate QR code
@@ -1436,102 +1434,7 @@ def contract_qr_code(request, contract_id, type):
     return response
 
 
-# Vistas públicas para activar/terminar servicio mediante token desde QR
-@csrf_exempt
-def contract_qr_start(request, contract_id, token):
-    """
-    Vista accesible vía URL pública incluida en el QR para iniciar el servicio.
-    Verifica que el token coincida y cambia el estado del contrato a 'active'.
-    """
-    contract = get_object_or_404(Contract, id=contract_id)
 
-    if not token or token != contract.start_token:
-        return HttpResponse("Token inválido o no coincide.", status=400)
-
-    # Si no está autenticado, redirigimos al login con next para que vuelva a esta URL
-    if not request.user.is_authenticated:
-        login_url = reverse('login')
-        return redirect(f"{login_url}?next={request.path}")
-
-    # Sólo el usuario cliente asociado al contrato puede activar el servicio
-    if request.user != contract.user:
-        html = "<html><body><h2>No autorizado</h2><p>Debes iniciar sesión con la cuenta del cliente para activar este servicio.</p></body></html>"
-        return HttpResponse(html, status=403)
-
-    # Si ya está activo, devolvemos un mensaje aceptable
-    if contract.status == 'active':
-        return HttpResponse("El servicio ya está en curso.")
-
-    # Establecer inicio
-    contract.actual_start = timezone.now()
-    contract.status = 'active'
-    contract.save(update_fields=['actual_start', 'status'])
-
-    # Crear la primera sesión del servicio
-    ServiceSession.objects.create(contract=contract)
-
-    # Opcional: notificar al cliente/proveedor (no obligatorio aquí)
-    try:
-        create_notification(
-            user=contract.user,
-            title="Servicio iniciado",
-            message=f"El servicio '{contract.service.name}' ha sido iniciado.",
-            notification_type='contract_update',
-            contract=contract
-        )
-    except Exception:
-        pass
-
-    # Respuesta simple para abrir desde la cámara
-    html = "<html><body><h2>Servicio iniciado correctamente</h2><p>Puedes cerrar esta página.</p></body></html>"
-    return HttpResponse(html)
-
-
-@csrf_exempt
-def contract_qr_end(request, contract_id, token):
-    """
-    Vista accesible vía URL pública incluida en el QR para finalizar el servicio.
-    Verifica que el token coincida y cambia el estado del contrato a 'finished'.
-    """
-    contract = get_object_or_404(Contract, id=contract_id)
-
-    if not token or token != contract.end_token:
-        return HttpResponse("Token inválido o no coincide.", status=400)
-
-    # Sólo el usuario cliente asociado al contrato puede finalizar el servicio
-    if not request.user.is_authenticated or request.user != contract.user:
-        html = "<html><body><h2>No autorizado</h2><p>Debes iniciar sesión con la cuenta del cliente para finalizar este servicio.</p></body></html>"
-        return HttpResponse(html, status=403)
-
-    # Si ya está finalizado, devolvemos un mensaje
-    if contract.status == 'finished':
-        return HttpResponse("El servicio ya ha sido finalizado.")
-
-    # Establecer fin
-    contract.actual_end = timezone.now()
-    contract.status = 'finished'
-    contract.save(update_fields=['actual_end', 'status'])
-
-    # Cerrar sesión activa si existe
-    active_session = contract.sessions.filter(end_time__isnull=True).last()
-    if active_session:
-        active_session.end_time = timezone.now()
-        active_session.save()
-
-    # Notificar y devolver resultado
-    try:
-        create_notification(
-            user=contract.user,
-            title="Servicio finalizado",
-            message=f"El servicio '{contract.service.name}' ha sido finalizado.",
-            notification_type='contract_update',
-            contract=contract
-        )
-    except Exception:
-        pass
-
-    html = "<html><body><h2>Servicio finalizado correctamente</h2><p>Gracias. Puedes cerrar esta página.</p></body></html>"
-    return HttpResponse(html)
 
 
 @login_required
