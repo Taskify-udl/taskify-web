@@ -51,6 +51,9 @@ urlpatterns = [
     path("resend-verification-code/", views.resend_verification_code, name="resend_verification_code"),
     path("order/<int:contract_id>/qr/<str:type>/", views.contract_qr_code, name="contract_qr_code"),
     path('order/<int:contract_id>/verify/', views.verify_service_code, name='verify_service_code'),
+    # URLs públicas para iniciar/terminar servicio vía token incluidos en QR
+    path('order/<int:contract_id>/qr/start/<str:token>/', views.contract_qr_start, name='contract_qr_start'),
+    path('order/<int:contract_id>/qr/end/<str:token>/', views.contract_qr_end, name='contract_qr_end'),
     path('order/<int:contract_id>/toggle-pause/', views.toggle_pause_service, name='toggle_pause_service'),
     path('promote-service/', views.promote_service, name='promote_service'),
 ]
