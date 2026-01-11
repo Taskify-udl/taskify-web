@@ -158,10 +158,12 @@ def contract_start(request, contract_id: int):
         return Response({'success': False, 'message': 'Falta el código o token.'}, status=status.HTTP_400_BAD_REQUEST)
 
     match_token = False
+    # Normalizar token a minúsculas para comparación tolerante a mayúsculas
+    contract_token = (contract.start_token or '').strip()
     if provided_token:
-        match_token = (provided_token == (contract.start_token or ''))
+        match_token = provided_token.strip().lower() == contract_token.lower()
     elif token_from_code_field:
-        match_token = (token_from_code_field == (contract.start_token or ''))
+        match_token = token_from_code_field.strip().lower() == contract_token.lower()
 
     match_code = provided_code and (provided_code == (contract.start_code_alpha or '').upper())
 
@@ -209,10 +211,12 @@ def contract_stop(request, contract_id: int):
         return Response({'success': False, 'message': 'Falta el código o token.'}, status=status.HTTP_400_BAD_REQUEST)
 
     match_token = False
+    # Normalizar token a minúsculas para comparación tolerante a mayúsculas
+    contract_end_token = (contract.end_token or '').strip()
     if provided_token:
-        match_token = (provided_token == (contract.end_token or ''))
+        match_token = provided_token.strip().lower() == contract_end_token.lower()
     elif token_from_code_field:
-        match_token = (token_from_code_field == (contract.end_token or ''))
+        match_token = token_from_code_field.strip().lower() == contract_end_token.lower()
 
     match_code = provided_code and (provided_code == (contract.end_code_alpha or '').upper())
 
