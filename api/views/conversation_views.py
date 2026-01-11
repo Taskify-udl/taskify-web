@@ -3,13 +3,14 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from django.db.models import Max
+from django.db.models import Max, Count
+from django.contrib.auth import get_user_model
 
 from api.serializers import ConversationSerializer, MessageSerializer
 from taskify_app.models import Conversation, Message
 
 
-@api_view(["GET"])
+@api_view(["GET", "POST"])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def conversations(request):
@@ -17,8 +18,70 @@ def conversations(request):
     Soporta query params:
       - offset: offset (int, por defecto 0)
       - limit: cantidad máxima de conversaciones a devolver (int, opcional)
+
+    POST: crear una nueva conversación.
+      - body esperado (JSON): { "participants": [<user_id>, ...] } o { "participant": <user_id> }
+      - El usuario autenticado será añadido automáticamente a participants si no está.
+      - Para conversaciones 1:1 (dos participantes) se intenta devolver la conversación existente si ya existe.
     """
+    User = get_user_model()
     user = request.user
+
+    # POST -> crear conversación
+    if request.method == "POST":
+        data = request.data or {}
+        # aceptar 'participant' (single) o 'participants' (list)
+        participants = data.get("participants")
+        single = data.get("participant")
+        ids = []
+        if participants is not None:
+            if not isinstance(participants, (list, tuple)):
+                return Response({"error": "'participants' debe ser una lista de ids."}, status=status.HTTP_400_BAD_REQUEST)
+            ids = [int(i) for i in participants if i is not None]
+        elif single is not None:
+            try:
+                ids = [int(single)]
+            except (ValueError, TypeError):
+                return Response({"error": "'participant' debe ser un id válido."}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({"error": "Debes indicar 'participants' o 'participant'."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Eliminar duplicados y convertir a enteros
+        try:
+            ids = list({int(i) for i in ids})
+        except (ValueError, TypeError):
+            return Response({"error": "Ids de participantes inválidos."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Asegurar que el usuario autenticado esté incluido
+        if user.id not in ids:
+            ids.append(user.id)
+
+        # No permitir solo el propio usuario
+        other_ids = [i for i in ids if i != user.id]
+        if len(other_ids) == 0:
+            return Response({"error": "Debes incluir al menos a otro participante."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Validar que existan los usuarios
+        users_qs = User.objects.filter(id__in=ids)
+        if users_qs.count() != len(ids):
+            return Response({"error": "Uno o más ids de participantes no existen."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Intentar evitar duplicados para conversaciones 1:1
+        if len(ids) == 2:
+            a, b = ids
+            existing = Conversation.objects.annotate(num=Count('participants')).filter(num=2, participants__id=a).filter(participants__id=b).first()
+            if existing:
+                serializer = ConversationSerializer(existing, context={"request": request})
+                return Response(serializer.data, status=status.HTTP_200_OK)
+
+        # Crear la conversación y asignar participantes
+        conv = Conversation.objects.create()
+        conv.participants.set(users_qs)
+        conv.save()
+        serializer = ConversationSerializer(conv, context={"request": request})
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    # GET -> listar conversaciones con offset/limit
     offset = request.GET.get("offset")
     limit = request.GET.get("limit")
 
