@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from slugify import slugify
 
-from taskify_app.models import Category, Service, Review, Contract, Favorite, CustomUser, ServiceImage
+from taskify_app.models import Category, Service, Review, Contract, Favorite, CustomUser, ServiceImage, Conversation, Message
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -304,3 +304,43 @@ class FavoriteSerializer(serializers.ModelSerializer):
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
+
+
+class MessageSerializer(serializers.ModelSerializer):
+    sender_username = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Message
+        fields = ["id", "conversation", "sender", "sender_username", "content", "timestamp", "is_read"]
+        read_only_fields = ["id", "timestamp"]
+
+    def get_sender_username(self, obj):
+        return getattr(obj.sender, "username", None)
+
+
+class ConversationSerializer(serializers.ModelSerializer):
+    # Mostrar solo los participantes que NO sean el usuario conectado
+    participants = serializers.SerializerMethodField()
+    last_message = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Conversation
+        fields = ["id", "participants", "created_at", "last_message"]
+
+    def get_participants(self, obj):
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+        participants_qs = obj.participants.all()
+        if user and getattr(user, "is_authenticated", False):
+            participants_qs = participants_qs.exclude(id=user.id)
+        serialized = PublicUserProfileSerializer(participants_qs, many=True, context=self.context).data
+        # Si es una conversación 1:1, devolver el único usuario en vez de una lista
+        if isinstance(serialized, list) and len(serialized) == 1:
+            return serialized[0]
+        return serialized
+
+    def get_last_message(self, obj):
+        last = obj.messages.order_by("-timestamp").first()
+        if not last:
+            return None
+        return MessageSerializer(last, context=self.context).data

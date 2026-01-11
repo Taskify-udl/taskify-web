@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import review_views, contract_views, category_views, service_views, favorite_views, auth_views, user_views, email_verification_views
+from .views import review_views, contract_views, category_views, service_views, favorite_views, auth_views, user_views, email_verification_views, conversation_views
 from taskify_app import views
 
 urlpatterns = [
@@ -25,4 +25,10 @@ urlpatterns = [
     path('change-password', user_views.change_password),
     path('verification-code', email_verification_views.get_verification_code),
     path('contract/<int:contract_id>/review/', views.create_review, name='create_review'),
+
+    # Chat / Conversations API
+    path('conversation', conversation_views.conversations),
+    path('conversation/<int:pk>', conversation_views.conversation_detail),
+    path('conversation/<int:pk>/messages', conversation_views.conversation_messages),
+    path('conversation/<int:pk>/mark-read', conversation_views.conversation_mark_read),
 ]
