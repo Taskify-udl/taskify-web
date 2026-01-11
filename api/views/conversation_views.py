@@ -22,7 +22,7 @@ def conversations(request):
     POST: crear una nueva conversación.
       - body esperado (JSON): { "participants": [<user_id>, ...] } o { "participant": <user_id> }
       - El usuario autenticado será añadido automáticamente a participants si no está.
-      - Para conversaciones 1:1 (dos participantes) se intenta devolver la conversación existente si ya existe.
+      - Se permiten múltiples conversaciones entre las mismas personas (no se evita la duplicación).
     """
     User = get_user_model()
     user = request.user
@@ -66,13 +66,7 @@ def conversations(request):
         if users_qs.count() != len(ids):
             return Response({"error": "Uno o más ids de participantes no existen."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Intentar evitar duplicados para conversaciones 1:1
-        if len(ids) == 2:
-            a, b = ids
-            existing = Conversation.objects.annotate(num=Count('participants')).filter(num=2, participants__id=a).filter(participants__id=b).first()
-            if existing:
-                serializer = ConversationSerializer(existing, context={"request": request})
-                return Response(serializer.data, status=status.HTTP_200_OK)
+        # Nota: permitimos conversaciones repetidas entre las mismas personas (no buscamos `existing`)
 
         # Crear la conversación y asignar participantes
         conv = Conversation.objects.create()

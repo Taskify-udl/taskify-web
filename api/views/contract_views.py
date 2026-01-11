@@ -129,9 +129,11 @@ from django.utils import timezone
 @permission_classes([IsAuthenticated])
 def contract_start(request, contract_id: int):
     """
-    Endpoint API para iniciar un contrato usando `start_code_alpha`.
-    Body esperado: { "code": "ABCDEF" }
-    Solo el cliente (contract.user) puede verificar el código.
+    Endpoint API para iniciar un contrato usando `start_code_alpha` o `start_token`.
+    Body aceptado:
+      - { "code": "ABCDEF" }  (o "start_code_alpha": "ABCDEF")
+      - { "token": "hex..." } (o "start_token": "hex...")
+    Solo el cliente (contract.user) puede verificar el código/token.
     """
     contract = get_object_or_404(Contract.objects.select_related('user', 'service'), pk=contract_id)
 
@@ -139,11 +141,31 @@ def contract_start(request, contract_id: int):
     if request.user != contract.user:
         return Response({'success': False, 'message': 'Solo el cliente puede verificar los códigos.'}, status=status.HTTP_403_FORBIDDEN)
 
-    code = str(request.data.get('code', '')).strip().upper()
-    if not code:
-        return Response({'success': False, 'message': 'Falta el código.'}, status=status.HTTP_400_BAD_REQUEST)
+    # Obtener posibles campos del body
+    provided_token = (request.data.get('token') or request.data.get('start_token') or '')
+    # raw_code_field recoge lo que venga en 'code' o 'start_code_alpha' (sin normalizar)
+    raw_code_field = request.data.get('code') or request.data.get('start_code_alpha') or ''
 
-    if contract.start_code_alpha == code:
+    provided_token = str(provided_token).strip()
+    provided_code = str(raw_code_field).strip().upper()
+
+    # Si sólo se pasa 'code' y ese valor corresponde al token, aceptarlo también
+    token_from_code_field = ''
+    if raw_code_field and not provided_token:
+        token_from_code_field = str(raw_code_field).strip()
+
+    if not provided_token and not provided_code:
+        return Response({'success': False, 'message': 'Falta el código o token.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    match_token = False
+    if provided_token:
+        match_token = (provided_token == (contract.start_token or ''))
+    elif token_from_code_field:
+        match_token = (token_from_code_field == (contract.start_token or ''))
+
+    match_code = provided_code and (provided_code == (contract.start_code_alpha or '').upper())
+
+    if match_token or match_code:
         contract.actual_start = timezone.now()
         contract.status = Contract.Status.ACTIVE
         contract.save()
@@ -152,7 +174,7 @@ def contract_start(request, contract_id: int):
         serializer = ContractSerializer(contract, context={'request': request})
         return Response({'success': True, 'message': 'Servicio iniciado correctamente.', 'contract': serializer.data}, status=status.HTTP_200_OK)
 
-    return Response({'success': False, 'message': 'Código de inicio incorrecto.'}, status=status.HTTP_400_BAD_REQUEST)
+    return Response({'success': False, 'message': 'Código o token de inicio incorrecto.'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
@@ -160,9 +182,11 @@ def contract_start(request, contract_id: int):
 @permission_classes([IsAuthenticated])
 def contract_stop(request, contract_id: int):
     """
-    Endpoint API para finalizar un contrato usando `end_code_alpha`.
-    Body esperado: { "code": "ABCDEF" }
-    Solo el cliente (contract.user) puede verificar el código.
+    Endpoint API para finalizar un contrato usando `end_code_alpha` o `end_token`.
+    Body aceptado:
+      - { "code": "ABCDEF" }  (o "end_code_alpha": "ABCDEF")
+      - { "token": "hex..." } (o "end_token": "hex...")
+    Solo el cliente (contract.user) puede verificar el código/token.
     """
     contract = get_object_or_404(Contract.objects.select_related('user', 'service'), pk=contract_id)
 
@@ -170,11 +194,29 @@ def contract_stop(request, contract_id: int):
     if request.user != contract.user:
         return Response({'success': False, 'message': 'Solo el cliente puede verificar los códigos.'}, status=status.HTTP_403_FORBIDDEN)
 
-    code = str(request.data.get('code', '')).strip().upper()
-    if not code:
-        return Response({'success': False, 'message': 'Falta el código.'}, status=status.HTTP_400_BAD_REQUEST)
+    # Obtener posibles campos del body
+    provided_token = (request.data.get('token') or request.data.get('end_token') or '')
+    raw_code_field = request.data.get('code') or request.data.get('end_code_alpha') or ''
 
-    if contract.end_code_alpha == code:
+    provided_token = str(provided_token).strip()
+    provided_code = str(raw_code_field).strip().upper()
+
+    token_from_code_field = ''
+    if raw_code_field and not provided_token:
+        token_from_code_field = str(raw_code_field).strip()
+
+    if not provided_token and not provided_code:
+        return Response({'success': False, 'message': 'Falta el código o token.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    match_token = False
+    if provided_token:
+        match_token = (provided_token == (contract.end_token or ''))
+    elif token_from_code_field:
+        match_token = (token_from_code_field == (contract.end_token or ''))
+
+    match_code = provided_code and (provided_code == (contract.end_code_alpha or '').upper())
+
+    if match_token or match_code:
         contract.actual_end = timezone.now()
         contract.status = Contract.Status.FINISHED
         contract.save()
@@ -186,4 +228,4 @@ def contract_stop(request, contract_id: int):
         serializer = ContractSerializer(contract, context={'request': request})
         return Response({'success': True, 'message': 'Servicio finalizado correctamente.', 'show_review_modal': True, 'contract': serializer.data}, status=status.HTTP_200_OK)
 
-    return Response({'success': False, 'message': 'Código de finalización incorrecto.'}, status=status.HTTP_400_BAD_REQUEST)
+    return Response({'success': False, 'message': 'Código o token de finalización incorrecto.'}, status=status.HTTP_400_BAD_REQUEST)
